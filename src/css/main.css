@@ -16,9 +16,5 @@ svg, canvas{
     touch-action: none;
     cursor: text;
 }
-body{
-    background: url("../../static/pdf.png") top center fixed;
-    background-size: 1170px;
-}
 
 /* // no-repeat bottom center fixed; */
