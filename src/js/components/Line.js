@@ -7,45 +7,34 @@ class Line extends Component {
         super(props);
     }
     componentDidMount(){
-
+        // console.log(this.props.stroke)
         var line = d3.line()
         var that = this;
-
-
-        this.line = new this.props.scope.Path();
-        this.line.importJSON(this.props.stroke);
-
-        this.props.layer.addChild(this.line)
-
-
-        if (this.line.data.type == "selecting"){
-            that.line.remove();
-            // d3.select({}).transition().duration(2000).delay(1000)
-            // .tween("circle", that.translateAlong())
-            // .ease(d3.easeLinear)
-            // .on("end", function(){ 
-            //     that.line.remove();
-            // }); 
-        }
+        d3.select('#'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '2')
+           
             
     
     }
-    translateAlong(){
+    componentDidUpdate(){
+        // console.log('HELLO')
+        var line = d3.line()
         var that = this;
-        var linearFadeOut = d3.scaleLinear().domain([0, 1]).range([1, 0])
-        return function(d, i, a) {
-        return function(t) {
-            if (t != 1){
-                that.line.opacity = linearFadeOut(t)
-            }
-        };
-        };
+        d3.select('#'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '2')
     }
    
     render() {
         return (
-           <React.Fragment>
-           </React.Fragment>
+            <path id={this.props.stroke.id}>
+            
+            </path>
         );
         
     }

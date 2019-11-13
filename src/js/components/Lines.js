@@ -12,6 +12,7 @@ const mapStateToProps = (state, ownProps) => {
     // console.log(state)
     return { 
         sketchLines: state.rootReducer.present.sketchLines,
+        groupLines: state.rootReducer.present.groupLines
     };
   };
 
@@ -25,24 +26,31 @@ class Lines extends Component {
    
     }  
     render() {
-        // console.log(this.props.sketchLines)
-        // console.log('HELLO')
-        this.props.scope.activate();
-        this.props.layer.activate();
+
 
         const listItems = this.props.sketchLines.map((d, i) => {
-                return <Line 
+                return <g key={i} transform={`translate(${d.position[0]},${d.position[1]})`}><Line 
                     key={i} 
-                    stroke={d} 
-                    scope={this.props.scope}
-                    layer={this.props.layer}
-            />
+                    stroke={d}
+            /></g>
         });
+        // console.log(this.props.groupLines)
+        const groupItems = this.props.groupLines.map((d, i) => {
+            // console.log(d)
+            return <g className="group" id={d.id} key={i} transform={`translate(${d.position[0]},${d.position[1]})`} > 
+                {d.data.map((e, j) => { return <g key={j} transform={`translate(${e.position[0]},${e.position[1]})`}>
+                    <Line key={j} stroke={e}/>
+                    </g> })}
+            </g>
+        });
+
+        // console.log(groupItems)
         
         return (
-            <React.Fragment>
-                {listItems}
-            </React.Fragment>
+            <g id="linesGroup">
+                <g className="standAloneLines">{listItems}</g>
+                {groupItems}
+            </g>
         );
         
     }
