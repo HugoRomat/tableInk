@@ -99,15 +99,22 @@ class Document extends Component {
         //   })
           this.mc.on("press", function(ev) {
             //   ev.preventDefault();
-                console.log(that)
+                // console.log(that)
               if (ev.pointers[0]['pointerType'] == 'touch'){
-                that.pressAction(ev);
+                that.press = true;
               }
             })
+            this.mc.on("pressup", function(ev) {
+                //   ev.preventDefault();
+                    // console.log(that)
+                  if (ev.pointers[0]['pointerType'] == 'touch'){
+                    that.press = false;
+                  }
+                })
     }
     pressAction(e){
         console.log('press')
-        this.press = true;
+        
     }
     panStart(e){
         console.log('panStart',e)
@@ -169,23 +176,8 @@ class Document extends Component {
                             that.newGroup.addChild(clone);
                         }
                         // console.log(d3.event)
-                        that.panPosition = {'x': d3.event.x, "y": d3.event.y };
-                    }
-                    
-    
-                }
-                
-
-            })
-            .on('pointermove', function(){
-                if (that.down == true){
-                    if (that.press == false){
-                        that.tempArrayStroke.push([d3.event.x, d3.event.y])
-                        if (that.drawing || that.selecting){
-                            that.addPointDrawing([d3.event.x, d3.event.y]);
-                        }
-                    }
-                    else {
+                        // that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+                        that.panPosition = {'x': 0, "y": 0};
                         var width = that.newGroup.bounds.height;
                         var dist = distance(that.panPosition.x, d3.event.x, that.panPosition.y, d3.event.y);
                         // console.log(that.panPosition, width)
@@ -195,6 +187,39 @@ class Document extends Component {
                             that.linesLayer.addChild(group)
                             group.position = {'x': d3.event.x, "y": d3.event.y };
                             that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+                        }
+
+                        that.createDrawing();
+
+                    }
+                    
+    
+                }
+                
+
+            })
+            .on('pointermove', function(){
+                if (d3.event.pointerType == 'pen'){
+                    if (that.down == true){
+                        if (that.press == false){
+                            that.tempArrayStroke.push([d3.event.x, d3.event.y])
+                            if (that.drawing || that.selecting){
+                                that.addPointDrawing([d3.event.x, d3.event.y]);
+                            }
+                        }
+                        else {
+                            var width = that.newGroup.bounds.height;
+                            var dist = distance(that.panPosition.x, d3.event.x, that.panPosition.y, d3.event.y);
+                            // console.log(that.panPosition, width)
+                            if (dist > width){
+                                // console.log('hello')
+                                var group = that.newGroup.clone();
+                                that.linesLayer.addChild(group)
+                                group.position = {'x': d3.event.x, "y": d3.event.y };
+                                that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+                            }
+
+                            that.addPointDrawing([d3.event.x, d3.event.y]);
                         }
                     }
                     
@@ -215,13 +240,24 @@ class Document extends Component {
 
                 // ]}));
                 that.tempArrayStroke = [];
-                if (that.selecting) {
-                    that.whoInside()
+                if (that.down){
+
+                    console.log(that.drawing)
+                    if (that.selecting) {
+                        that.whoInside();
+                        that.selecting = false;
+                    }
+                    if (that.drawing){
+                        that.addStroke();
+                        that.drawing = false;
+                    }
+                    else {
+                        console.log(that.scope.project)
+                        that.tempLine.remove();
+                    }
                 }
-                if (that.down == true){
-                    that.addStroke();
-                    that.down = false;
-                }
+                
+                that.down = false;
             })
     }
     createDrawing(){
@@ -259,6 +295,7 @@ class Document extends Component {
     addStroke(){
         // var line = d3.line();
         // console.log(this.props)
+        this.tempLine.simplify();
         var path = this.tempLine.clone({insert: false})
         var clone = JSON.parse(path.exportJSON());
 
