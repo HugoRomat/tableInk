@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
+import { getTransformation } from "./Helper";
 
 class Guide extends Component {
     constructor(props) {
@@ -32,13 +33,16 @@ class Guide extends Component {
             .attr('fill', 'none')
             .attr('stroke', 'red')
             .attr('stroke-width', '40')
-            .attr('stroke-opacity', '0.5')
+            .attr('stroke-opacity', '0')
             
             
             
-            d3.select('#group-'+that.props.stroke.id)
-            .call(drag)
-            // console.log(d3.select('#group-'+that.props.stroke.id))
+            d3.select('#guide-'+that.props.stroke.id)
+                .call(drag)
+            
+            
+            
+            console.log()
             
             //.call(drag);
         
@@ -49,18 +53,34 @@ class Guide extends Component {
     dragstarted(env) {
         // console.log('HEY', env, this)
         d3.event.sourceEvent.stopPropagation();
-        // d3.select(this).classed("dragging", true);
+        d3.select('#guide-'+env.props.stroke.id).classed("dragging", true);
     }
 
     dragged(env) {
-        var X = d3.event.x - env.props.stroke['points'][0][0];
-        var Y = d3.event.y - env.props.stroke['points'][0][1];
-        d3.select('#group-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
-        // d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-    }
+        d3.event.sourceEvent.stopPropagation();
+        var transform = getTransformation(d3.select('#guide-'+env.props.stroke.id).attr('transform'));
+        var X = d3.event.dx + transform.translateX;
+        var Y = d3.event.dy + transform.translateY;
+        d3.select('#guide-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
 
+        var linesAttached = env.props.stroke.data.linesAttached;
+        for (var i in linesAttached){
+            var line = linesAttached[i];
+            var identifier = 'item-'+line;
+            var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+            var X = d3.event.dx + transform.translateX;
+            var Y = d3.event.dy + transform.translateY;
+            d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
+        }
+        // d3.select('svg').append('circle')
+        //     .attr('cx', X)
+        //     .attr('cy', Y)
+        //     .attr('r', 10)
+           
+
+    }
     dragended(env) {
-        // d3.select(this).classed("dragging", false);
+        d3.select('#guide-'+env.props.stroke.id).classed("dragging", false);
     }
     componentDidUpdate(){
         // console.log('HELLO')
@@ -75,7 +95,7 @@ class Guide extends Component {
    
     render() {
         return (
-            <g  id={'group-'+this.props.stroke.id}>
+            <g  id={'guide-'+this.props.stroke.id} transform={`translate(0,0)`}>
                 <path id={this.props.stroke.id}></path>
                 <path id={'fake-'+this.props.stroke.id}></path>
             </g>

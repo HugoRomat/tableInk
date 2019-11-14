@@ -20,7 +20,7 @@ class Line extends Component {
     
     }
     componentDidUpdate(){
-        // console.log('HELLO')
+        // console.log(this.props.stroke)
         var line = d3.line()
         var that = this;
         d3.select('#'+that.props.stroke.id)
@@ -28,13 +28,17 @@ class Line extends Component {
             .attr('fill', 'none')
             .attr('stroke', 'black')
             .attr('stroke-width', '2')
+        
+        d3.select('#item-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
     }
    
     render() {
         return (
-            <path id={this.props.stroke.id}>
-            
-            </path>
+            <g id={'item-'+this.props.stroke.id} transform={`translate(0,0)`}>
+                <path id={this.props.stroke.id}>
+                
+                </path>
+            </g>
         );
         
     }

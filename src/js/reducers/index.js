@@ -30,6 +30,26 @@ const initialState = {
           ...state, 
           groupLines: [ ...state.groupLines, action.data] 
         };
+      case 'ADD_LINES_CLASS':
+        var idsLine = action.data.idLines;
+       
+        idsLine.forEach((id)=>{
+          var index = state.sketchLines.indexOf(state.sketchLines.find(x => x.id == id))
+          if (index > -1){
+            // console.log(state.sketchLines[index]['data']['class'])
+            state = update(state, { 
+              sketchLines: {
+                [index] : {
+                  data: {
+                    class: {$push: action.data.class},
+                  }
+                }
+              }
+            })
+          }
+        })
+        return state;
+        // console.log(action.data)
 
       case 'REMOVE_SKETCH_LINES':
           var idsToDelete = action.data;

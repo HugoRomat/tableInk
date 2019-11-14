@@ -101,7 +101,7 @@ export function whoIsInside(sketchLines, arraySelection){
     var arrayPath = []
     for (var i in pathInside){
         var index = pathInside[i];
-        arrayPath.push(sketchLines[index])
+        arrayPath.push(sketchLines[index]['id'])
     }
 
     return arrayPath;

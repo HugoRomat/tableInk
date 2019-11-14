@@ -46,10 +46,9 @@ class Guides extends Component {
         // console.log(groupItems)
         
         return (
-            <g id="guides">
-                <g className="guides">{listItems}</g>
-                {/* {groupItems} */}
-            </g>
+      
+                <g id="guides">{listItems}</g>
+         
         );
         
     }

@@ -13,15 +13,18 @@ import {
     addSketchLine,
     removeSketchLines,
     createGroupLines,
-    addStickyLines
+    addStickyLines,
+    addLinesClass
 } from '../actions';
 import Guides from "./Guides";
+import Groups from "./Groups";
 
 const mapDispatchToProps = {  
     addSketchLine,
     removeSketchLines,
     createGroupLines,
-    addStickyLines
+    addStickyLines,
+    addLinesClass
 };
 
 
@@ -48,6 +51,7 @@ class Document extends Component {
         this.selectionGroup = [];
         this.press = false;
         this.sticky = false;
+        this.grouping = false;
     }
     init(){
 
@@ -123,7 +127,7 @@ class Document extends Component {
                 // console.log('HEY')
                 if (d3.event.pointerType == 'pen'){
 
-                    that.selecting =false;
+                    // that.selecting =false;
                     that.drawing = false;
                     that.erasing = false;
                    
@@ -132,7 +136,7 @@ class Document extends Component {
                         that.down = true;
                         // that.createLine();
                         // console.log(d3.event)
-                        if(d3.event.buttons == 1){
+                        if(d3.event.buttons == 1 && that.selecting != true){
                             that.drawing = true;
                             // that.createDrawing();
                         }
@@ -145,13 +149,46 @@ class Document extends Component {
                         }
                     }
                     else {
-                        that.down = true;
-                        var group = JSON.parse(JSON.stringify(that.selectionGroup))
-                        group.data.forEach(function(d){
-                            d.id = guid()
-                        })
-                        that.props.createGroupLines({'id': 'group-'+guid(), 'data':group.data, 'position': [d3.event.x, d3.event.y]});
-                        that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+
+                        //duplicate group
+
+                        var ids = that.selectionGroup['data']['idLines'];
+                        var newGroupId = guid();
+                        var arrayLinesId = [];
+
+
+                        for (var i in ids){
+                            var id = ids[i];
+                            var newIdLine = guid();
+                            //recuperer la donnee
+                            var line = that.props.sketchLines.find(x => x.id == id)
+                            var data = {
+                                'points': line['points'], 
+                                'data': {'class':['group-'+newGroupId]}, 
+                                'id': newIdLine, 
+                                'position': [0,0]
+                            }
+                            arrayLinesId.push(newIdLine)
+                            that.props.addSketchLine(data);
+                        }
+                        // console.log(that.selectionGroup['id'])
+                        var x = parseFloat(d3.select('#'+that.selectionGroup['id']).attr('x')) + parseFloat(d3.select('#'+that.selectionGroup['id']).attr('width'))/2
+                        var y = parseFloat(d3.select('#'+that.selectionGroup['id']).attr('y')) + parseFloat(d3.select('#'+that.selectionGroup['id']).attr('height'))/2
+                        // console.log(x, y)
+                        var X = 0;
+                        var Y = 0;
+
+                        that.props.createGroupLines({'id': 'group-'+newGroupId, 'data':{'idLines':arrayLinesId}, 'position': [d3.event.x-x, d3.event.y-y]});
+                        
+                        // this.props.addSketchLine(data);
+
+                        // that.down = true;
+                        // var group = JSON.parse(JSON.stringify(that.selectionGroup))
+                        // group.data.forEach(function(d){
+                        //     d.id = guid()
+                        // })
+                        // that.props.createGroupLines({'id': 'group-'+guid(), 'data':group.data, 'position': [d3.event.x, d3.event.y]});
+                        // that.panPosition = {'x': d3.event.x, "y": d3.event.y };
                     }
                 }
                 
@@ -160,7 +197,7 @@ class Document extends Component {
             .on('pointermove', function(){
                 if (d3.event.pointerType == 'pen'){
                     if (that.down == true){
-                        // console.log(that.press)
+                        // console.log(that.selecting)
                         if (that.press == false){
 
                             
@@ -172,21 +209,21 @@ class Document extends Component {
                                 that.drawTempSelectingStroke();
                             }
                         }
-                        else {
-                            // console.log(d3.select('#'+that.selectionGroup.id).node().getBBox())
+                        // else {
+                        //     // console.log(d3.select('#'+that.selectionGroup.id).node().getBBox())
 
-                            var BBWidth = d3.select('#'+that.selectionGroup.id).node().getBBox().width
-                            // var BBWidth = text.node().getBBox();
-                            // var width = that.newGroup.bounds.height;
-                            var dist = distance(that.panPosition.x, d3.event.x, that.panPosition.y, d3.event.y);
-                            // console.log(dist)
-                            if (dist > BBWidth){
-                                var group = JSON.parse(JSON.stringify(that.selectionGroup))
-                                group.data.forEach(function(d){ d.id = guid()})
-                                // that.props.createGroupLines({'id': 'group-'+guid(), 'data':group.data, 'position': [d3.event.x, d3.event.y]});
-                                that.panPosition = {'x': d3.event.x, "y": d3.event.y };
-                            }
-                        }
+                        //     var BBWidth = d3.select('#'+that.selectionGroup.id).node().getBBox().width
+                        //     // var BBWidth = text.node().getBBox();
+                        //     // var width = that.newGroup.bounds.height;
+                        //     var dist = distance(that.panPosition.x, d3.event.x, that.panPosition.y, d3.event.y);
+                        //     // console.log(dist)
+                        //     if (dist > BBWidth){
+                        //         var group = JSON.parse(JSON.stringify(that.selectionGroup))
+                        //         group.data.forEach(function(d){ d.id = guid()})
+                        //         // that.props.createGroupLines({'id': 'group-'+guid(), 'data':group.data, 'position': [d3.event.x, d3.event.y]});
+                        //         that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+                        //     }
+                        // }
                     }
                     
                     
@@ -204,8 +241,9 @@ class Document extends Component {
                     // console.log(that.drawing)
                     if (that.selecting) {
                         
+                        that.makingGroup();
                         // selectionGroup
-                        var selection = whoIsInside(that.props.sketchLines, that.tempArrayStroke);
+                        
 
                         // var soustraire = JSON.parse(JSON.stringify(selection[0]['position']));
                         // selection.forEach((d)=>{
@@ -218,13 +256,14 @@ class Document extends Component {
                         // that.props.removeSketchLines(that.selectionGroup.data.map((d)=> d.id));
                         that.selecting = false;
                     }
-                    if (that.sticky){
+                    else if (that.sticky){
                         // var length = d3.select('#penTemp').node().getTotalLength();
                         // .getPointAtLength(float distance);
                         // console.log(length)
                         that.findIntersection();
                         that.addStrokeGuide(); 
                     }
+                    
                     if (that.drawing && that.sticky == false){
                         that.addStroke();
                         that.drawing = false;
@@ -234,6 +273,23 @@ class Document extends Component {
                 that.tempArrayStroke = [];
                 that.down = false;
             })
+    }
+    makingGroup(){
+        var selection = whoIsInside(this.props.sketchLines, this.tempArrayStroke);
+        var id = guid();
+        this.selectionGroup = {'id': id, 'data':{'idLines':selection}, 'position': [0,0]};
+        console.log(selection)
+
+        this.props.addLinesClass({'idLines':selection, 'class':['group-'+id]})
+        this.props.createGroupLines({'id': id, 'data':{'idLines':selection}, 'position': [0,0]});
+
+
+
+        // for (var i in selection){
+        //     d3.select('#item-'+selection[i]).classed('group-'+id, true);
+        // }
+
+        // console.log(selection)
     }
     findIntersection(){
         //Getting all objects
@@ -273,14 +329,22 @@ class Document extends Component {
     }
     addStrokeGuide(){
         var id = guid();
+        var that = this;
+        // console.log( this.objectIn)
         var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
         var data = {
             'points': arrayPoints, 
-            'data': {'lineAttached': this.objectIn}, 
+            'data': {'linesAttached': this.objectIn}, 
             'id': id, 
             'position': [0,0]
         }
         this.props.addStickyLines(data);
+
+        //Add class to element
+        this.props.addLinesClass({'idLines':that.objectIn, 'class':['sticky-'+id]})
+        // for (var i in this.objectIn){
+        //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
+        // }
     }
     drawTempStroke(){
         var that = this;
@@ -322,7 +386,7 @@ class Document extends Component {
         // console.log(arrayPoints)
         var data = {
             'points': arrayPoints, 
-            'data': {}, 
+            'data': {'class':[]}, 
             'id': id, 
             'position': [0,0]
         }
@@ -346,6 +410,9 @@ class Document extends Component {
     isSticky = (d) => {
         this.sticky = d;
     }
+    isGroup = (d) => {
+        this.selecting = d;
+    }
     // setTextBounds= (d) => {
     //     // console.log(d);
     //     this.pointText = d;
@@ -357,8 +424,10 @@ class Document extends Component {
                 
                 <svg id="canvasVisualization">
                     {/* {this.isMount ?  */}
+                        <Groups />
                         <Lines />
                         <Guides />
+                        
                         {/* <GroupPattern */}
                         <g id="tempLines">
                             <path id="penTemp"></path>
@@ -368,7 +437,7 @@ class Document extends Component {
                     {/* : null } */}
 
                 </svg>
-                <ColorMenu isSticky={this.isSticky} />
+                <ColorMenu isSticky={this.isSticky} isGroup ={this.isGroup} />
             </div>
         );
     }

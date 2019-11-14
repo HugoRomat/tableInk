@@ -18,5 +18,9 @@ svg, canvas{
 }
 #buttons{
     position: absolute;
+   
+}
+.buttonMenu{
+    padding:20px;
 }
 /* // no-repeat bottom center fixed; */

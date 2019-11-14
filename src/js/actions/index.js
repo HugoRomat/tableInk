@@ -17,3 +17,7 @@ export const removeSketchLines = data => ({
     type: 'REMOVE_SKETCH_LINES',
     data
 })
+export const addLinesClass = data => ({
+    type: 'ADD_LINES_CLASS',
+    data
+})
