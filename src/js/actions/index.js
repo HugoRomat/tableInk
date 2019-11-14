@@ -8,6 +8,11 @@ export const createGroupLines = data => ({
     data
 })
 
+export const addStickyLines = data => ({
+    type: 'CREATE_STICKY_LINES',
+    data
+})
+
 export const removeSketchLines = data => ({
     type: 'REMOVE_SKETCH_LINES',
     data

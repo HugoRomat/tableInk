@@ -6,7 +6,8 @@ import { includeAction, excludeAction } from 'redux-undo';
 
 const initialState = { 
     sketchLines: [],
-    groupLines: []
+    groupLines: [],
+    stickyLines: []
   };
 
   const rootReducer = (state = initialState, action) => {
@@ -19,7 +20,11 @@ const initialState = {
           ...state, 
           sketchLines: [ ...state.sketchLines, action.data] 
         };
-      
+        case 'CREATE_STICKY_LINES':
+            return { 
+              ...state, 
+              stickyLines: [ ...state.stickyLines, action.data] 
+            };
       case 'CREATE_GROUP_LINES':
         return { 
           ...state, 

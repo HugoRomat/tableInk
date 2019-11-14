@@ -16,5 +16,7 @@ svg, canvas{
     touch-action: none;
     cursor: text;
 }
-
+#buttons{
+    position: absolute;
+}
 /* // no-repeat bottom center fixed; */

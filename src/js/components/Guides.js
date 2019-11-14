@@ -1,23 +1,22 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import { connect } from 'react-redux';
-import Line from './Line';
+import Guide from './Guide';
 
 import { 
-  } from './../actions';
+  } from '../actions';
 
 const mapDispatchToProps = { 
 };
 const mapStateToProps = (state, ownProps) => {  
     // console.log(state)
     return { 
-        sketchLines: state.rootReducer.present.sketchLines,
-        groupLines: state.rootReducer.present.groupLines
+        stickyLines: state.rootReducer.present.stickyLines
     };
   };
 
 
-class Lines extends Component {
+class Guides extends Component {
     constructor(props) {
         super(props);
         
@@ -28,11 +27,11 @@ class Lines extends Component {
     render() {
 
         // console.log( this.props.sketchLines)
-        const listItems = this.props.sketchLines.map((d, i) => {
-                return <g key={i} id={'group-'+d.id} transform={`translate(${d.position[0]},${d.position[1]})`}><Line 
+        const listItems = this.props.stickyLines.map((d, i) => {
+                return <Guide 
                     key={i} 
                     stroke={d}
-            /></g>
+            />
         });
         // console.log(this.props.groupLines)
         // const groupItems = this.props.groupLines.map((d, i) => {
@@ -47,12 +46,12 @@ class Lines extends Component {
         // console.log(groupItems)
         
         return (
-            <g id="linesGroup">
-                <g className="standAloneLines">{listItems}</g>
+            <g id="guides">
+                <g className="guides">{listItems}</g>
                 {/* {groupItems} */}
             </g>
         );
         
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(Lines);
+export default connect(mapStateToProps, mapDispatchToProps)(Guides);
