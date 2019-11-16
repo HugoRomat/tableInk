@@ -1,3 +1,6 @@
+import * as d3 from 'd3';
+import { ENETUNREACH } from 'constants';
+
 export function guid() {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -12,7 +15,206 @@ export function distance(x1, x2, y1, y2){
     var c = Math.sqrt( a*a + b*b );
     return c;
 }
+// export function getNearestElement(id){
+//     var arrayIn = [];
+//     var arrayOut = [];
+    
+//     // 
+//     // var allGuides = [];
+//     // d3.select('#guides').selectAll('g').each(function(d){
+//     //     var id2 = d3.select(this).attr('id');
+//     //     allGuides.push(id2);
+//     // })
+//     var neighboors = [];
+//     recursive(neighboors, 'item-'+id);
+//     return arrayIn
+// }
 
+// export function getNearestElement(id){
+
+//     var neighborood = ['item-'+id];
+//     var itemToAvoid = [];
+//     var res2 = Promise.all(neighborood.map(fn)).then((d)=>{
+//         itemToAvoid.push(d);
+//         getNeighboor(d)
+       
+//     })
+
+//     function getNeighboor(id){
+//         return new Promise((resolve, reject) => {
+//             var BB = FgetBBox(id)
+//             d3.select('#guides').selectAll('g').each(function(d){
+//                 var id2 = d3.select(this).attr('id');
+//                 var BB2 = FgetBBox(id2);
+//             })
+//         })
+//     }
+// }
+
+export function checkIntersection(r2, r1){
+        return !(r2.x              > r1.x + r1.width || 
+                 r2.x + r2.width   < r1.x || 
+                 r2.y              > r1.y + r1.height ||
+                 r2.y + +r2.height < r1.y);
+}
+
+
+export function getNearestElement(id){
+    var linkToAvoid = [];
+    var iteration = 0;
+    var nodeIn = [];
+
+    return new Promise((resolve, reject) => {
+        nodeIn.push('item-'+id)
+        getNeighborood('item-'+id);
+        resolve(nodeIn);
+    })
+    
+
+    
+    function getNeighborood(nodeId){
+        var BB = FgetBBox(nodeId)
+        d3.select('#guides').selectAll('g').each(function(d){
+            var id2 = d3.select(this).attr('id');
+            if (linkToAvoid.indexOf(id2+'-'+nodeId) == -1 && nodeIn.indexOf(id2) == -1){
+                var BB2 = FgetBBox(id2);
+                var isIntersect = checkIntersection(BB, BB2);
+                // linkToAvoid.push(id2);
+                linkToAvoid.push(id2+'-'+nodeId);
+                
+                // console.log(isIntersect, iteration)
+                // d3.select('svg').append('g').attr('transform', 'translate('+BB2.x+','+BB2.y+')').append('text').html(iteration)
+                iteration++
+                //Si Intersection je continue avec celui-la
+                if(isIntersect){
+                    nodeIn.push(id2)
+                    // console.log(nodeIn)
+                    getNeighborood(id2);
+                   
+                }
+            }
+        })
+        
+    }
+}
+
+
+// export async function isSomethingAttached(neighboors, id, itemAlreadyVisited){
+//     return new Promise (function(resolve, reject){
+//         var BB = FgetBBox(id)
+//         var newNeighboors = [];
+//         console.log(id)
+//         d3.select('#guides').selectAll('g').each(function(d){
+//             var id2 = d3.select(this).attr('id');
+//             if (neighboors.indexOf(id2) == -1 && itemAlreadyVisited.indexOf(id2) == -1){
+//                 var BB2 = FgetBBox(id2);
+//                 var isIntersect = checkIntersection(BB, BB2);
+//                 if (isIntersect){
+//                     // itemAlreadyVisited.push(id2);
+//                     newNeighboors.push(id2)
+//                 }
+//             }
+//         })
+//         itemAlreadyVisited = itemAlreadyVisited.concat(neighboors);
+
+//         resolve({'neig':neighboors, 'id': id, 'visite':itemAlreadyVisited});
+
+
+
+
+//     })
+    
+    /*var BB = FgetBBox(id);
+    d3.select('#guides').selectAll('g').each(function(d){
+        var id2 = d3.select(this).attr('id');
+        if (neighboors.indexOf(id2) == -1){
+            var BB2 = FgetBBox(id2);
+            var isIntersect = checkIntersection(BB, BB2);
+            if (isIntersect){
+                neighboors.push(id2)
+            }
+        }
+    })
+
+    console.log(neighboors)*/
+// }
+export function _getBBox(id){
+    var BB2 = d3.select('#'+id).node().getBBox();
+    var transform = getTransformation(d3.select('#'+id).attr('transform'))
+    var selection = [
+        [BB.x+transform.translateX, BB.y+transform.translateY],
+        [BB.x+transform.translateX+BB.width, BB.y+transform.translateY],
+        [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
+        [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
+    ]
+}
+export function FgetBBox(id){
+    // console.log(id)
+    var offset = 30;
+    d3.select('#'+id).node().getBBox();
+    var BB = d3.select('#'+id).node().getBBox();
+    BB.x -= offset;
+    BB.y -= offset;
+    BB.width += 2*offset;
+    BB.height += 2*offset;
+    return BB;
+
+}
+// export function drawBBox(){
+
+// }
+// export function recursive(arrayIn, arrayOut, id){
+//     var offset = 30;
+//     // console.log(id, arrayOut, arrayIn)
+//     var BB = d3.select('#'+id).node().getBBox();
+//     BB.x -= offset;
+//     BB.y -= offset;
+//     BB.width += 2*offset;
+//     BB.height += 2*offset;
+
+//     arrayIn.push(id);
+//     // arrayOut.push(id);
+//     // console.log('Comparing', id)
+//     showBbox(BB, 'black');
+//     d3.select('#guides').selectAll('g').each(function(d){
+        
+//         var id2 = d3.select(this).attr('id');
+       
+//         // console.log(id2)
+//         if (arrayOut.indexOf(id2 + '-id') == -1){
+//             var offset = 30;
+//             var BB2 = d3.select(this).node().getBBox();
+//             BB2.x -= offset;
+//             BB2.y -= offset;
+//             BB2.width += 2*offset;
+//             BB2.height += 2*offset;
+    
+//             // showBbox(BB2, 'red');
+    
+//             var isIntersect = checkIntersection(BB, BB2);
+//             arrayOut.push(id2 + '-' + id);
+//             arrayOut.push(id + '-' + id2);
+//             // console.log(isIntersect)
+//             if (isIntersect){
+//                 // console.log(isIntersect)
+//                 arrayIn.push(id2);
+//                 recursive(arrayIn,arrayOut, id2);
+//             }
+//             // else arrayOut.push(id2 + 'id');
+//         }
+//     })
+// }
+export function showBbox(id, color){
+    var BB2 = d3.select('#'+id).node().getBBox();
+    console.log(BB2)
+    d3.select('svg').append('rect')
+    .attr('x', BB2.x)
+    .attr('y', BB2.y)
+    .attr('width', BB2.width)
+    .attr('height', BB2.height)
+    .attr('fill', 'none')
+    .attr('stroke', color)
+}
 export function is_point_inside_selection(point, array_selection) {
     var vs = array_selection;
     var x = point[0], y = point[1];
@@ -61,7 +263,16 @@ export function getTransformation(transform) {
       scaleY: scaleY
     };
   }
-  
+export function getType(type, classData){
+    var data = classData.split(' ');
+    var arrayType = [];
+    for (var i in data){
+        var item = data[i];
+        // console.log(item)
+        if (item.split('-')[0] == type) arrayType.push(item.split('-')[1])
+    }
+    return arrayType;
+}
 export function whoIsInside(sketchLines, arraySelection){
 
 

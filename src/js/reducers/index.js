@@ -49,6 +49,30 @@ const initialState = {
           }
         })
         return state;
+
+
+        case 'ADD_LINES_TO_STICKY':
+          var idLine = action.data.id;
+          console.log(action.data.idLines)
+          // 'data': {'linesAttached': this.objectIn}, 
+          // idsLine.forEach((id)=>{
+            var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == idLine))
+            if (index > -1){
+              // console.log(state.sketchLines[index]['data']['class'])
+              state = update(state, { 
+                stickyLines: {
+                  [index] : {
+                    data: {
+                      linesAttached: {$push: action.data.idLines},
+                    }
+                  }
+                }
+              })
+            }
+          
+          return state;
+
+        
         // console.log(action.data)
 
       case 'REMOVE_SKETCH_LINES':

@@ -5,7 +5,7 @@ import './../../css/main.css';
 import paper from 'paper';
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox } from "./Helper";
 import ColorMenu from "./ColorMenu";
 
 
@@ -14,17 +14,20 @@ import {
     removeSketchLines,
     createGroupLines,
     addStickyLines,
-    addLinesClass
+    addLinesClass,
+    addLinesToSticky
 } from '../actions';
 import Guides from "./Guides";
-import Groups from "./Groups";
+
+import Interface from "./Interface";
 
 const mapDispatchToProps = {  
     addSketchLine,
     removeSketchLines,
     createGroupLines,
     addStickyLines,
-    addLinesClass
+    addLinesClass,
+    addLinesToSticky
 };
 
 
@@ -32,7 +35,8 @@ function mapStateToProps(state, ownProps) {
 
     // console.log(state)
     return {
-        sketchLines: state.rootReducer.present.sketchLines
+        sketchLines: state.rootReducer.present.sketchLines,
+        stickyLines: state.rootReducer.present.stickyLines
     };
 }
 
@@ -52,6 +56,8 @@ class Document extends Component {
         this.press = false;
         this.sticky = false;
         this.grouping = false;
+        this.isGuideHold = [];
+        this.duplicating = false;
     }
     init(){
 
@@ -99,23 +105,24 @@ class Document extends Component {
         //       }
         //     }
         //   })
-          this.mc.on("press", function(ev) {
-            //   ev.preventDefault();
-                // console.log(that)
-              if (ev.pointers[0]['pointerType'] == 'touch'){
-                  console.log('PRESS')
-                that.press = true;
-              }
-            })
-            this.mc.on("pressup", function(ev) {
-                //   ev.preventDefault();
-                    // console.log(that)
-                  if (ev.pointers[0]['pointerType'] == 'touch'){
-                    that.press = false;
-                  }
-                })
+        //   this.mc.on("press", function(ev) {
+        //     //   ev.preventDefault();
+        //         // console.log(that)
+        //       if (ev.pointers[0]['pointerType'] == 'touch'){
+        //         // console.log('PRESS')
+        //         that.press = true;
+        //         // that.press(ev);
+        //       }
+        //     })
+        //     this.mc.on("pressup", function(ev) {
+        //         //   ev.preventDefault();
+        //             // console.log(that)
+        //           if (ev.pointers[0]['pointerType'] == 'touch'){
+        //             that.press = false;
+        //           }
+        //         })
     }
-   
+    
     panEnd(e){
         console.log('panEnd')
     }
@@ -125,7 +132,7 @@ class Document extends Component {
         d3.select('#canvasVisualization')
             .on('pointerdown', function(){
                 // console.log('HEY')
-                if (d3.event.pointerType == 'pen'){
+                // if (d3.event.pointerType == 'pen'){
 
                     // that.selecting =false;
                     that.drawing = false;
@@ -136,7 +143,12 @@ class Document extends Component {
                         that.down = true;
                         // that.createLine();
                         // console.log(d3.event)
-                        if(d3.event.buttons == 1 && that.selecting != true){
+                        if (that.isGuideHold.length != 0){
+                            that.duplicating = true;
+                            that.duplicateSticky(that.isGuideHold);
+
+                        }
+                        else if(d3.event.buttons == 1 && that.selecting != true){
                             that.drawing = true;
                             // that.createDrawing();
                         }
@@ -148,11 +160,12 @@ class Document extends Component {
                             // that.createSelecting();
                         }
                     }
+                    //Si je presse pour dupliquer
                     else {
 
                         //duplicate group
 
-                        var ids = that.selectionGroup['data']['idLines'];
+                       /* var ids = that.selectionGroup['data']['idLines'];
                         var newGroupId = guid();
                         var arrayLinesId = [];
 
@@ -178,24 +191,15 @@ class Document extends Component {
                         var X = 0;
                         var Y = 0;
 
-                        that.props.createGroupLines({'id': 'group-'+newGroupId, 'data':{'idLines':arrayLinesId}, 'position': [d3.event.x-x, d3.event.y-y]});
-                        
-                        // this.props.addSketchLine(data);
-
-                        // that.down = true;
-                        // var group = JSON.parse(JSON.stringify(that.selectionGroup))
-                        // group.data.forEach(function(d){
-                        //     d.id = guid()
-                        // })
-                        // that.props.createGroupLines({'id': 'group-'+guid(), 'data':group.data, 'position': [d3.event.x, d3.event.y]});
-                        // that.panPosition = {'x': d3.event.x, "y": d3.event.y };
+                        that.props.createGroupLines({'id': '-'+newGroupId, 'data':{'idLines':arrayLinesId}, 'position': [d3.event.x-x, d3.event.y-y]});
+                        */
                     }
-                }
+                // }
                 
 
             })
             .on('pointermove', function(){
-                if (d3.event.pointerType == 'pen'){
+                // if (d3.event.pointerType == 'pen'){
                     if (that.down == true){
                         // console.log(that.selecting)
                         if (that.press == false){
@@ -230,7 +234,7 @@ class Document extends Component {
                     
 
                     // console.log(d3.event)
-                }
+                // }
             })
             .on('contextmenu', function(){
                 d3.event.preventDefault();
@@ -239,32 +243,20 @@ class Document extends Component {
                 if (that.down){
                     // console.log(that.drawing, that.sticky)
                     // console.log(that.drawing)
+                    console.log(that.isGuideHold.length)
                     if (that.selecting) {
                         
                         that.makingGroup();
                         // selectionGroup
-                        
-
-                        // var soustraire = JSON.parse(JSON.stringify(selection[0]['position']));
-                        // selection.forEach((d)=>{
-                        //     d.position[0] = d.position[0] - soustraire[0];
-                        //     d.position[1] = d.position[1] - soustraire[1]
-                        // })
-                        // console.log(that.selectionGroup)
-                        // that.selectionGroup = {'id': 'group-'+guid(), 'data':selection, 'position': [0,0]}
-                        // that.props.createGroupLines(that.selectionGroup);
-                        // that.props.removeSketchLines(that.selectionGroup.data.map((d)=> d.id));
                         that.selecting = false;
                     }
-                    else if (that.sticky){
-                        // var length = d3.select('#penTemp').node().getTotalLength();
-                        // .getPointAtLength(float distance);
+                    else if (that.sticky && that.isGuideHold.length == 0){
                         // console.log(length)
-                        that.findIntersection();
+                        // that.findIntersection('penTemp');
                         that.addStrokeGuide(); 
                     }
                     
-                    if (that.drawing && that.sticky == false){
+                    else if (that.drawing && that.sticky == false && that.isGuideHold.length == 0){
                         that.addStroke();
                         that.drawing = false;
                     }
@@ -272,17 +264,55 @@ class Document extends Component {
                 }
                 that.tempArrayStroke = [];
                 that.down = false;
+                that.objectIn = [];
             })
     }
+    duplicateSticky(groupOfLines){
+        console.log(groupOfLines)
+        var that = this;
+        var firstpoint= [];
+        for (var i in groupOfLines){
+            var id = guid();
+            var lineId = groupOfLines[i].split('-')[1]
+            // console.log(lineId)
+            var line = that.props.stickyLines.find(x => x.id == lineId);
+            var arrayPoints = JSON.parse(JSON.stringify(line['points']))
+            firstpoint.push(arrayPoints[0])
+ 
+            var data = {
+                'points': arrayPoints, 
+                'data': {}, 
+                'id': id, 
+                'position': [d3.event.x-firstpoint[0][0], d3.event.y-firstpoint[0][1]]
+            }
+            this.props.addStickyLines(data);
+            
+           
+
+            console.log('item-'+id)
+            setTimeout(function(){
+            that.findIntersection(id);
+            console.log(that.objectIn)
+            //that.props.addLinesClass({'idLines':[lineId], 'class':['item-'+id]});
+            //if (that.objectIn.length != 0) that.props.addLinesToSticky({'idLines':that.objectIn, 'id':id})
+            
+            
+                }, 3000)
+            // setTimeout(function(){
+                // console.log()
+                // console.log(d3.select('#item-'+id).node())
+            //
+        }
+    }
     makingGroup(){
-        var selection = whoIsInside(this.props.sketchLines, this.tempArrayStroke);
+        /*var selection = whoIsInside(this.props.sketchLines, this.tempArrayStroke);
         var id = guid();
         this.selectionGroup = {'id': id, 'data':{'idLines':selection}, 'position': [0,0]};
         console.log(selection)
 
         this.props.addLinesClass({'idLines':selection, 'class':['group-'+id]})
         this.props.createGroupLines({'id': id, 'data':{'idLines':selection}, 'position': [0,0]});
-
+        */
 
 
         // for (var i in selection){
@@ -291,12 +321,52 @@ class Document extends Component {
 
         // console.log(selection)
     }
-    findIntersection(){
+    //Pour les guides
+    findIntersection(id){
         //Getting all objects
         var that = this;
         this.objectIn = [];
+        this.groupIn = []
         
+
+        // console.log( d3.select('#'+id)['_groups'][0])
+        // console.log( d3.select('#'+id).node())
+
+        // console.log( d3.select('#'+id).node().getTotalLength())
+        //check for groups
+        // d3.select('.groups').selectAll('g').each(function(){
+        //     var BB = d3.select(this).node().getBBox();
+        //     var transform = getTransformation(d3.select(this).attr('transform'))
+        //     var selection = [
+        //         [BB.x+transform.translateX, BB.y+transform.translateY],
+        //         [BB.x+transform.translateX+BB.width, BB.y+transform.translateY],
+        //         [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
+        //         [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
+        //     ]
+        //     var isIn = false;
+        //     var i = 0;
+        //     //Iterate over all points
+        //     var length = d3.select('#penTemp').node().getTotalLength();
+        //     while( isIn == false && i< length){
+        //         var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
+        //         var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
+        //         if (isIn) that.groupIn.push( d3.select(this).attr('id').split('-')[1])
+        //         i++;
+        //     }
+        // })
+        getBBox('item'+id);
+        var BB2 = d3.select('#item'+id).node().getBBox();
+        var transform = getTransformation(d3.select('#item'+id).attr('transform'))
+        var selection = [
+            [BB2.x+transform.translateX, BB2.y+transform.translateY],
+            [BB2.x+transform.translateX+BB2.width, BB.y+transform.translateY],
+            [BB2.x+transform.translateX+BB2.width, BB.y+transform.translateY+BB.height],
+            [BB2.x+transform.translateX, BB2.y+transform.translateY+BB.height],
+        ]
+
+        showBbox(id, 'black');
         d3.select('.standAloneLines').selectAll('g').each(function(){
+            console.log(d3.select(this).node())
             var BB = d3.select(this).node().getBBox();
             var transform = getTransformation(d3.select(this).attr('transform'))
             var selection = [
@@ -307,15 +377,33 @@ class Document extends Component {
             ]
             var isIn = false;
             var i = 0;
-            //Iterate over all points
-            var length = d3.select('#penTemp').node().getTotalLength();
+            showBbox(d3.select(this).attr('id'), 'red');
+            // showBbox(id, 'red');
+            console.log(selection)
+            // //Iterate over all points
+            // console.log( d3.select('#'+id)['_groups'][0])
+            // console.log( d3.select('#'+id).node().getTotalLength())
+            var length = d3.select('#'+id).node().getTotalLength();
             while( isIn == false && i< length){
-                var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
-                var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
-                if (isIn) that.objectIn.push( d3.select(this).attr('id').split('-')[1])
+                var pointSticky = d3.select('#'+id).node().getPointAtLength(i);
+                // console.log('GOO')
+                d3.select('svg').append('circle').attr('cx',pointSticky.x ).attr('cy',pointSticky.y).attr('r', 2)
+                // var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
+
+
+                if (isIn) {
+                    var classes = d3.select(this).attr('class');
+                    // var groupClass = getType('group', classes);
+
+                    
+                    // console.log(groupClass, that.groupIn)
+                    that.objectIn.push( d3.select(this).attr('id').split('-')[1])
+                }
                 i++;
             }
         })
+
+        // console.log(that.objectIn)
 
         // d3.select('svg').append('rect')
         //     .attr('x', BB.x+transform.translateX)
@@ -341,7 +429,7 @@ class Document extends Component {
         this.props.addStickyLines(data);
 
         //Add class to element
-        this.props.addLinesClass({'idLines':that.objectIn, 'class':['sticky-'+id]})
+        this.props.addLinesClass({'idLines':that.objectIn, 'class':['item-'+id]})
         // for (var i in this.objectIn){
         //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
         // }
@@ -417,16 +505,21 @@ class Document extends Component {
     //     // console.log(d);
     //     this.pointText = d;
     // }
-
+    holdGuide = (d) => {
+        // console.log(d)
+        this.isGuideHold = d;
+        // console.log('HOOOOLD')
+    }
     render() {
         return (
             <div>
                 
                 <svg id="canvasVisualization">
                     {/* {this.isMount ?  */}
-                        <Groups />
+                        {/* <Groups /> */}
                         <Lines />
-                        <Guides />
+                        <Guides holdGuide={this.holdGuide}/>
+                        <Interface />
                         
                         {/* <GroupPattern */}
                         <g id="tempLines">

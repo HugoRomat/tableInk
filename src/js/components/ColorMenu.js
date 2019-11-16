@@ -65,7 +65,7 @@ class ColorsMenu extends Component {
         return (
            <div id="buttons">
                <button className="buttonMenu" issticky='false' id="rule"> noSticky </button>
-               <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button>
+               {/* <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button> */}
                 {/* <g id="rule" issticky='false' transform={'translate(400,20)'}>
                     <rect fill='black' width='100' height='50' x='0' stroke='black' fill='grey'> hello</rect>
                     <text y='27' x='27'> Rule </text>

@@ -1,6 +1,21 @@
 body { 
-    margin: 0;
+
+	background: -webkit-linear-gradient(top, #d9eaf3 0%, #fff 8%) 0 4px;
+    background-size: 100% 20px;
+
 }
+body::before {
+
+    content: '';
+    position: absolute;
+    width: 4px;
+    top: 0;
+    left: 300px;
+    bottom: 0;
+    border: 1px solid;
+    border-color: transparent #efe4e4;
+  
+  }
 svg, canvas{
     /* background: grey; */
     /* background: rgb(178, 172, 162); */

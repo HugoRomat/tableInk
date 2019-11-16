@@ -21,3 +21,7 @@ export const addLinesClass = data => ({
     type: 'ADD_LINES_CLASS',
     data
 })
+export const addLinesToSticky = data => ({
+    type: 'ADD_LINES_TO_STICKY',
+    data
+})

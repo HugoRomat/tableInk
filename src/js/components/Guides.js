@@ -31,6 +31,7 @@ class Guides extends Component {
                 return <Guide 
                     key={i} 
                     stroke={d}
+                    holdGuide={this.props.holdGuide}
             />
         });
         // console.log(this.props.groupLines)
