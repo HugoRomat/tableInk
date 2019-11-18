@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, _getBBox } from "./../Helper";
+import { getNearestElement, getTransformation, _getBBox, interpolate } from "./../Helper";
 
 class Menu extends Component {
     constructor(props) {
@@ -50,11 +50,33 @@ class Menu extends Component {
     componentDidUpdate(){
       
     }
-    rightALignement(){
+    rightALignement(idLines, idGuide){
+
+        var path = d3.select('#'+idGuide);
+        //Get the BBox 
+        var BBox = _getBBox(idGuide);
+        var firstPoint = {'x':BBox.x + BBox.width, 'y': BBox.y};
+        var secondPoint = {'x':BBox.x + BBox.width, 'y': BBox.y + BBox.height};
+
+
+        interpolate(firstPoint, secondPoint, 0.5);
+        var itr = 0;
+        // console.log(BBox)
+
+
         idLines.forEach((d)=>{
-            var pathLine = d3.select('#item-'+d['idLine']);
+            var point = interpolate(firstPoint, secondPoint, itr);
+            var pathLine = d3.select('#item-'+d);
+            // var BBox = _getBBox(d['idLine']);
+
+            // var X = d['position'].x - BBox.x - BBox.width/2; // minus their position
+            // var Y = d['position'].y - BBox.y - BBox.height/2;// + transform.translateY;
+            pathLine.attr('transform', 'translate('+point.x+','+point.y+')')
+            itr += 1/idLines.length;
+
 
         })
+        
     }
     distributesItemsAlongLine(idLines, idGuide){
         var path = d3.select('#'+idGuide);

@@ -247,6 +247,12 @@ export function FgetBBox(id){
     return BB;
 
 }
+export function  interpolate(a, b, frac) // points A and B, frac between 0 and 1
+{
+    var nx = a.x+(b.x-a.x)*frac;
+    var ny = a.y+(b.y-a.y)*frac;
+    return {x:nx,  y:ny};
+}
 
 export function is_point_inside_selection(point, array_selection) {
     var vs = array_selection;
