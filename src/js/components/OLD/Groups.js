@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import { connect } from 'react-redux';
-import Guide from './Guide';
+import Group from './Group';
 
 import { 
   } from '../actions';
@@ -11,12 +11,12 @@ const mapDispatchToProps = {
 const mapStateToProps = (state, ownProps) => {  
     // console.log(state)
     return { 
-        stickyLines: state.rootReducer.present.stickyLines
+        groupLines: state.rootReducer.present.groupLines
     };
   };
 
 
-class Guides extends Component {
+class Groups extends Component {
     constructor(props) {
         super(props);
         
@@ -26,13 +26,11 @@ class Guides extends Component {
     }  
     render() {
 
-        // console.log( this.props.sketchLines)
-        const listItems = this.props.stickyLines.map((d, i) => {
-                return <Guide 
-                    key={i} 
-                    stroke={d}
-                    holdGuide={this.props.holdGuide}
-                    dragItem={this.props.dragItem}
+        // console.log( this.props.groupLines)
+        const listItems = this.props.groupLines.map((d, i) => {
+            return <Group 
+                key={i} 
+                group={d}
             />
         });
         // console.log(this.props.groupLines)
@@ -48,11 +46,14 @@ class Guides extends Component {
         // console.log(groupItems)
         
         return (
-      
-                <g id="guides">{listItems}</g>
-         
+
+            <g className="groups">
+                {listItems}
+            </g>
+            
+
         );
         
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(Guides);
+export default connect(mapStateToProps, mapDispatchToProps)(Groups);

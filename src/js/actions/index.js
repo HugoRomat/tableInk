@@ -25,3 +25,7 @@ export const addLinesToSticky = data => ({
     type: 'ADD_LINES_TO_STICKY',
     data
 })
+export const shouldOpenMenu = data => ({
+    type: 'SHOULD_OPEN_MENU',
+    data
+})

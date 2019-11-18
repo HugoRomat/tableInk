@@ -78,6 +78,9 @@ export function getNearestElement(id){
             var id2 = d3.select(this).attr('id');
             if (linkToAvoid.indexOf(id2+'-'+nodeId) == -1 && nodeIn.indexOf(id2) == -1){
                 var BB2 = FgetBBox(id2);
+
+                // console.log('HELLO', BB2)
+                // showBboxBB(BB2, 'red')
                 var isIntersect = checkIntersection(BB, BB2);
                 // linkToAvoid.push(id2);
                 linkToAvoid.push(id2+'-'+nodeId);
@@ -138,28 +141,7 @@ export function getNearestElement(id){
 
     console.log(neighboors)*/
 // }
-export function _getBBox(id){
-    var BB2 = d3.select('#'+id).node().getBBox();
-    var transform = getTransformation(d3.select('#'+id).attr('transform'))
-    var selection = [
-        [BB.x+transform.translateX, BB.y+transform.translateY],
-        [BB.x+transform.translateX+BB.width, BB.y+transform.translateY],
-        [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
-        [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
-    ]
-}
-export function FgetBBox(id){
-    // console.log(id)
-    var offset = 30;
-    d3.select('#'+id).node().getBBox();
-    var BB = d3.select('#'+id).node().getBBox();
-    BB.x -= offset;
-    BB.y -= offset;
-    BB.width += 2*offset;
-    BB.height += 2*offset;
-    return BB;
 
-}
 // export function drawBBox(){
 
 // }
@@ -204,9 +186,9 @@ export function FgetBBox(id){
 //         }
 //     })
 // }
-export function showBbox(id, color){
-    var BB2 = d3.select('#'+id).node().getBBox();
-    console.log(BB2)
+export function showBboxBB(BB2, color){
+    // var BB2 = d3.select('#'+id).node().getBBox();
+    // console.log(BB2)
     d3.select('svg').append('rect')
     .attr('x', BB2.x)
     .attr('y', BB2.y)
@@ -215,6 +197,57 @@ export function showBbox(id, color){
     .attr('fill', 'none')
     .attr('stroke', color)
 }
+export function showBbox(id, color){
+    var BB2 = d3.select('#'+id).node().getBBox();
+    var transform = getTransformation(d3.select('#'+id).attr('transform'))
+    // console.log(BB2)
+    d3.select('svg').append('rect')
+    .attr('x', BB2.x + transform.translateX)
+    .attr('y', BB2.y +transform.translateY)
+    .attr('width', BB2.width)
+    .attr('height', BB2.height)
+    .attr('fill', 'none')
+    .attr('stroke', color)
+}
+
+export function _getBBox(id){
+    // console.log('Id', id)
+    var BB = d3.select('#'+id).node().getBBox();
+    // console.log(d3.select('#'+id).node())
+    // console.log(d3.select('#'+id).node().tagName)
+    var transform = {'translateX':0, 'translateY':0}
+    if (d3.select('#'+id).node().tagName == 'g'){
+        transform = getTransformation(d3.select('#'+id).attr('transform'))
+    }
+    
+    // var selection = [
+    // BB.x = BB.x+transform.translateX, BB.y+transform.translateY],
+    // BBBB.x+transform.translateX+BB.width, BB.y+transform.translateY],
+    //     [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
+    //     [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
+    // ]
+    BB.x = BB.x+transform.translateX;
+    BB.y = BB.y+transform.translateY;
+    return BB;
+}
+export function FgetBBox(id){
+    // console.log(id)
+    var offset = 10;
+    d3.select('#'+id).node().getBBox();
+    var transform = getTransformation(d3.select('#'+id).attr('transform'))
+    var BB = d3.select('#'+id).node().getBBox();
+    // BB.x = BB.x+transform.translateX - offset;
+    // BB.y = BB.x+transform.translateY - offset;
+    BB.x = BB.x+transform.translateX - offset;
+    BB.y = BB.y+transform.translateY - offset;
+    BB.width += 2*offset;
+    BB.height += 2*offset;
+
+    // showBboxBB(BB, 'red')
+    return BB;
+
+}
+
 export function is_point_inside_selection(point, array_selection) {
     var vs = array_selection;
     var x = point[0], y = point[1];

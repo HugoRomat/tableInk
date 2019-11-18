@@ -38,4 +38,13 @@ svg, canvas{
 .buttonMenu{
     padding:20px;
 }
+#rectVisualization{
+    /* width: 100%;
+    height: 100%;
+    width: 100%;
+    height: 100%;
+    user-select: none;
+    touch-action: none;
+    cursor: text; */
+}
 /* // no-repeat bottom center fixed; */

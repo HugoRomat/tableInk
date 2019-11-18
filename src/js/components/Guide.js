@@ -1,13 +1,32 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import shallowCompare from 'react-addons-shallow-compare';
-import { getTransformation, getNearestElement, showBbox } from "./Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox } from "./Helper";
+import { connect } from 'react-redux';
+
+
+import { 
+    shouldOpenMenu
+} from '../actions';
+
+const mapDispatchToProps = { 
+    shouldOpenMenu
+};
+const mapStateToProps = (state, ownProps) => {  
+
+  return { 
+    //   stickyLines: state.rootReducer.present.stickyLines
+  };
+};
+
+
 
 class Guide extends Component {
     constructor(props) {
         super(props);
         this.timerPress = null;
         this.press = false;
+        this.startPosition = {};
+        this.drag = false;
     }
     componentDidMount(){
         // console.log(this.props.stroke)
@@ -20,30 +39,37 @@ class Guide extends Component {
             .on("start", function(e){ that.dragstarted(that)})
             .on("drag", function(e){ that.dragged(that)})
             .on("end", function(e){ that.dragended(that)})
+            .clickDistance(40)
         
 
 
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', 'red')
+            .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             
 
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', 'red')
+            .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '40')
             .attr('stroke-opacity', '0.1')
-            .on('pointerdown', function(){
+            /*.on('pointerdown', function(){
                 // console.log(d3.event)
                 if (d3.event.pointerType == 'touch'){
-
+                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y}
                     // that.props.holdGuide(['item-'+that.props.stroke.id]);
                     that.timerPress = setTimeout(function(){
-                        that.expandSelection(that.props.stroke.id);
-                        that.press = true;
+                        console.log(that.startPosition)
+                        // var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+                        // if (dist < 40){
+                            that.expandSelection(that.props.stroke.id);
+                            that.press = true;
+                            that.props.dragItem(false);
+                        // }
+                       
                     }, 1000)
     
                     // console.log(this)
@@ -52,13 +78,16 @@ class Guide extends Component {
 
             })
             .on('pointerup', function(){
-                if (d3.event.pointerType == 'touch'){
+                if (d3.event.pointerType == 'touch' && that.press == true){
                     // clearTimeout(that.timerPress);
-                    if (that.press == false) that.props.holdGuide();
+                    that.props.holdGuide([]);
+                    
+                    // console.log(dist)
+                    // if (that.press == false) that.props.holdGuide([]);
                 }
                 // console.log('pointerleave')
             })
-            
+            */
             
             
             d3.select('#item-'+that.props.stroke.id)
@@ -83,6 +112,7 @@ class Guide extends Component {
                
             }
             this.props.holdGuide(d);
+            
             // console.log(d)
         })
 
@@ -97,27 +127,55 @@ class Guide extends Component {
         //     .attr('stroke', 'black')
     }
     dragstarted(env) {
+        var that = env;
+        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
+        that.drag = false;
         // console.log('HEY', env, this)
-        d3.event.sourceEvent.stopPropagation();
-        d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
+        // d3.event.sourceEvent.stopPropagation();
+        // d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
+
+        // console.log('GO DRAG')
+        that.props.dragItem(true);
+
+        that.timerPress = setTimeout(function(){
+            if (that.drag == false){
+                that.expandSelection(that.props.stroke.id);
+                that.press = true;
+                that.props.dragItem(false);
+                that.drag = false;
+            }
+        }, 1000)
+
     }
 
-    dragged(env) {
-        d3.event.sourceEvent.stopPropagation();
-        var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
-        var X = d3.event.dx + transform.translateX;
-        var Y = d3.event.dy + transform.translateY;
-        d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+    dragged(env) {  
+        var that = env;
+        that.drag = true;
+        // console.log('GO')
+        
 
-        var linesAttached = env.props.stroke.data.linesAttached;
-        for (var i in linesAttached){
-            var line = linesAttached[i];
-            var identifier = 'item-'+line;
-            var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+        // var dist = distance(env.startPosition.x, d3.event.x, env.startPosition.y, d3.event.y);
+
+        // console.log(dist)
+        // if (dist > 10){
+            clearTimeout(that.timerPress);
+            d3.event.sourceEvent.stopPropagation();
+            var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
             var X = d3.event.dx + transform.translateX;
             var Y = d3.event.dy + transform.translateY;
-            d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
-        }
+            d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+
+            var linesAttached = env.props.stroke.data.linesAttached;
+            for (var i in linesAttached){
+                var line = linesAttached[i];
+                var identifier = 'item-'+line;
+                var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+                var X = d3.event.dx + transform.translateX;
+                var Y = d3.event.dy + transform.translateY;
+                d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
+            }
+        // }
+        
         // d3.select('svg').append('circle')
         //     .attr('cx', X)
         //     .attr('cy', Y)
@@ -126,7 +184,32 @@ class Guide extends Component {
 
     }
     dragended(env) {
-        d3.select('#item-'+env.props.stroke.id).classed("dragging", false);
+        var that = env;
+        that.drag = false;
+        // d3.select('#item-'+env.props.stroke.id).classed("dragging", false);
+
+        // To say nothing is holded anymore and dragged
+        that.props.dragItem(false);
+        that.props.holdGuide([]);
+
+
+        // TO detect the tap
+        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+        var time = Date.now() -  that.startPosition['time'];
+
+        // console.log(dist, time)
+        if (dist < 10 && time < 100){
+            clearTimeout(that.timerPress);
+            console.log('Thats a tap')
+            var BBox = _getBBox('item-'+env.props.stroke.id)
+            that.props.shouldOpenMenu({
+                'id': guid(),
+                'shouldOpen': true,
+                'position': [BBox.x, BBox.y],
+                'idGuide': env.props.stroke.id,
+                'idLines': env.props.stroke.data.linesAttached
+            })
+        }
     }
     componentDidUpdate(){
         // console.log('HELLO')
@@ -138,7 +221,7 @@ class Guide extends Component {
             .attr('stroke', 'red')
             .attr('stroke-width', '2')
 
-        console.log(this.props.stroke)
+        // console.log(this.props.stroke)
     }
    
     render() {
@@ -151,4 +234,4 @@ class Guide extends Component {
         
     }
 }
-export default Guide;
+export default connect(mapStateToProps, mapDispatchToProps)(Guide);

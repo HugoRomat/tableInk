@@ -5,7 +5,7 @@ import './../../css/main.css';
 import paper from 'paper';
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection } from "./Helper";
 import ColorMenu from "./ColorMenu";
 
 
@@ -20,6 +20,7 @@ import {
 import Guides from "./Guides";
 
 import Interface from "./Interface";
+import Menus from "./Menus/Menus";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -58,6 +59,10 @@ class Document extends Component {
         this.grouping = false;
         this.isGuideHold = [];
         this.duplicating = false;
+
+        this.objectIn = [];
+        this.isItemDragged = false;
+        this.isFlick = false;
     }
     init(){
 
@@ -65,7 +70,9 @@ class Document extends Component {
     componentDidMount(){
         this.listenEvents();
         d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
-        this.listenHammer();
+        // d3.select('#eventReceiver').style('width', '100%').style('height', '100%');
+        
+        // this.listenHammer();
         // this.init();
 
         // this.isMount = true;
@@ -128,18 +135,20 @@ class Document extends Component {
     }
     listenEvents(){
         var that = this;
-        //Mon click est forcement une selection
-        d3.select('#canvasVisualization')
-            .on('pointerdown', function(){
-                // console.log('HEY')
-                // if (d3.event.pointerType == 'pen'){
+        // console.log('HEY')
 
+        //Mon click est forcement une selection
+        d3.select('#eventReceiver')
+            .on('pointerdown', function(){
+                console.log('HEY')
+                // if (d3.event.pointerType == 'pen'){
+                    that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]}
                     // that.selecting =false;
                     that.drawing = false;
                     that.erasing = false;
                    
 
-                    if (that.press == false){
+                    if (that.press == false && that.isItemDragged == false){
                         that.down = true;
                         // that.createLine();
                         // console.log(d3.event)
@@ -200,7 +209,7 @@ class Document extends Component {
             })
             .on('pointermove', function(){
                 // if (d3.event.pointerType == 'pen'){
-                    if (that.down == true){
+                    if (that.down == true  && that.isItemDragged == false){
                         // console.log(that.selecting)
                         if (that.press == false){
 
@@ -240,10 +249,13 @@ class Document extends Component {
                 d3.event.preventDefault();
             })
             .on('pointerup', function(){
-                if (that.down){
+
+                that.detectingFlick();
+                // console.log(that.isGuideHold.length, that.isItemDragged)
+                if (that.down && that.isItemDragged == false){
                     // console.log(that.drawing, that.sticky)
                     // console.log(that.drawing)
-                    console.log(that.isGuideHold.length)
+                    // console.log(that.isGuideHold.length)
                     if (that.selecting) {
                         
                         that.makingGroup();
@@ -252,7 +264,7 @@ class Document extends Component {
                     }
                     else if (that.sticky && that.isGuideHold.length == 0){
                         // console.log(length)
-                        // that.findIntersection('penTemp');
+                        that.findIntersection('penTemp');
                         that.addStrokeGuide(); 
                     }
                     
@@ -267,6 +279,20 @@ class Document extends Component {
                 that.objectIn = [];
             })
     }
+    detectingFlick(){
+        // that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]};
+        // console.log(Date.now() -  this.pointerDownPoperties['time'])
+        var time = Date.now() -  this.pointerDownPoperties['time'];
+        var dist = distance(this.pointerDownPoperties['position'][0], d3.event.x, this.pointerDownPoperties['position'][1], d3.event.y)
+        // console.log(dist, time)
+
+        //Setup for the flick
+        if (time < 200 && dist < 200 && dist > 50){
+            console.log('FLICK')
+            this.isFlick = true;
+        }
+
+    }
     duplicateSticky(groupOfLines){
         console.log(groupOfLines)
         var that = this;
@@ -278,26 +304,29 @@ class Document extends Component {
             var line = that.props.stickyLines.find(x => x.id == lineId);
             var arrayPoints = JSON.parse(JSON.stringify(line['points']))
             firstpoint.push(arrayPoints[0])
+
+            var transform = getTransformation(d3.select('#'+groupOfLines[i]).attr('transform'))
  
             var data = {
                 'points': arrayPoints, 
-                'data': {}, 
+                'data': {'linesAttached':[]}, 
                 'id': id, 
-                'position': [d3.event.x-firstpoint[0][0], d3.event.y-firstpoint[0][1]]
+                'position': [d3.event.x-firstpoint[0][0] + transform.translateX, d3.event.y-firstpoint[0][1]+ transform.translateY]
             }
             this.props.addStickyLines(data);
             
            
 
-            console.log('item-'+id)
-            setTimeout(function(){
-            that.findIntersection(id);
-            console.log(that.objectIn)
-            //that.props.addLinesClass({'idLines':[lineId], 'class':['item-'+id]});
-            //if (that.objectIn.length != 0) that.props.addLinesToSticky({'idLines':that.objectIn, 'id':id})
+            // console.log('item-'+id)
+            // setTimeout(function(){
+            var objectIntersects = that.findIntersection('item-'+id);
+            // console.log(that.objectIn)
+            that.props.addLinesClass({'idLines':[lineId], 'class':['item-'+id]});
+            // console.log({'idLines':that.objectIn, 'id':id})
+            if (objectIntersects.length != 0) that.props.addLinesToSticky({'idLines':objectIntersects, 'id':id})
             
             
-                }, 3000)
+                // }, 3000)
             // setTimeout(function(){
                 // console.log()
                 // console.log(d3.select('#item-'+id).node())
@@ -326,94 +355,22 @@ class Document extends Component {
         //Getting all objects
         var that = this;
         this.objectIn = [];
-        this.groupIn = []
-        
 
-        // console.log( d3.select('#'+id)['_groups'][0])
-        // console.log( d3.select('#'+id).node())
+        var BB1 = _getBBox(id);
 
-        // console.log( d3.select('#'+id).node().getTotalLength())
-        //check for groups
-        // d3.select('.groups').selectAll('g').each(function(){
-        //     var BB = d3.select(this).node().getBBox();
-        //     var transform = getTransformation(d3.select(this).attr('transform'))
-        //     var selection = [
-        //         [BB.x+transform.translateX, BB.y+transform.translateY],
-        //         [BB.x+transform.translateX+BB.width, BB.y+transform.translateY],
-        //         [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
-        //         [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
-        //     ]
-        //     var isIn = false;
-        //     var i = 0;
-        //     //Iterate over all points
-        //     var length = d3.select('#penTemp').node().getTotalLength();
-        //     while( isIn == false && i< length){
-        //         var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
-        //         var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
-        //         if (isIn) that.groupIn.push( d3.select(this).attr('id').split('-')[1])
-        //         i++;
-        //     }
-        // })
-        getBBox('item'+id);
-        var BB2 = d3.select('#item'+id).node().getBBox();
-        var transform = getTransformation(d3.select('#item'+id).attr('transform'))
-        var selection = [
-            [BB2.x+transform.translateX, BB2.y+transform.translateY],
-            [BB2.x+transform.translateX+BB2.width, BB.y+transform.translateY],
-            [BB2.x+transform.translateX+BB2.width, BB.y+transform.translateY+BB.height],
-            [BB2.x+transform.translateX, BB2.y+transform.translateY+BB.height],
-        ]
-
-        showBbox(id, 'black');
+        // showBbox(id, 'black');
         d3.select('.standAloneLines').selectAll('g').each(function(){
-            console.log(d3.select(this).node())
-            var BB = d3.select(this).node().getBBox();
-            var transform = getTransformation(d3.select(this).attr('transform'))
-            var selection = [
-                [BB.x+transform.translateX, BB.y+transform.translateY],
-                [BB.x+transform.translateX+BB.width, BB.y+transform.translateY],
-                [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
-                [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
-            ]
-            var isIn = false;
-            var i = 0;
-            showBbox(d3.select(this).attr('id'), 'red');
-            // showBbox(id, 'red');
-            console.log(selection)
-            // //Iterate over all points
-            // console.log( d3.select('#'+id)['_groups'][0])
-            // console.log( d3.select('#'+id).node().getTotalLength())
-            var length = d3.select('#'+id).node().getTotalLength();
-            while( isIn == false && i< length){
-                var pointSticky = d3.select('#'+id).node().getPointAtLength(i);
-                // console.log('GOO')
-                d3.select('svg').append('circle').attr('cx',pointSticky.x ).attr('cy',pointSticky.y).attr('r', 2)
-                // var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
+           
+            var BB2 = _getBBox(d3.select(this).attr('id'));
+            // console.log(BB1, BB2)
+            var isIntersect = checkIntersection(BB1, BB2);
 
-
-                if (isIn) {
-                    var classes = d3.select(this).attr('class');
-                    // var groupClass = getType('group', classes);
-
-                    
-                    // console.log(groupClass, that.groupIn)
-                    that.objectIn.push( d3.select(this).attr('id').split('-')[1])
-                }
-                i++;
+            if (isIntersect) {
+                that.objectIn.push( d3.select(this).attr('id').split('-')[1])
             }
+            
         })
-
-        // console.log(that.objectIn)
-
-        // d3.select('svg').append('rect')
-        //     .attr('x', BB.x+transform.translateX)
-        //     .attr('y', BB.y+transform.translateY)
-        //     .attr('width', BB.width)
-        //     .attr('height', BB.height)
-        
-        //Getting Sticky line
-       
-        // d3.select('#penTemp');
+        return JSON.parse(JSON.stringify(that.objectIn))
     }
     addStrokeGuide(){
         var id = guid();
@@ -428,6 +385,7 @@ class Document extends Component {
         }
         this.props.addStickyLines(data);
 
+        // console.log({'idLines':that.objectIn, 'class':['item-'+id]})
         //Add class to element
         this.props.addLinesClass({'idLines':that.objectIn, 'class':['item-'+id]})
         // for (var i in this.objectIn){
@@ -506,8 +464,14 @@ class Document extends Component {
     //     this.pointText = d;
     // }
     holdGuide = (d) => {
-        // console.log(d)
+        console.log(d)
         this.isGuideHold = d;
+        // console.log('HOOOOLD')
+    }
+    // To know if an item was dragged
+    dragItem = (d) => {
+        
+        this.isItemDragged = d;
         // console.log('HOOOOLD')
     }
     render() {
@@ -515,21 +479,26 @@ class Document extends Component {
             <div>
                 
                 <svg id="canvasVisualization">
-                    {/* {this.isMount ?  */}
-                        {/* <Groups /> */}
-                        <Lines />
-                        <Guides holdGuide={this.holdGuide}/>
-                        <Interface />
+                        <rect id='eventReceiver' height={window.innerWidth} width={window.innerHeight} x={0} y={0} fill='red' opacity='0' />
                         
-                        {/* <GroupPattern */}
+                        <Lines />
+                        <Guides holdGuide={this.holdGuide} dragItem={this.dragItem}/>
+                        <Interface />
+
+                        <Menus />
+
                         <g id="tempLines">
                             <path id="penTemp"></path>
                         </g>
+                        
+                        {/* <g id="eventReceiver">
+                            </g>     */}
                         {/* <ColorMenu isSticky={this.isSticky} changeColorStroke={this.changeColorStroke} changeWidthStroke={this.changeWidthStroke} changeActionPen={this.changeActionPen}/> */}
                         
-                    {/* : null } */}
+               
 
                 </svg>
+                {/* <svg id="eventReceiver"></svg> */}
                 <ColorMenu isSticky={this.isSticky} isGroup ={this.isGroup} />
             </div>
         );
