@@ -22,7 +22,7 @@ class Line extends Component {
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             .attr('stroke', 'black')
-            .attr('stroke-width', '40')
+            .attr('stroke-width', '10')
             .attr('stroke-opacity', '0.2')
             
            

@@ -29,3 +29,8 @@ export const shouldOpenMenu = data => ({
     type: 'SHOULD_OPEN_MENU',
     data
 })
+
+export const addLineToStickyGroup = data => ({
+    type: 'ADD_LINE_TO_STICKY_GROUP',
+    data
+})

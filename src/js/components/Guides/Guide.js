@@ -5,13 +5,16 @@ import { connect } from 'react-redux';
 
 
 import { 
-    shouldOpenMenu
+    shouldOpenMenu,
+    addLineToStickyGroup
 } from '../../actions';
-import TextField from "./TextField";
+
 import PlaceHolder from "./PlaceHolder";
+import PlaceHolderText from "./PlaceHolderText";
 
 const mapDispatchToProps = { 
-    shouldOpenMenu
+    shouldOpenMenu,
+    addLineToStickyGroup
 };
 const mapStateToProps = (state, ownProps) => {  
   
@@ -64,8 +67,8 @@ class Guide extends Component {
             .attr('stroke-opacity', '0.1')
             
             
-            // d3.select('#item-'+that.props.stroke.id)
-            //     .call(drag)
+            d3.select('#item-'+that.props.stroke.id)
+                .call(drag)
             
             
             
@@ -86,7 +89,7 @@ class Guide extends Component {
                 showBbox(id, 'black');
                
             }
-            this.props.holdGuide(d);
+            
         })
     }
     dragstarted(env) {
@@ -102,7 +105,9 @@ class Guide extends Component {
 
         that.timerPress = setTimeout(function(){
             if (that.drag == false){
-                that.expandSelection(that.props.stroke.id);
+                // that.expandSelection(that.props.stroke.id);
+                that.props.holdGuide(that.props.stroke.id);
+                // console.log(that.props)
                 that.press = true;
                 that.props.dragItem(false);
                 that.drag = false;
@@ -128,7 +133,7 @@ class Guide extends Component {
             var Y = d3.event.dy + transform.translateY;
             d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
 
-            var linesAttached = env.props.stroke.data.linesAttached;
+            var linesAttached = env.props.stroke.linesAttached;
             for (var i in linesAttached){
                 var line = linesAttached[i];
                 var identifier = 'item-'+line;
@@ -153,7 +158,7 @@ class Guide extends Component {
 
         // To say nothing is holded anymore and dragged
         that.props.dragItem(false);
-        that.props.holdGuide([]);
+        that.props.holdGuide(false);
 
 
         // TO detect the tap
@@ -187,27 +192,40 @@ class Guide extends Component {
         
         // console.log(this.props.stroke)
     }
-   
-    render() {
-        // console.log(this.props.stroke)
+    addLine = (d) => {
+        console.log('DOOO')
+       this.props.addLineToStickyGroup({
+           'idGuide': d.idGuide,
+           'where':d.where,
+           'data': d.data
+       })
 
-        const listPlaceHolder = this.props.stroke.data.placeHolder.map((d, i) => {
+    }
+    render() {
+        console.log(this.props.stroke.placeHolder)
+
+        const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
                     key={i}
                     data={d}
                     parent={this.props.stroke}
                     BBoxParent={this.state.BBox}
-                    lines={d.data['lines']}
+                    lines={d['lines']}
+                    addLine={this.addLine}
                 />
         });
-
+        console.log(this.props.stroke)
 
         return (
             <g  id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
-                <TextField />
-                {listPlaceHolder}
                 <path id={this.props.stroke.id}></path>
                 <path id={'fake-'+this.props.stroke.id}></path>
+                {listPlaceHolder}
+                <PlaceHolderText 
+                    data={this.props.stroke.textPosition}
+                    dataParent={this.props.stroke} 
+                />
+                
             </g>
         );
         

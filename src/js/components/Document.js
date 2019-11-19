@@ -5,7 +5,7 @@ import './../../css/main.css';
 import paper from 'paper';
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine } from "./Helper";
 import ColorMenu from "./ColorMenu";
 
 
@@ -58,7 +58,7 @@ class Document extends Component {
         this.press = false;
         this.sticky = false;
         this.grouping = false;
-        this.isGuideHold = [];
+        this.isGuideHold = false;
         this.duplicating = false;
 
         this.objectIn = [];
@@ -141,38 +141,39 @@ class Document extends Component {
         //Mon click est forcement une selection
         d3.select('#eventReceiver')
             .on('pointerdown', function(){
-                console.log('HEY')
+                // console.log('HEY')
                 // if (d3.event.pointerType == 'pen'){
-                    that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]}
-                    // that.selecting =false;
-                    that.drawing = false;
-                    that.erasing = false;
-                   
+                that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]}
+                // that.selecting =false;
+                that.drawing = false;
+                that.erasing = false;
+                // that.press == false && 
 
-                    if (that.press == false && that.isItemDragged == false){
-                        that.down = true;
-                        // that.createLine();
-                        // console.log(d3.event)
-                        if (that.isGuideHold.length != 0){
-                            that.duplicating = true;
-                            that.duplicateSticky(that.isGuideHold);
+                if (that.isItemDragged == false){
+                    that.down = true;
+                    // that.createLine();
+                    // console.log(d3.event)
+                    if (that.isGuideHold != false){
+                        that.duplicating = true;
+                        // console.log('GO')
+                        // that.duplicateSticky(that.isGuideHold);
 
-                        }
-                        else if (d3.event.x < 300){
-                            that.sticky = true;
-                        }
-                        else if(d3.event.buttons == 1 && that.selecting != true){
-                            that.drawing = true;
-                            // that.createDrawing();
-                        }
-                        else if (d3.event.buttons == 32){
-                            that.erasing = true;
-                        }
-                        else if (d3.event.buttons == 2){
-                            that.selecting = true;
-                            // that.createSelecting();
-                        }
                     }
+                    else if (d3.event.x < 300){
+                        that.sticky = true;
+                    }
+                    else if(d3.event.buttons == 1 && that.selecting != true){
+                        that.drawing = true;
+                        // that.createDrawing();
+                    }
+                    else if (d3.event.buttons == 32){
+                        that.erasing = true;
+                    }
+                    else if (d3.event.buttons == 2){
+                        that.selecting = true;
+                        // that.createSelecting();
+                    }
+                }
                     //Si je presse pour dupliquer
                     else {
 
@@ -214,8 +215,8 @@ class Document extends Component {
             .on('pointermove', function(){
                 // if (d3.event.pointerType == 'pen'){
                     if (that.down == true  && that.isItemDragged == false){
-                        // console.log(that.selecting)
-                        if (that.press == false){
+                        // console.log(that.drawing)
+                        // if (that.press == false){
 
                             
                             that.tempArrayStroke.push([d3.event.x, d3.event.y])
@@ -228,7 +229,12 @@ class Document extends Component {
                             if (that.selecting){
                                 that.drawTempSelectingStroke();
                             }
-                        }
+                            if (that.duplicating){
+                                that.drawTempStroke();
+                                // console.log('Hello world')
+                            }
+
+                        // }
                         // else {
                         //     // console.log(d3.select('#'+that.selectionGroup.id).node().getBBox())
 
@@ -263,20 +269,29 @@ class Document extends Component {
                     // console.log(that.drawing, that.sticky)
                     // console.log(that.drawing)
                     // console.log(that.isGuideHold.length)
+                    // if (that.duplicating && that.isGuideHold != false){
+
+                    // }
                     if (that.selecting) {
                         
                         that.makingGroup();
                         // selectionGroup
                         that.selecting = false;
                     }
-                    else if (that.sticky && that.isGuideHold.length == 0){
+                    else if (that.duplicating){
+                        // that.drawTempStroke();
+                        var objectsSelected = that.findIntersection('penTemp');
+                        that.findClosestElements(objectsSelected, 'penTemp');
+                        // console.log('Hello world')
+                    }
+                    else if (that.sticky && that.isGuideHold == false){
                         // console.log(length)
-                        that.findIntersection('penTemp');
+                        // that.findIntersection('penTemp');
                         that.addStrokeGuide(); 
                         that.sticky = false;
                     }
                     
-                    else if (that.drawing && that.sticky == false && that.isGuideHold.length == 0){
+                    else if (that.drawing && that.sticky == false && that.isGuideHold == false){
                         that.addStroke();
                         that.drawing = false;
                     }
@@ -285,6 +300,7 @@ class Document extends Component {
                 that.tempArrayStroke = [];
                 that.down = false;
                 that.objectIn = [];
+                that.sticky = false;
             })
     }
     detectingFlick(){
@@ -358,31 +374,108 @@ class Document extends Component {
 
         // console.log(selection)
     }
+    findClosestElements(objects, idGuide){
+        var that = this;
+        console.log(objects)
+        var BB1 = _getBBox(idGuide);
+        var firstPoint = that.tempArrayStroke[0];
+        var lastPoint = that.tempArrayStroke[that.tempArrayStroke.length-1];
+        var lineGuide = [{'x': firstPoint[0] ,'y': firstPoint[1]}, {'x': lastPoint[0], 'y': lastPoint[1] }]
+
+        drawCircle(lineGuide[0].x, lineGuide[0].y, 2, 'purple');
+        drawCircle(lineGuide[1].x, lineGuide[1].y, 2, 'purple');
+
+        objects.forEach((objectId)=>{
+            showBbox('item-'+objectId, 'black');
+            var BB = _getBBox('item-'+objectId);
+            var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
+            var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
+            var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
+            var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }]
+
+            var arrayLine = [line1, line2, line3, line4];
+            var arrayIntersection = [];
+            arrayLine.forEach((line)=>{
+                var isIntersect = line_intersect(line[0].x, line[0].y, line[1].x, line[1].y, lineGuide[0].x, lineGuide[0].y, lineGuide[1].x, lineGuide[1].y);
+                if (isIntersect != false) {
+                    arrayIntersection.push(isIntersect);
+                }
+                // console.log(isIntersect)
+                // drawCircle(line[0].x, line[0].y, 2, 'red')
+                // drawCircle(line[1].x, line[0].y, 2, 'red')
+            })
+            console.log(arrayIntersection)
+            if (arrayIntersection.length != 0){
+
+                var positionMiddle = midPosition(arrayIntersection[0].x, arrayIntersection[0].y, arrayIntersection[1].x,  arrayIntersection[1].y);
+                var perpPoint = getPerpendicularPoint(lineGuide[0], positionMiddle, 100)
+                drawCircle(perpPoint.x, perpPoint.y, 5, 'red')
+
+                var perpPoint = getPerpendicularPoint(lineGuide[0], positionMiddle, -100)
+                drawCircle(perpPoint.x, perpPoint.y, 5, 'red')
+                drawCircle(positionMiddle.x, positionMiddle.y, 5, 'red');
+            }
+            
+            // drawCircle(arrayIntersection[0].x, arrayIntersection[0].y, 2, 'red')
+            // var middleRight = {'x': BB.x + BB.width, 'y': BB.y + BB.height/2};
+
+            // var point = interpolate(middleLeft, middleRight, 2)
+            // drawCircle(positionMiddle.x, positionMiddle.y, 2, 'red')
+            // drawCircle(middleLeft.x, middleLeft.y, 2, 'red')
+            // drawCircle(middleRight.x, middleRight.y, 2, 'red')
+        })
+
+        
+        /*objects.forEach((d)=>{
+            // showBbox('item-'+d, 'black');
+            console.log(d)
+            // var id = 'item-'+d;
+            // console.log(id)
+            getNearestElement(d).then((element)=>{
+                console.log(element)
+            })
+        })*/
+    }
     //Pour les guides
     findIntersection(id){
         //Getting all objects
         var that = this;
         this.objectIn = [];
 
-        var BB1 = _getBBox(id);
+        var firstPoint = that.tempArrayStroke[0];
+        var lastPoint = that.tempArrayStroke[that.tempArrayStroke.length-1];
+        var lineGuide = [{'x': firstPoint[0] ,'y': firstPoint[1]}, {'x': lastPoint[0], 'y': lastPoint[1] }]
 
-        // showBbox(id, 'black');
+        drawLine(firstPoint[0] ,firstPoint[1],lastPoint[0], lastPoint[1] , 'black' )
+        //Regardes les intersections
         d3.select('.standAloneLines').selectAll('g').each(function(){
-           
-            var BB2 = _getBBox(d3.select(this).attr('id'));
-            // console.log(BB1, BB2)
-            var isIntersect = checkIntersection(BB1, BB2);
 
-            if (isIntersect) {
-                that.objectIn.push( d3.select(this).attr('id').split('-')[1])
-            }
-            
+            var BB = _getBBox(d3.select(this).attr('id'));
+            var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
+            var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
+            var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
+            var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }];
+
+            var arrayLine = [line1, line2, line3, line4];
+            var item = null
+            arrayLine.forEach((line)=>{
+                var isIntersect = line_intersect(line[0].x, line[0].y, line[1].x, line[1].y, lineGuide[0].x, lineGuide[0].y, lineGuide[1].x, lineGuide[1].y);
+                if (isIntersect != false) {
+                    console.log('HEY')
+                    item = d3.select(this).attr('id').split('-')[1]
+                }
+            })
+            if (item != null) that.objectIn.push(item)
+
         })
+        // console.log(that.objectIn)
         return JSON.parse(JSON.stringify(that.objectIn))
+    }
+    expandSelection(){
+
     }
     addStrokeGuide(){
         var id = guid();
-        var idGroup = guid();
         var that = this;
         // console.log( this.objectIn)
         
@@ -394,12 +487,13 @@ class Document extends Component {
         })
         var data = {
             'points': arrayPoints, 
-            'data': {'linesAttached': this.objectIn}, 
+            'linesAttached': this.objectIn, 
             'id': id, 
+            'placeHolder': [{'id':'left', 'data': {}, 'lines':[]}, {'id':'right', 'data': {}, 'lines':[]}, {'id':'top', 'data': {}, 'lines':[]}, {'id':'bottom', 'data': {}, 'lines':[]}, {'id':'middle', 'data': {}, 'lines':[]}],
             'position': [firstPoint[0],firstPoint[1]],
-            'textPosition': [0,0],
-            'idGroup': idGroup 
+            'textPosition': {'where': 'right', 'position': [10,50]},
         }
+
         this.props.addStickyLines(data);
 
         // console.log({'idLines':that.objectIn, 'class':['item-'+id]})
@@ -482,7 +576,7 @@ class Document extends Component {
     //     this.pointText = d;
     // }
     holdGuide = (d) => {
-        console.log(d)
+        console.log('Selection '+d)
         this.isGuideHold = d;
         // console.log('HOOOOLD')
     }

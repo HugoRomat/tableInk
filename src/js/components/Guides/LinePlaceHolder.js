@@ -12,13 +12,20 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-
+        console.log(this.props.stroke)
+        var line = d3.line()
+        var that = this;
+        d3.select('#stroke-'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke.data))
+            .attr('stroke', 'black')
+            .attr('fill', 'none')
+            .attr('stroke-width', '2')
     }
    
     render() {
         return (
  
-            <path id={'stroke-'+this.props.data.id} />
+            <path id={'stroke-'+this.props.stroke.id} />
 
         );
         

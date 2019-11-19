@@ -67,14 +67,17 @@ export function getNearestElement(id){
     return new Promise((resolve, reject) => {
         nodeIn.push('item-'+id)
         getNeighborood('item-'+id);
+        // console.log()
         resolve(nodeIn);
     })
     
 
     
     function getNeighborood(nodeId){
+
+        // console.log(nodeId)
         var BB = FgetBBox(nodeId)
-        d3.select('#guides').selectAll('g').each(function(d){
+        d3.select('.standAloneLines').selectAll('g').each(function(d){
             var id2 = d3.select(this).attr('id');
             if (linkToAvoid.indexOf(id2+'-'+nodeId) == -1 && nodeIn.indexOf(id2) == -1){
                 var BB2 = FgetBBox(id2);
@@ -186,6 +189,27 @@ export function getNearestElement(id){
 //         }
 //     })
 // }
+export function drawLine(x1, y1, x2, y2, color){
+    // var BB2 = d3.select('#'+id).node().getBBox();
+    // console.log(BB2)
+    d3.select('svg').append('line')
+    .attr('x1', x1)
+    .attr('y1', y1)
+    .attr('x2', x2)
+    .attr('y2', y2)
+    .attr('stroke', color)
+
+}
+export function drawCircle(x, y, r, color){
+    // var BB2 = d3.select('#'+id).node().getBBox();
+    // console.log(BB2)
+    d3.select('svg').append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', r)
+    .attr('fill', color)
+
+}
 export function showBboxBB(BB2, color){
     // var BB2 = d3.select('#'+id).node().getBBox();
     // console.log(BB2)
@@ -199,8 +223,11 @@ export function showBboxBB(BB2, color){
 }
 export function showBbox(id, color){
     var BB2 = d3.select('#'+id).node().getBBox();
-    var transform = getTransformation(d3.select('#'+id).attr('transform'))
-    // console.log(BB2)
+    var transform = {'translateX':0, 'translateY':0}
+    if (d3.select('#'+id).node().tagName == 'g'){
+        transform = getTransformation(d3.select('#'+id).attr('transform'))
+    }
+
     d3.select('svg').append('rect')
     .attr('x', BB2.x + transform.translateX)
     .attr('y', BB2.y +transform.translateY)
@@ -210,7 +237,9 @@ export function showBbox(id, color){
     .attr('stroke', color)
 }
 
-export function _getBBox(id){
+export function _getBBox(id, offset){
+
+    if (offset == undefined) offset = 0;
     // console.log('Id', id)
     var BB = d3.select('#'+id).node().getBBox();
     // console.log(d3.select('#'+id).node())
@@ -226,10 +255,20 @@ export function _getBBox(id){
     //     [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
     //     [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
     // ]
-    BB.x = BB.x+transform.translateX;
-    BB.y = BB.y+transform.translateY;
+    BB.x = BB.x+transform.translateX - offset;
+    BB.y = BB.y+transform.translateY - offset;
+    BB.width += 2*offset;
+    BB.height += 2*offset;
     return BB;
 }
+export function getPerpendicularPoint(A, B, d){
+    var C = {
+        x:B.x+d*(A.y-B.y)/Math.sqrt(Math.pow(A.x-B.x,2)+Math.pow(A.y-B.y,2)),
+        y:B.y-d*(A.x-B.x)/Math.sqrt(Math.pow(A.x-B.x,2)+Math.pow(A.y-B.y,2))
+    }
+    return C;
+}
+
 export function FgetBBox(id){
     // console.log(id)
     var offset = 10;
@@ -241,17 +280,48 @@ export function FgetBBox(id){
     BB.x = BB.x+transform.translateX - offset;
     BB.y = BB.y+transform.translateY - offset;
     BB.width += 2*offset;
-    BB.height += 2*offset;
+    BB.height += 3*offset;
 
     // showBboxBB(BB, 'red')
     return BB;
 
 }
-export function  interpolate(a, b, frac) // points A and B, frac between 0 and 1
+export function midPosition(x1, y1, x2, y2){
+    return {'x': (x1 + x2) / 2, 'y': (y1 + y2) / 2}
+}
+export function interpolate(a, b, frac) // points A and B, frac between 0 and 1
 {
     var nx = a.x+(b.x-a.x)*frac;
     var ny = a.y+(b.y-a.y)*frac;
     return {x:nx,  y:ny};
+}
+export function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
+{
+    // Check if none of the lines are of length 0
+	if ((x1 === x2 && y1 === y2) || (x3 === x4 && y3 === y4)) {
+		return false
+	}
+
+	var denominator = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
+
+  // Lines are parallel
+	if (denominator === 0) {
+		return false
+	}
+
+	let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator
+	let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator
+
+  // is the intersection along the segments
+	if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+		return false
+	}
+
+  // Return a object with the x and y coordinates of the intersection
+	let x = x1 + ua * (x2 - x1)
+	let y = y1 + ua * (y2 - y1)
+
+	return {x, y}
 }
 
 export function is_point_inside_selection(point, array_selection) {
