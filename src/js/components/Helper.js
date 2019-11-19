@@ -219,7 +219,7 @@ export function _getBBox(id){
     if (d3.select('#'+id).node().tagName == 'g'){
         transform = getTransformation(d3.select('#'+id).attr('transform'))
     }
-    
+    // console.log(transform, d3.select('#'+id).node().tagName)
     // var selection = [
     // BB.x = BB.x+transform.translateX, BB.y+transform.translateY],
     // BBBB.x+transform.translateX+BB.width, BB.y+transform.translateY],

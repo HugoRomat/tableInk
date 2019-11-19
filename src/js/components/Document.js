@@ -17,10 +17,11 @@ import {
     addLinesClass,
     addLinesToSticky
 } from '../actions';
-import Guides from "./Guides";
+import Guides from "./Guides/Guides";
 
 import Interface from "./Interface";
 import Menus from "./Menus/Menus";
+import Lettres from "./Lettres/Lettres";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -157,6 +158,9 @@ class Document extends Component {
                             that.duplicateSticky(that.isGuideHold);
 
                         }
+                        else if (d3.event.x < 300){
+                            that.sticky = true;
+                        }
                         else if(d3.event.buttons == 1 && that.selecting != true){
                             that.drawing = true;
                             // that.createDrawing();
@@ -218,6 +222,9 @@ class Document extends Component {
                             if (that.drawing){
                                 that.drawTempStroke();
                             }
+                            if (that.sticky){
+                                that.drawTempStroke();
+                            }
                             if (that.selecting){
                                 that.drawTempSelectingStroke();
                             }
@@ -266,6 +273,7 @@ class Document extends Component {
                         // console.log(length)
                         that.findIntersection('penTemp');
                         that.addStrokeGuide(); 
+                        that.sticky = false;
                     }
                     
                     else if (that.drawing && that.sticky == false && that.isGuideHold.length == 0){
@@ -293,7 +301,7 @@ class Document extends Component {
         }
 
     }
-    duplicateSticky(groupOfLines){
+    /*duplicateSticky(groupOfLines){
         console.log(groupOfLines)
         var that = this;
         var firstpoint= [];
@@ -332,7 +340,7 @@ class Document extends Component {
                 // console.log(d3.select('#item-'+id).node())
             //
         }
-    }
+    }*/
     makingGroup(){
         /*var selection = whoIsInside(this.props.sketchLines, this.tempArrayStroke);
         var id = guid();
@@ -374,19 +382,29 @@ class Document extends Component {
     }
     addStrokeGuide(){
         var id = guid();
+        var idGroup = guid();
         var that = this;
         // console.log( this.objectIn)
-        var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
+        
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
+        arrayPoints.forEach((d)=>{
+            d[0] = d[0] - firstPoint[0];
+            d[1] = d[1] - firstPoint[1]
+        })
         var data = {
             'points': arrayPoints, 
             'data': {'linesAttached': this.objectIn}, 
             'id': id, 
-            'position': [0,0]
+            'position': [firstPoint[0],firstPoint[1]],
+            'textPosition': [0,0],
+            'idGroup': idGroup 
         }
         this.props.addStickyLines(data);
 
         // console.log({'idLines':that.objectIn, 'class':['item-'+id]})
         //Add class to element
+        
         this.props.addLinesClass({'idLines':that.objectIn, 'class':['item-'+id]})
         // for (var i in this.objectIn){
         //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
@@ -403,7 +421,7 @@ class Document extends Component {
             .attr("stroke-dasharray", 'none');
 
 
-        if (this.sticky) d3.select('#penTemp').attr('stroke', 'red')
+        if (this.sticky) d3.select('#penTemp').attr('stroke', '#9C9EDEDF')
     }
     drawTempSelectingStroke(){
         var that = this;
@@ -423,18 +441,18 @@ class Document extends Component {
     addStroke(){
         var id = guid();
         // To have everything in 0,0
-        // var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
         var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
-        // arrayPoints.forEach((d)=>{
-        //     d[0] = d[0] - firstPoint[0];
-        //     d[1] = d[1] - firstPoint[1]
-        // })
+        arrayPoints.forEach((d)=>{
+            d[0] = d[0] - firstPoint[0];
+            d[1] = d[1] - firstPoint[1]
+        })
         // console.log(arrayPoints)
         var data = {
             'points': arrayPoints, 
             'data': {'class':[]}, 
             'id': id, 
-            'position': [0,0]
+            'position': [firstPoint[0],firstPoint[1]]
         }
         this.props.addSketchLine(data);
        
@@ -486,6 +504,7 @@ class Document extends Component {
                         <Interface />
 
                         <Menus />
+                        <Lettres />
 
                         <g id="tempLines">
                             <path id="penTemp"></path>

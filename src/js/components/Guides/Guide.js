@@ -1,18 +1,20 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox } from "./Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox } from "./../Helper";
 import { connect } from 'react-redux';
 
 
 import { 
     shouldOpenMenu
-} from '../actions';
+} from '../../actions';
+import TextField from "./TextField";
+import PlaceHolder from "./PlaceHolder";
 
 const mapDispatchToProps = { 
     shouldOpenMenu
 };
 const mapStateToProps = (state, ownProps) => {  
-
+  
   return { 
     //   stickyLines: state.rootReducer.present.stickyLines
   };
@@ -27,6 +29,10 @@ class Guide extends Component {
         this.press = false;
         this.startPosition = {};
         this.drag = false;
+
+        this.state = {
+            'BBox':{}
+        };
     }
     componentDidMount(){
         // console.log(this.props.stroke)
@@ -56,48 +62,17 @@ class Guide extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '40')
             .attr('stroke-opacity', '0.1')
-            /*.on('pointerdown', function(){
-                // console.log(d3.event)
-                if (d3.event.pointerType == 'touch'){
-                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y}
-                    // that.props.holdGuide(['item-'+that.props.stroke.id]);
-                    that.timerPress = setTimeout(function(){
-                        console.log(that.startPosition)
-                        // var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                        // if (dist < 40){
-                            that.expandSelection(that.props.stroke.id);
-                            that.press = true;
-                            that.props.dragItem(false);
-                        // }
-                       
-                    }, 1000)
-    
-                    // console.log(this)
-                }
-                
-
-            })
-            .on('pointerup', function(){
-                if (d3.event.pointerType == 'touch' && that.press == true){
-                    // clearTimeout(that.timerPress);
-                    that.props.holdGuide([]);
-                    
-                    // console.log(dist)
-                    // if (that.press == false) that.props.holdGuide([]);
-                }
-                // console.log('pointerleave')
-            })
-            */
             
             
-            d3.select('#item-'+that.props.stroke.id)
-                .call(drag)
+            // d3.select('#item-'+that.props.stroke.id)
+            //     .call(drag)
             
             
             
             
-            
-        
+        console.log('GUIDE')
+        var BBox = _getBBox(this.props.stroke.id);
+        this.setState({'BBox': BBox})
        
     
     }
@@ -112,19 +87,7 @@ class Guide extends Component {
                
             }
             this.props.holdGuide(d);
-            
-            // console.log(d)
         })
-
-        // console.log(items)
-        // var BB = d3.select('#item-'+id).node().getBBox();
-        // d3.select('svg').append('rect')
-        //     .attr('x', BB.x)
-        //     .attr('y', BB.y)
-        //     .attr('width', BB.width)
-        //     .attr('height', BB.height)
-        //     .attr('fill', 'none')
-        //     .attr('stroke', 'black')
     }
     dragstarted(env) {
         var that = env;
@@ -212,7 +175,7 @@ class Guide extends Component {
         }
     }
     componentDidUpdate(){
-        // console.log('HELLO')
+        console.log('HELLO')
         var line = d3.line()
         var that = this;
         d3.select('#'+that.props.stroke.id)
@@ -221,12 +184,28 @@ class Guide extends Component {
             .attr('stroke', 'red')
             .attr('stroke-width', '2')
 
+        
         // console.log(this.props.stroke)
     }
    
     render() {
+        // console.log(this.props.stroke)
+
+        const listPlaceHolder = this.props.stroke.data.placeHolder.map((d, i) => {
+                return <PlaceHolder 
+                    key={i}
+                    data={d}
+                    parent={this.props.stroke}
+                    BBoxParent={this.state.BBox}
+                    lines={d.data['lines']}
+                />
+        });
+
+
         return (
             <g  id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+                <TextField />
+                {listPlaceHolder}
                 <path id={this.props.stroke.id}></path>
                 <path id={'fake-'+this.props.stroke.id}></path>
             </g>

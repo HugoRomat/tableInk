@@ -32,30 +32,30 @@ class ColorsMenu extends Component {
         var that = this;
 
 
-        d3.select('#rule').on("click", function(d, index){
-            d3.event.stopPropagation();
-            if (d3.select(this).attr('issticky') == 'false'){
-                that.props.isSticky(true);
-                d3.select(this).attr('issticky', 'true')
-                d3.select(this).html('sticky')
-            } else{
-                that.props.isSticky(false);
-                d3.select(this).attr('issticky', 'false')
-                d3.select(this).html('noSticky')
-            }
-        })
-        d3.select('#grouping').on("click", function(d, index){
-            d3.event.stopPropagation();
-            if (d3.select(this).attr('isgroup') == 'false'){
-                that.props.isGroup(true);
-                d3.select(this).attr('isgroup', 'true')
-                d3.select(this).html('group')
-            } else{
-                that.props.isGroup(false);
-                d3.select(this).attr('isgroup', 'false')
-                d3.select(this).html('noGroup')
-            }
-        })
+        // d3.select('#rule').on("click", function(d, index){
+        //     d3.event.stopPropagation();
+        //     if (d3.select(this).attr('issticky') == 'false'){
+        //         that.props.isSticky(true);
+        //         d3.select(this).attr('issticky', 'true')
+        //         d3.select(this).html('sticky')
+        //     } else{
+        //         that.props.isSticky(false);
+        //         d3.select(this).attr('issticky', 'false')
+        //         d3.select(this).html('noSticky')
+        //     }
+        // })
+        // d3.select('#grouping').on("click", function(d, index){
+        //     d3.event.stopPropagation();
+        //     if (d3.select(this).attr('isgroup') == 'false'){
+        //         that.props.isGroup(true);
+        //         d3.select(this).attr('isgroup', 'true')
+        //         d3.select(this).html('group')
+        //     } else{
+        //         that.props.isGroup(false);
+        //         d3.select(this).attr('isgroup', 'false')
+        //         d3.select(this).html('noGroup')
+        //     }
+        // })
         
 
     }
@@ -64,7 +64,7 @@ class ColorsMenu extends Component {
        
         return (
            <div id="buttons">
-               <button className="buttonMenu" issticky='false' id="rule"> noSticky </button>
+               {/* <button className="buttonMenu" issticky='false' id="rule"> noSticky </button> */}
                {/* <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button> */}
                 {/* <g id="rule" issticky='false' transform={'translate(400,20)'}>
                     <rect fill='black' width='100' height='50' x='0' stroke='black' fill='grey'> hello</rect>

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, _getBBox, interpolate } from "./../Helper";
+import { getNearestElement, getTransformation, _getBBox, interpolate, showBboxBB } from "./../Helper";
 
 class Menu extends Component {
     constructor(props) {
@@ -12,7 +12,7 @@ class Menu extends Component {
        console.log('HEY');
        var that = this;
        var menuOptions = [
-           'alignMiddle',
+        //    'alignMiddle',
            'alignLeft', 
            'alignRight',
            'distribute'
@@ -31,6 +31,9 @@ class Menu extends Component {
             }
             if (d == 'alignRight'){
                 that.rightALignement(that.props.menu.idLines, that.props.menu.idGuide)
+            }
+            if (d == 'alignLeft'){
+                that.leftALignement(that.props.menu.idLines, that.props.menu.idGuide)
             }
         })
 
@@ -51,44 +54,59 @@ class Menu extends Component {
       
     }
     rightALignement(idLines, idGuide){
-
-        var path = d3.select('#'+idGuide);
         //Get the BBox 
-        var BBox = _getBBox(idGuide);
+        var BBox = _getBBox('item-'+idGuide);
         var firstPoint = {'x':BBox.x + BBox.width, 'y': BBox.y};
-        var secondPoint = {'x':BBox.x + BBox.width, 'y': BBox.y + BBox.height};
-
-
-        interpolate(firstPoint, secondPoint, 0.5);
-        var itr = 0;
-        // console.log(BBox)
-
-
+        // var secondPoint = {'x':BBox.x + BBox.width + transform.translateX, 'y': BBox.y + BBox.height + transform.translateY};
+        // interpolate(firstPoint, secondPoint, 0.5);
         idLines.forEach((d)=>{
-            var point = interpolate(firstPoint, secondPoint, itr);
             var pathLine = d3.select('#item-'+d);
-            // var BBox = _getBBox(d['idLine']);
+            var BBox2 = _getBBox('item-'+d);
+            // var offsetX = firstPoint.x - BBox.x;
+            var offsetX = firstPoint.x - BBox2.x;
+            var transform = getTransformation(d3.select('#item-'+d).attr('transform'));
 
-            // var X = d['position'].x - BBox.x - BBox.width/2; // minus their position
-            // var Y = d['position'].y - BBox.y - BBox.height/2;// + transform.translateY;
-            pathLine.attr('transform', 'translate('+point.x+','+point.y+')')
-            itr += 1/idLines.length;
+            var X = offsetX+transform.translateX;
+            var Y = transform.translateY;
+            pathLine.attr('transform', 'translate('+X+','+Y+')')
+        })
+        
+    }
+    leftALignement(idLines, idGuide){
+        //Get the BBox 
+        var BBox = _getBBox('item-'+idGuide);
+        var firstPoint = {'x':BBox.x, 'y': BBox.y};
+        // var secondPoint = {'x':BBox.x + BBox.width + transform.translateX, 'y': BBox.y + BBox.height + transform.translateY};
+        idLines.forEach((d)=>{
+            var pathLine = d3.select('#item-'+d);
+            var BBox2 = _getBBox('item-'+d);
+            var offsetX = firstPoint.x - (BBox2.x + BBox2.width);
+            var transform = getTransformation(d3.select('#item-'+d).attr('transform'));
 
-
+            var X = offsetX+transform.translateX;
+            var Y = transform.translateY;
+            pathLine.attr('transform', 'translate('+X+','+Y+')')
         })
         
     }
     distributesItemsAlongLine(idLines, idGuide){
-        var path = d3.select('#'+idGuide);
-        var length = path.node().getTotalLength();
+        var pathItem = d3.select('#'+idGuide);
+        var length = pathItem.node().getTotalLength();
         // console.log(length)
         var numberSeparation = idLines.length;
         var arrayPosition = [];
 
+        var transform = getTransformation(d3.select('#item-'+idGuide).attr('transform'));
+            // console.log(path)
+// var point = interpolate(firstPoint, secondPoint, itr);
         for (var i=1; i < numberSeparation+1; i++){
+            //Get g transform
+            
             var pointLength = Math.floor(length/numberSeparation) * i;
             // console.log(pointLength)
-            var position = path.node().getPointAtLength(pointLength);
+            var position = pathItem.node().getPointAtLength(pointLength);
+            position.x += transform.translateX;
+            position.y += transform.translateY;
             arrayPosition.push({'position': position, 'idLine': idLines[i-1]});
         }
 
@@ -102,8 +120,8 @@ class Menu extends Component {
             var BBox = _getBBox(d['idLine'])
             
             //Apply the thing
-            var X = d['position'].x - BBox.x - BBox.width/2; // minus their position
-            var Y = d['position'].y - BBox.y - BBox.height/2;// + transform.translateY;
+            var X = d['position'].x - BBox.width/2; // minus their position
+            var Y = d['position'].y - BBox.height/2;// + transform.translateY;
             // console.log(X,Y)
             pathLine.attr('transform', 'translate('+X+','+Y+')')
         })

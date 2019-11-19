@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Guide from './Guide';
 
 import { 
-  } from '../actions';
+  } from '../../actions';
 
 const mapDispatchToProps = { 
 };
@@ -35,7 +35,16 @@ class Guides extends Component {
                     dragItem={this.props.dragItem}
             />
         });
-        // console.log(this.props.groupLines)
+        console.log(listItems);
+
+
+
+        
+
+
+
+
+
         // const groupItems = this.props.groupLines.map((d, i) => {
         //     // console.log(d)
         //     return <g className="group" id={d.id} key={i} transform={`translate(${d.position[0]},${d.position[1]})`} > 
