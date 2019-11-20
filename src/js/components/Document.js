@@ -7,7 +7,7 @@ import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
 import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon } from "./Helper";
 import ColorMenu from "./ColorMenu";
-
+import Polygon from 'polygon'
 
 import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
@@ -552,6 +552,10 @@ class Document extends Component {
                     })
                     var convexHull = CalcConvexHull(points);
                     var oobbNew = new CalcOmbb(convexHull);
+
+                    var polygon1 = new Polygon(oobbNew);
+                    var polyCopie = polygon1.offset(5);
+                    oobbNew = polyCopie.points
 
                     // var BB = _getBBox(id);   
                     var isIntersect = lineIntersectsPolygone(begin, point, oobbNew);
