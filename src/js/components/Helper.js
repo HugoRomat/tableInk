@@ -57,12 +57,20 @@ export function checkIntersection(r2, r1){
                  r2.y              > r1.y + r1.height ||
                  r2.y + +r2.height < r1.y);
 }
+export function center(arr){
+    var x = arr.map (x => x.x);
+    var y = arr.map (x => x.y);
+    var cx = (Math.min (...x) + Math.max (...x)) / 2;
+    var cy = (Math.min (...y) + Math.max (...y)) / 2;
+    return {'x': cx, 'y': cy};
 
+}
 
 export function getNearestElement(id){
     var linkToAvoid = [];
     var iteration = 0;
     var nodeIn = [];
+    
 
     return new Promise((resolve, reject) => {
         nodeIn.push('item-'+id)
@@ -76,11 +84,11 @@ export function getNearestElement(id){
     function getNeighborood(nodeId){
 
         // console.log(nodeId)
-        var BB = FgetBBox(nodeId)
+        var BB = FgetBBox(nodeId, 3);
         d3.select('.standAloneLines').selectAll('g').each(function(d){
             var id2 = d3.select(this).attr('id');
             if (linkToAvoid.indexOf(id2+'-'+nodeId) == -1 && nodeIn.indexOf(id2) == -1){
-                var BB2 = FgetBBox(id2);
+                var BB2 = FgetBBox(id2, 3);
 
                 // console.log('HELLO', BB2)
                 // showBboxBB(BB2, 'red')
@@ -284,6 +292,7 @@ export function _getBBox(id, offset){
     BB.height += 2*offset;
     return BB;
 }
+// REtourn un point donne pas sur la ligne
 export function getPerpendicularPoint(A, B, d){
     var C = {
         x:B.x+d*(A.y-B.y)/Math.sqrt(Math.pow(A.x-B.x,2)+Math.pow(A.y-B.y,2)),
@@ -291,7 +300,64 @@ export function getPerpendicularPoint(A, B, d){
     }
     return C;
 }
-function getSpPoint(A,B,C){
+export function LeastSquares(values_x, values_y) {
+    var sum_x = 0;
+    var sum_y = 0;
+    var sum_xy = 0;
+    var sum_xx = 0;
+    var count = 0;
+
+    /*
+     * We'll use those variables for faster read/write access.
+     */
+    var x = 0;
+    var y = 0;
+    var values_length = values_x.length;
+
+    if (values_length != values_y.length) {
+        throw new Error('The parameters values_x and values_y need to have same size!');
+    }
+
+    /*
+     * Nothing to do.
+     */
+    if (values_length === 0) {
+        return [ [], [] ];
+    }
+
+    /*
+     * Calculate the sum for each of the parts necessary.
+     */
+    for (var v = 0; v < values_length; v++) {
+        x = values_x[v];
+        y = values_y[v];
+        sum_x += x;
+        sum_y += y;
+        sum_xx += x*x;
+        sum_xy += x*y;
+        count++;
+    }
+
+    /*
+     * Calculate m and b for the formular:
+     * y = x * m + b
+     */
+    var m = (count*sum_xy - sum_x*sum_y) / (count*sum_xx - sum_x*sum_x);
+    var b = (sum_y/count) - (m*sum_x)/count;
+
+
+    return {'b': b, 'm': m};
+}
+
+//            |C
+//            |
+//            |
+//            |
+//            |D
+//______________________
+//A                     B
+//retourne un point sur la ligne
+export function getSpPoint(A,B,C){
     var x1=A.x, y1=A.y, x2=B.x, y2=B.y, x3=C.x, y3=C.y;
     var px = x2-x1, py = y2-y1, dAB = px*px + py*py;
     var u = ((x3 - x1) * px + (y3 - y1) * py) / dAB;
@@ -299,9 +365,9 @@ function getSpPoint(A,B,C){
     return {x:x, y:y}; //this is D
 }
 
-export function FgetBBox(id){
+export function FgetBBox(id, offset){
     // console.log(id)
-    var offset = 10;
+
     d3.select('#'+id).node().getBBox();
     var transform = getTransformation(d3.select('#'+id).attr('transform'))
     var BB = d3.select('#'+id).node().getBBox();
@@ -365,6 +431,12 @@ export function interpolate(a, b, frac) // points A and B, frac between 0 and 1
     var nx = a.x+(b.x-a.x)*frac;
     var ny = a.y+(b.y-a.y)*frac;
     return {x:nx,  y:ny};
+}
+export function createPositionAtLengthAngle(a, angle, distance) // points A and B, frac between 0 and 1
+{
+    var x2 = a.x + Math.cos(angle) * distance
+    var y2 = a.y + Math.sin(angle) * distance
+    return {x:x2,  y:y2};
 }
 export function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
 {
