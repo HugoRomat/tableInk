@@ -291,6 +291,13 @@ export function getPerpendicularPoint(A, B, d){
     }
     return C;
 }
+function getSpPoint(A,B,C){
+    var x1=A.x, y1=A.y, x2=B.x, y2=B.y, x3=C.x, y3=C.y;
+    var px = x2-x1, py = y2-y1, dAB = px*px + py*py;
+    var u = ((x3 - x1) * px + (y3 - y1) * py) / dAB;
+    var x = x1 + u * px, y = y1 + u * py;
+    return {x:x, y:y}; //this is D
+}
 
 export function FgetBBox(id){
     // console.log(id)
