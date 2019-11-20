@@ -47,7 +47,7 @@ class Line extends Component {
         return (
             <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path id={this.props.stroke.id}></path>
-                <path id={'fake-'+this.props.stroke.id}></path>
+                {/* <path id={'fake-'+this.props.stroke.id}></path> */}
             </g>
         );
         

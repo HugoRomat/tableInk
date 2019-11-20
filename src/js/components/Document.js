@@ -5,9 +5,13 @@ import './../../css/main.css';
 import paper from 'paper';
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB } from "./Helper";
 import ColorMenu from "./ColorMenu";
 
+
+import CalcConvexHull from './../../../customModules/convexhull';
+import Vector from './../../../customModules/vector';
+import CalcOmbb from './../../../customModules/ombb';
 
 import { 
     addSketchLine,
@@ -64,6 +68,8 @@ class Document extends Component {
         this.objectIn = [];
         this.isItemDragged = false;
         this.isFlick = false;
+
+        // console.log(CalcOmbb)
     }
     init(){
 
@@ -375,24 +381,125 @@ class Document extends Component {
         // console.log(selection)
     }
     findClosestElements(objects, idGuide){
-        var that = this;
         console.log(objects)
-        var BB1 = _getBBox(idGuide);
-        var firstPoint = that.tempArrayStroke[0];
-        var lastPoint = that.tempArrayStroke[that.tempArrayStroke.length-1];
-        var lineGuide = [{'x': firstPoint[0] ,'y': firstPoint[1]}, {'x': lastPoint[0], 'y': lastPoint[1] }]
+        var that = this;
+        this.alreadyGoInsideLines = [];
 
-        drawCircle(lineGuide[0].x, lineGuide[0].y, 2, 'purple');
-        drawCircle(lineGuide[1].x, lineGuide[1].y, 2, 'purple');
+        var firstPoint = {'x': this.tempArrayStroke[0][0] , 'y': this.tempArrayStroke[1][1]  };
+        var lastPoint = {'x': this.tempArrayStroke[this.tempArrayStroke.length-1][0], 'y': this.tempArrayStroke[this.tempArrayStroke.length-1][1] };
+
+
+        objects.forEach((objectIntersection)=>{
+            //to not go here again
+            this.alreadyGoInsideLines.push(objectIntersection.id);
+
+            var objectId = objectIntersection.id 
+            // var pointClosest = objectIntersection.intersectionPoint;
+            var line = this.props.sketchLines.find(x => x.id == objectIntersection.id);
+            var points = JSON.parse(JSON.stringify(line['points']));
+            
+
+            // console.log(points[0], transform.translateX)
+            
+
+            drawCircle(firstPoint.x, firstPoint.y, 5, 'purple')
+            drawCircle(lastPoint.x, lastPoint.y, 5, 'purple')
+
+            // console.log(firstPoint, lastPoint);
+            
+            /**********************************************************/
+            //    SERT A TROUVER LA LIGNE QUI COUPE MON MOT EN DEUX
+            /**********************************************************/
+
+            //ConvexHull
+            var line = this.props.sketchLines.find(x => x.id == objectId)
+            var points = JSON.parse(JSON.stringify(line['points']));
+            var transform = getTransformation(d3.select('#item-'+objectId).attr('transform'))
+            points = points.map((d)=>{
+                return new Vector(d[0] + transform.translateX,d[1] + transform.translateY)//{'x': d[0], 'y': d[1]}
+            })
+            objectIntersection.points = points;
+            var convexHull = CalcConvexHull(points);
+            var oobb = new CalcOmbb(convexHull);
+            showOmBB(oobb);
+            var arrayDistance = []
+            oobb.forEach((point)=>{
+                // var determinant = Math.sign(((lastPoint.x - firstPoint.x) * (point.y - firstPoint.y)) - ((lastPoint.y - firstPoint.y) * (point.x - firstPoint.x)))
+                var distance = distToSegment([point.x,point.y], [firstPoint.x, firstPoint.y], [lastPoint.x, lastPoint.y])
+                arrayDistance.push({'distance': distance, 'point': point});
+            })
+            arrayDistance.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+            //Draw my line
+            var point1 = {'x': arrayDistance[0]['point']['x'] + (arrayDistance[1]['point']['x'] - arrayDistance[0]['point']['x'])/2, 'y': arrayDistance[0]['point']['y'] + (arrayDistance[1]['point']['y'] - arrayDistance[0]['point']['y'])/2}
+            var point2 = {'x': arrayDistance[2]['point']['x'] + (arrayDistance[3]['point']['x'] - arrayDistance[2]['point']['x'])/2, 'y': arrayDistance[2]['point']['y'] + (arrayDistance[3]['point']['y'] - arrayDistance[2]['point']['y'])/2}
+            // console.log(point1)
+
+            // var point = interpolate(middleLeft, middleRight, 2)
+            drawLine(point1.x, point1.y, point2.x, point2.y, 'red');
+
+            setTimeout(function(){
+                expandText(point1, point2, 2, objectIntersection)
+            },1000)
+
+
+
+        })
+
+        /**********************************************************/
+        //    EXPAND AS LONG AS USERS WRITE
+        /**********************************************************/
+        function expandText(begin, end, lengthInterpolate,  objectIntersection){
+            
+            var point = interpolate(begin, end, lengthInterpolate);
+            drawLine(begin.x, begin.y, point.x, point.y, 'red');
+
+
+            d3.select('.standAloneLines').selectAll('g').each(function(){
+                var id = d3.select(this).attr('id').split('-')[1];
+                if (that.alreadyGoInsideLines.indexOf(id) == -1){
+
+                    var line = that.props.sketchLines.find(x => x.id == id)
+                    // console.log(that.props.sketchLines, id)
+                    var points = JSON.parse(JSON.stringify(line['points']));
+                    var transform = getTransformation(d3.select('#item-'+id).attr('transform'))
+                    points = points.map((d)=>{
+                        return new Vector(d[0] + transform.translateX,d[1] + transform.translateY)//{'x': d[0], 'y': d[1]}
+                    })
+                    var convexHull = CalcConvexHull(points);
+                    var oobb = new CalcOmbb(convexHull);
+
+                    // var BB = _getBBox(id);   
+                    var isIntersect = lineIntersectsPolygone(begin, point, oobb);
+                    if (isIntersect){
+                       
+                        // console.log(that.alreadyGoInsideLines)
+                        that.alreadyGoInsideLines.push(id);
+                        showOmBB(oobb);
+                        objectIntersection.points = objectIntersection.points.concat(points)
+                        // showBboxBB(BB, 'blue')
+                        setTimeout(function(){
+                            lengthInterpolate = lengthInterpolate *2
+                            expandText(begin, end, lengthInterpolate, objectIntersection)
+                        },1000)
+                    }
+                    // console.log(isIntersect)
+                }
+               
+            })
+            // if ()
+        }
+        /*
 
         objects.forEach((objectId)=>{
-            showBbox('item-'+objectId, 'black');
+          showBbox('item-'+objectId, 'black');
             var BB = _getBBox('item-'+objectId);
             var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
             var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
             var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
             var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }]
-
+           
+            
             var arrayLine = [line1, line2, line3, line4];
             var arrayIntersection = [];
             arrayLine.forEach((line)=>{
@@ -425,7 +532,7 @@ class Document extends Component {
             // drawCircle(middleRight.x, middleRight.y, 2, 'red')
         })
 
-        
+        */
         /*objects.forEach((d)=>{
             // showBbox('item-'+d, 'black');
             console.log(d)
@@ -437,40 +544,67 @@ class Document extends Component {
         })*/
     }
     //Pour les guides
-    findIntersection(id){
+    findIntersection(){
         //Getting all objects
         var that = this;
         this.objectIn = [];
 
-        var firstPoint = that.tempArrayStroke[0];
-        var lastPoint = that.tempArrayStroke[that.tempArrayStroke.length-1];
-        var lineGuide = [{'x': firstPoint[0] ,'y': firstPoint[1]}, {'x': lastPoint[0], 'y': lastPoint[1] }]
-
-        drawLine(firstPoint[0] ,firstPoint[1],lastPoint[0], lastPoint[1] , 'black' )
-        //Regardes les intersections
         d3.select('.standAloneLines').selectAll('g').each(function(){
-
             var BB = _getBBox(d3.select(this).attr('id'));
-            var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
-            var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
-            var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
-            var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }];
-
-            var arrayLine = [line1, line2, line3, line4];
-            var item = null
-            arrayLine.forEach((line)=>{
-                var isIntersect = line_intersect(line[0].x, line[0].y, line[1].x, line[1].y, lineGuide[0].x, lineGuide[0].y, lineGuide[1].x, lineGuide[1].y);
-                if (isIntersect != false) {
-                    console.log('HEY')
-                    item = d3.select(this).attr('id').split('-')[1]
-                }
-            })
-            if (item != null) that.objectIn.push(item)
-
+            var selection = [
+                [BB.x, BB.y],
+                [BB.x+BB.width, BB.y],
+                [BB.x+BB.width, BB.y+BB.height],
+                [BB.x, BB.y+BB.height]
+            ]
+            var isIn = false;
+            var i = 0;
+            var length = d3.select('#penTemp').node().getTotalLength();
+            while( isIn == false && i< length){
+                var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
+                var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
+                if (isIn) that.objectIn.push({'id':d3.select(this).attr('id').split('-')[1]})
+                i++;
+            }
         })
+
         // console.log(that.objectIn)
         return JSON.parse(JSON.stringify(that.objectIn))
     }
+    // findIntersection(id){
+    //     //Getting all objects
+    //     var that = this;
+    //     this.objectIn = [];
+
+    //     var firstPoint = that.tempArrayStroke[0];
+    //     var lastPoint = that.tempArrayStroke[that.tempArrayStroke.length-1];
+    //     var lineGuide = [{'x': firstPoint[0] ,'y': firstPoint[1]}, {'x': lastPoint[0], 'y': lastPoint[1] }]
+
+    //     drawLine(firstPoint[0] ,firstPoint[1],lastPoint[0], lastPoint[1] , 'black' )
+    //     //Regardes les intersections
+    //     d3.select('.standAloneLines').selectAll('g').each(function(){
+
+    //         var BB = _getBBox(d3.select(this).attr('id'));
+    //         var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
+    //         var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
+    //         var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
+    //         var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }];
+
+    //         var arrayLine = [line1, line2, line3, line4];
+    //         var item = null
+    //         arrayLine.forEach((line)=>{
+    //             var isIntersect = line_intersect(line[0].x, line[0].y, line[1].x, line[1].y, lineGuide[0].x, lineGuide[0].y, lineGuide[1].x, lineGuide[1].y);
+    //             if (isIntersect != false) {
+    //                 console.log('HEY')
+    //                 item = d3.select(this).attr('id').split('-')[1]
+    //             }
+    //         })
+    //         if (item != null) that.objectIn.push(item)
+
+    //     })
+    //     // console.log(that.objectIn)
+    //     return JSON.parse(JSON.stringify(that.objectIn))
+    // }
     expandSelection(){
 
     }

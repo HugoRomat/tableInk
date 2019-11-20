@@ -189,6 +189,29 @@ export function getNearestElement(id){
 //         }
 //     })
 // }
+export function sqr (x) {
+    return x * x;
+}
+export function dist2 (v, w) {
+    return sqr(v[0] - w[0]) + sqr(v[1] - w[1]);
+}
+// p - point
+// v - start point of segment
+// w - end point of segment
+function distToSegmentSquared (p, v, w) {
+    var l2 = dist2(v, w);
+    if (l2 === 0) return dist2(p, v);
+    var t = ((p[0] - v[0]) * (w[0] - v[0]) + (p[1] - v[1]) * (w[1] - v[1])) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return dist2(p, [ v[0] + t * (w[0] - v[0]), v[1] + t * (w[1] - v[1]) ]);
+  }
+  
+  // p - point
+  // v - start point of segment
+  // w - end point of segment
+export function distToSegment (p, v, w) {
+    return Math.sqrt(distToSegmentSquared(p, v, w));
+}
 export function drawLine(x1, y1, x2, y2, color){
     // var BB2 = d3.select('#'+id).node().getBBox();
     // console.log(BB2)
@@ -285,6 +308,47 @@ export function FgetBBox(id){
     // showBboxBB(BB, 'red')
     return BB;
 
+}
+export function lineIntersectsPolygone(begin, end, arrayVector){
+    var isIntersectSquare = false
+
+    //all face of my object
+    // var line1 = [{'x': BB.x, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y }]
+    // var line2 = [{'x': BB.x + BB.width, 'y': BB.y}, {'x': BB.x + BB.width, 'y': BB.y + BB.height}]
+    // var line3 = [{'x': BB.x + BB.width, 'y': BB.y + BB.height}, {'x': BB.x, 'y': BB.y + BB.height }]
+    // var line4 = [{'x': BB.x, 'y': BB.y + BB.height }, {'x': BB.x , 'y': BB.y }]
+
+    var arrayLine = []
+    for (var i = 0; i < arrayVector.length; i++ ){
+        if (i == arrayVector.length -1){
+            arrayLine.push( [{'x': arrayVector[i]['x'], 'y':  arrayVector[i]['y']}, {'x':  arrayVector[0]['x'], 'y': arrayVector[0]['y'] }])
+        }
+        else{
+            arrayLine.push( [{'x': arrayVector[i]['x'], 'y':  arrayVector[i]['y']}, {'x':  arrayVector[i+1]['x'], 'y': arrayVector[i+1]['y'] }])
+        }
+    }
+    // console.log(arrayLine)
+
+
+    // var arrayLine = [line1, line2, line3, line4];
+    var arrayIntersection = [];
+    arrayLine.forEach((line)=>{
+        var isIntersect = line_intersect(line[0].x, line[0].y, line[1].x, line[1].y, begin.x, begin.y, end.x, end.y);
+        if (isIntersect != false) {
+            isIntersectSquare = true;
+        }
+    })
+    return isIntersectSquare;
+}
+export function showOmBB(oobb){
+    for (var i = 0; i < oobb.length; i++ ){
+        if (i == oobb.length -1){
+            drawLine(oobb[i].x, oobb[i].y, oobb[0].x, oobb[0].y, 'black')
+        }
+        else{
+            drawLine(oobb[i].x, oobb[i].y, oobb[i+1].x, oobb[i+1].y, 'black')
+        }
+    }
 }
 export function midPosition(x1, y1, x2, y2){
     return {'x': (x1 + x2) / 2, 'y': (y1 + y2) / 2}
