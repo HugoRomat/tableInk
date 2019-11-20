@@ -73,9 +73,12 @@ export function getCenterPolygon(arr){
     return {'x': cx, 'y': cy};
 
 }
-function getoobb(nodeId, sketchLines){
+export function getoobb(nodeId, sketchLines){
     // var fakeid = 'fake-'+nodeId
+
+   
     var line = sketchLines.find(x => x.id == nodeId);
+    // console.log(line, nodeId)
     var points = JSON.parse(JSON.stringify(line['points']));
     var transform = getTransformation(d3.select('#item-'+nodeId).attr('transform'))
     // console.log(transform)
@@ -135,7 +138,7 @@ export function getNearestElement(id, sketchLines){
                     arrayPolygon2.push(d.y);
                })
                 var isIntersect = polygonPolygon(arrayPolygon, arrayPolygon2)
-                console.log(isIntersect)
+                // console.log(isIntersect)
                 // console.log('HELLO', BB2)
                 // showBboxBB(BB2, 'red')
                 // var isIntersect = checkIntersection(BB, BB2);
@@ -148,7 +151,7 @@ export function getNearestElement(id, sketchLines){
                 //Si Intersection je continue avec celui-la
                 if(isIntersect){
                     nodeIn.push(id2)
-                    showOmBB(item2.oobb);
+                    // showOmBB(item2.oobb);
                     // console.log(nodeIn)
                     getNeighborood(id2, sketchLines);
                    
@@ -459,6 +462,26 @@ export function lineIntersectsPolygone(begin, end, arrayVector){
         }
     })
     return isIntersectSquare;
+}
+export function mergeRectangles(r1, r2) {
+   return { x: Math.min(r1.x, r2.x),
+            y: Math.min(r1.y, r2.y),
+            width: Math.max(r1.width, r2.width),
+            height: Math.max(r1.height, r2.height)
+          }
+}
+export function drawPath(oobb){
+    var line = d3.line()
+    // oobb.push(oobb[0]);
+    oobb = oobb.map((d)=> [d.x, d.y])
+    // console.log(oobb)
+    d3.select('svg')
+        .append('path')
+        .attr("d", line(oobb))
+        .attr('fill', 'red')
+        // .attr('stroke', 'black')
+        // .attr('stroke-width', '2')
+        .attr('opacity', 0.2)
 }
 export function showOmBB(oobb){
     for (var i = 0; i < oobb.length; i++ ){

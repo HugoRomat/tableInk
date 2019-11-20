@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getTransformation } from "./Helper";
+import { getTransformation } from "./../Helper";
 
 class Group extends Component {
     constructor(props) {

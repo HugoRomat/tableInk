@@ -12,7 +12,7 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        console.log(this.props.stroke)
+        // console.log(this.props.stroke)
         var line = d3.line()
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)

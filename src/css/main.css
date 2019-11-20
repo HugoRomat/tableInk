@@ -1,8 +1,6 @@
 body { 
-
-	background: -webkit-linear-gradient(top, #d9eaf3 0%, #fff 8%) 0 4px;
-    background-size: 100% 20px;
-
+	background: -webkit-linear-gradient(top, #d9eaf3 0%, #fff 8%) 0 10px;
+    background-size: 100% 40px;
 }
 body::before {
 

@@ -31,6 +31,7 @@ class Guide extends Component {
         this.timerPress = null;
         this.press = false;
         this.startPosition = {};
+        this.lastPosition = {};
         this.drag = false;
 
         this.state = {
@@ -67,9 +68,36 @@ class Guide extends Component {
             .attr('stroke-opacity', '0.1')
             
             
-            d3.select('#item-'+that.props.stroke.id)
-                .call(drag)
-            
+        d3.select('#item-'+that.props.stroke.id)
+                // .call(drag)
+                .on('pointerdown', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
+                        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+                        that.dragstarted(that);
+                    }
+                })
+                .on('pointermove', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+                        var differenceTime = that.startPosition.time - Date.now();
+                        
+                        // console.log(differenceTime, dist)
+                        if (dist > 10 ){
+                            that.dragged(that);
+                        }
+                    }
+                })
+                .on('pointerup', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        that.dragended(that);
+                    }
+    
+                    // console.log('Hello')
+                })
+                .on('contextmenu', function(){
+                    d3.event.preventDefault();
+                })
             
             
             
@@ -93,8 +121,10 @@ class Guide extends Component {
         })
     }
     dragstarted(env) {
+        // if (d3.event.sourceEvent == tou
+        // console.log(d3.event.sourceEvent)
         var that = env;
-        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
+        // that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
         that.drag = false;
         // console.log('HEY', env, this)
         // d3.event.sourceEvent.stopPropagation();
@@ -102,9 +132,11 @@ class Guide extends Component {
 
         // console.log('GO DRAG')
         that.props.dragItem(true);
-
+        // d3.event.preventDefault();
         that.timerPress = setTimeout(function(){
+            console.log('PRESS')
             if (that.drag == false){
+                // d3.event.preventDefault();
                 // that.expandSelection(that.props.stroke.id);
                 that.props.holdGuide(that.props.stroke.id);
                 // console.log(that.props)
@@ -117,6 +149,7 @@ class Guide extends Component {
     }
 
     dragged(env) {  
+        // console.log(d3.event)
         var that = env;
         that.drag = true;
         // console.log('GO')
@@ -126,29 +159,35 @@ class Guide extends Component {
 
         // console.log(dist)
         // if (dist > 10){
-            clearTimeout(that.timerPress);
-            d3.event.sourceEvent.stopPropagation();
-            var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
-            var X = d3.event.dx + transform.translateX;
-            var Y = d3.event.dy + transform.translateY;
-            d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+        clearTimeout(that.timerPress);
+        d3.event.preventDefault();
+        var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
+        // console.log(transform)
+        var offsetX = d3.event.x - that.lastPosition.x;
+        var offsetY = d3.event.y - that.lastPosition.y;
+        var X = offsetX + transform.translateX;
+        var Y = offsetY + transform.translateY;
+        d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
 
+
+            
             var linesAttached = env.props.stroke.linesAttached;
             for (var i in linesAttached){
                 var line = linesAttached[i];
                 var identifier = 'item-'+line;
                 var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
-                var X = d3.event.dx + transform.translateX;
-                var Y = d3.event.dy + transform.translateY;
+                var X = offsetX + transform.translateX;
+                var Y = offsetY + transform.translateY;
                 d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
             }
+            
         // }
         
         // d3.select('svg').append('circle')
         //     .attr('cx', X)
         //     .attr('cy', Y)
         //     .attr('r', 10)
-           
+        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
 
     }
     dragended(env) {
@@ -202,7 +241,7 @@ class Guide extends Component {
 
     }
     render() {
-        console.log(this.props.stroke.placeHolder)
+        // console.log(this.props.stroke.placeHolder)
 
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 

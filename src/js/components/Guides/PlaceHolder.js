@@ -19,10 +19,10 @@ class PlaceHolder extends Component {
     componentDidMount(){
         // console.log(this.props.data)
         var that = this;
-        
-        d3.select('#placeHolder-' + this.props.data.id)
+        // console.log('placeHolder-' + this.props.data.id)
+        d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                // console.log(d3.event)
+                console.log(d3.event)
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
                     that.down = true;
@@ -83,7 +83,7 @@ class PlaceHolder extends Component {
         var that = this;
         //Si j'udpate la BBox
         if (this.props.BBoxParent != prevProps.BBoxParent){
-            console.log('UPDATE BOX', that.props.data.id);
+            // console.log('UPDATE BOX', that.props.data.id);
             var height = this.props.BBoxParent.height;
             var width = this.props.BBoxParent.width;
             var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
