@@ -516,10 +516,11 @@ class Document extends Component {
 
                 
 
-                // setTimeout(function(){
+                setTimeout(function(){
                     
-                    expandText(pointOnLine[i],  centerBox[i], 3,  pointsThroughLine[i], alreadyAdded);
-                // },1000)
+                    expandText(pointOnLine[i],  centerBox[i], 3,  pointsThroughLine[i], alreadyAdded, -1);
+                    expandText(pointOnLine[i],  centerBox[i], 3,  pointsThroughLine[i], alreadyAdded, +1);
+                },1000)
             })
 
         })
@@ -527,12 +528,12 @@ class Document extends Component {
         /**********************************************************/
         //    EXPAND AS LONG AS USERS WRITE
         /**********************************************************/
-        function expandText(begin, end, lengthInterpolate, pointsThroughLine, alreadyAdded){
+        function expandText(begin, end, lengthInterpolate, pointsThroughLine, alreadyAdded, signe){
             
             // var point = interpolate(begin, end, lengthInterpolate);
 
             var angle = Math.atan2(end.y-begin.y, end.x-begin.x)
-            var point = createPositionAtLengthAngle(end, angle, 150)
+            var point = createPositionAtLengthAngle(end, angle, 150*signe)
             drawCircle(point.x, point.y, 5, 'red');
 
             drawLine(begin.x, begin.y, point.x, point.y, 'red');
@@ -566,9 +567,10 @@ class Document extends Component {
                         // console.log(pointsThroughLine)
                         var result = increasePrecisionLine(begin, end, oobbNew, pointsThroughLine,)
                         // expandText(begin, end, lengthInterpolate, pointsThroughLine, alreadyAdded)
-                        expandText(result.begin, result.end, lengthInterpolate, pointsThroughLine, alreadyAdded)//, arraySorted,oobb, iteration)
-                            
-                        // },1000)
+                        setTimeout(function(){
+                            console.log('SIIIIGNE', signe)
+                            expandText(result.begin, result.end, lengthInterpolate, pointsThroughLine, alreadyAdded, signe)//, arraySorted,oobb, iteration)
+                        },1000)
                     }
                 }
             })
