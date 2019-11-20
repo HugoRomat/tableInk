@@ -1,6 +1,14 @@
 import * as d3 from 'd3';
 import { ENETUNREACH } from 'constants';
 
+import CalcOmbb from './../../../customModules/ombb';
+import CalcConvexHull from './../../../customModules/convexhull';
+import Vector from './../../../customModules/vector';
+
+import {polygonPolygon} from 'intersects';
+import Polygon from 'polygon'
+
+// console.log(Polygon)
 export function guid() {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -57,7 +65,7 @@ export function checkIntersection(r2, r1){
                  r2.y              > r1.y + r1.height ||
                  r2.y + +r2.height < r1.y);
 }
-export function center(arr){
+export function getCenterPolygon(arr){
     var x = arr.map (x => x.x);
     var y = arr.map (x => x.y);
     var cx = (Math.min (...x) + Math.max (...x)) / 2;
@@ -65,34 +73,72 @@ export function center(arr){
     return {'x': cx, 'y': cy};
 
 }
+function getoobb(nodeId, sketchLines){
+    // var fakeid = 'fake-'+nodeId
+    var line = sketchLines.find(x => x.id == nodeId);
+    var points = JSON.parse(JSON.stringify(line['points']));
+    var transform = getTransformation(d3.select('#item-'+nodeId).attr('transform'))
+    // console.log(transform)
+    points = points.map((d)=>{
+        return new Vector(d[0] + transform.translateX,d[1] + transform.translateY)
+    })
+    var convexHull = CalcConvexHull(points);
+    var oobb = new CalcOmbb(convexHull);
+    
 
-export function getNearestElement(id){
+    var polygon1 = new Polygon(oobb);
+    var polyCopie = polygon1.offset(5);
+    
+    // var center = getCenterPolygon(points);
+
+    return {'oobb': polyCopie.points, 'points': points}
+}
+
+export function getNearestElement(id, sketchLines){
     var linkToAvoid = [];
     var iteration = 0;
     var nodeIn = [];
     
 
     return new Promise((resolve, reject) => {
-        nodeIn.push('item-'+id)
-        getNeighborood('item-'+id);
+        nodeIn.push(id)
+        getNeighborood(id, sketchLines);
         // console.log()
         resolve(nodeIn);
     })
     
 
     
-    function getNeighborood(nodeId){
+    function getNeighborood(nodeId,sketchLines){
 
-        // console.log(nodeId)
-        var BB = FgetBBox(nodeId, 3);
-        d3.select('.standAloneLines').selectAll('g').each(function(d){
+        //  RETRIEVE MA BBOX
+        var item1 = getoobb(nodeId,sketchLines);
+        var arrayPolygon = [];
+        item1.oobb.forEach((d)=>{
+            arrayPolygon.push(d.x)
+            arrayPolygon.push(d.y);
+       })
+
+        // showOmBB(item1.oobb);
+        // console.log(poly1)
+        // var center = center(points);
+
+        //CHECK INTERESCTION
+        d3.select('.standAloneLines').selectAll('path').each(function(d){
             var id2 = d3.select(this).attr('id');
             if (linkToAvoid.indexOf(id2+'-'+nodeId) == -1 && nodeIn.indexOf(id2) == -1){
-                var BB2 = FgetBBox(id2, 3);
-
+                // var BB2 = FgetBBox(id2, 3);
+                var item2 = getoobb(id2, sketchLines);
+                var arrayPolygon2 = [];
+                item2.oobb.forEach((d)=>{
+                    arrayPolygon2.push(d.x)
+                    arrayPolygon2.push(d.y);
+               })
+                var isIntersect = polygonPolygon(arrayPolygon, arrayPolygon2)
+                console.log(isIntersect)
                 // console.log('HELLO', BB2)
                 // showBboxBB(BB2, 'red')
-                var isIntersect = checkIntersection(BB, BB2);
+                // var isIntersect = checkIntersection(BB, BB2);
                 // linkToAvoid.push(id2);
                 linkToAvoid.push(id2+'-'+nodeId);
                 
@@ -102,8 +148,9 @@ export function getNearestElement(id){
                 //Si Intersection je continue avec celui-la
                 if(isIntersect){
                     nodeIn.push(id2)
+                    showOmBB(item2.oobb);
                     // console.log(nodeIn)
-                    getNeighborood(id2);
+                    getNeighborood(id2, sketchLines);
                    
                 }
             }
@@ -415,6 +462,7 @@ export function lineIntersectsPolygone(begin, end, arrayVector){
 }
 export function showOmBB(oobb){
     for (var i = 0; i < oobb.length; i++ ){
+        // console.log(oobb[i])
         if (i == oobb.length -1){
             drawLine(oobb[i].x, oobb[i].y, oobb[0].x, oobb[0].y, 'black')
         }

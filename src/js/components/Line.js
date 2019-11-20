@@ -23,7 +23,7 @@ class Line extends Component {
             .attr('fill', 'none')
             .attr('stroke', 'black')
             .attr('stroke-width', '10')
-            .attr('stroke-opacity', '0.2')
+            .attr('stroke-opacity', '0.1')
             
            
             
@@ -47,7 +47,7 @@ class Line extends Component {
         return (
             <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path id={this.props.stroke.id}></path>
-                {/* <path id={'fake-'+this.props.stroke.id}></path> */}
+                {/* <path style={{'pointerEvents': 'none' }} id={'fake-'+this.props.stroke.id}></path> */}
             </g>
         );
         
