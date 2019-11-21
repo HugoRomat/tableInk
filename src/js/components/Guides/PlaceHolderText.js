@@ -46,12 +46,12 @@ class PlaceHolderText extends Component {
    
     render() {
 
-        console.log(this.props)
+        // console.log(this.props)
 
         return (
             <g id={'placeHolderText-'+this.props.dataParent.id} transform={`translate(${this.props.data.position[0]},${this.props.data.position[1]})`}>
                 <rect width={100} height={50} x={0} y={0} stroke={'black'} fill={'white'}/>
-                <text style={{'fontSize': '25px'}} x={25} dy={32} > Text </text>
+                <text style={{'fontSize': '25px', 'fontStyle': 'italic'}} x={25} dy={32} > Text </text>
             </g>
         );
         

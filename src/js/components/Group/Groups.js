@@ -5,6 +5,7 @@ import Group from './Group';
 
 import { 
   } from '../../actions';
+import { guid } from "../Helper";
 
 const mapDispatchToProps = { 
 };
@@ -19,11 +20,31 @@ const mapStateToProps = (state, ownProps) => {
 class Groups extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            'shouldUnselect': guid()
+        }
+        this.selection = [];
         
     }
     componentDidMount(){
    
-    }  
+    } 
+
+    addToSelection = (d) => {
+        var that = this;
+        this.selection.push(d.id);
+        
+        that.props.setSelection({'elements':this.selection})
+        clearTimeout(that.timeSelection);
+        that.timeSelection = setTimeout(function(){
+            that.selection = [];
+            that.setState({'shouldUnselect': guid()});
+
+            that.props.setSelection({'elements':[]})
+
+            // console.log('GO')
+        }, 2000)
+    }
     render() {
 
         // console.log( this.props.groupLines)
@@ -31,6 +52,9 @@ class Groups extends Component {
             return <Group 
                 key={i} 
                 group={d}
+                shouldUnselect={this.state.shouldUnselect}
+
+                addToSelection={this.addToSelection}
             />
         });
         // console.log(this.props.groupLines)

@@ -9,33 +9,27 @@ import CalcOmbb from "../../../../customModules/ombb";
 import Polygon from 'polygon';
 
 
-
+/**
+ * C'est la LIGNE ENTIER DE MOT
+ */
 
 class LinesGrouping extends Component {
     constructor(props) {
         super(props);
         this.organizedCorners = [];
-        // this.BBheight = 0;
     }
-
     componentDidMount(){
         var that = this;
         this.BBox = this.getBoundinxBoxEveryone();
         this.movePoints();
-        
-        // setTimeout(function(){
-        //     that.BBox = that.getBoundinxBoxEveryone();
-        // }, 1000)
-        // this.organizedCorners = this.knowWhereIsLeftOrRight(this.BBox);
-        // console.log(this.props)
-       
+
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
         //Si j'udpate la BBox
         if (this.props.placeholders != prevProps.placeholders){
-            
-            // console.log(this.array)
+
+            // console.log('UPDATE PLACEHOLDER')
             this.addPlaceHolder();
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
@@ -50,21 +44,6 @@ class LinesGrouping extends Component {
      * FAIT LA BOUNDING BOX DE TOUT LE MONDE
      */
     getBoundinxBoxEveryone(){
-        //  console.log(this.props)
-        /*var pointsAll = []
-        var line = this.props.line;
-        line.forEach(strokeId => {
-            var stroke = this.props.sketchLines.find(x => x.id == strokeId);
-            var points = JSON.parse(JSON.stringify(stroke['points']));
-            var transform = getTransformation(d3.select('#item-'+strokeId).attr('transform'))
-            points = points.map((d)=>{ return new Vector(d[0] + transform.translateX,d[1] + transform.translateY) })
-            var convexHull = CalcConvexHull(points);
-            var oobbNew = new CalcOmbb(convexHull);
-            pointsAll = pointsAll.concat(oobbNew)
-            // showOmBB(oobbNew)
-        });
-        var convexHull = CalcConvexHull(pointsAll);
-        var oobb = new CalcOmbb(convexHull);*/
         var line = this.props.line;
         var rectangle = null;
         line.forEach(strokeId => {
@@ -75,50 +54,10 @@ class LinesGrouping extends Component {
             else rectangle = unionRectangles(rectangle, BB);
 
         })
-        // showBboxBB(rectangle, 'red');
-        // console.log(rectangle)
         // showOmBB(oobb);
         return rectangle;
         
     }
-    /**
-     * RECUPERE LE TOP LEFT CORNER
-     * @param {*} BBox 
-     */
-    knowWhereIsLeftOrRight(BBox){
-        var begin = this.props.stroke.points[0];
-        var end = this.props.stroke.points[this.props.stroke.points.length-1];
-
-        var angle = Math.atan2(end[1]-begin[1], end[0]-begin[0]) * 180 / Math.PI;
-
-        var newAngle = 90 - angle;
-        var p = new Polygon([BBox[0],BBox[1], BBox[2], BBox[3]]);
-        var newP = p.rotate(newAngle * (Math.PI/180), undefined, true)
-
-        // showOmBB(p.points, 'red')
-
-        var topLeft = null;
-        var oldDistance = 1000000;
-        newP.points.forEach((d, i) =>{
-            var dist = distance(d.x, 0 , d.y, 0)
-            if (dist < oldDistance){
-                oldDistance = dist;
-                topLeft = i;
-            }
-        })
-        
-        
-        var newArray = p.points.splice(topLeft);
-        if (p.points.length > 0) newArray= newArray.concat(p.points);
-
-        newArray = this.movePoints(newArray);
-    
-        // drawCircle(newArray[0]['x'], newArray[0]['y'], 10, 'blue')
-        return newArray;
-        // console.log(newArray)
-        // var orientation = 
-    }
-
     /**
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
      * @param {*} arrayPositionBox 
@@ -174,9 +113,11 @@ class LinesGrouping extends Component {
 
         this.props.placeholders.forEach((d)=>{
             if (d.id == 'left' && d.lines.length > 0){
-                // console.log('GOOOO', d)
+                console.log('GOOOO', d.lines[0]['data'][0])
                 // d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).append('path')
-                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).select('g').selectAll('path')
+
+                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path').remove()
+                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path')
                     .data(d.lines).enter()
                     .append('path')
                     .attr('d', (d)=>line(d.data))
@@ -184,9 +125,14 @@ class LinesGrouping extends Component {
                     .attr('stroke', 'black')
                     .attr('stroke-width', '2')
                 
-                // console.log(d)
-                var X = this.BBox.x- (d.BBox.width/2) - 50;
-                var Y = (this.BBox.height / 2) + this.BBox.y - (d.BBox.height/2);
+                // console.log(this.BBox, d)
+                // var X = this.BBox.x- (d.BBox.width/2) - 50;
+                // var Y = (this.BBox.height / 2) + this.BBox.y - (d.BBox.height/2);
+
+
+                
+                var X = this.BBox.x - d.BBox.width;
+                var Y = this.BBox.y;
                 // var begin = [array[0]['x'], array[0]['y']];
 
                 // drawCircle(newArray[0]['x'], newArray[0]['y'], 10, 'blue')
@@ -210,7 +156,7 @@ class LinesGrouping extends Component {
                 var x = (-cx * (scale - 1)) ;
                 var y = (-cy * (scale - 1)) ;
                 // console.log(d)
-                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).select('g').attr('transform', 'translate('+X+','+Y+')')
+                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
                 // d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+x+','+y+')scale(0.7)')
 
             }
@@ -219,11 +165,11 @@ class LinesGrouping extends Component {
     }
     render() {
         return (
-            <g transform={`translate(0,0)`}>
+            // <g transform={`translate(0,0)`}>
                <g id={'placeHolderLeft-'+this.props.iteration +'-'+this.props.id} >
-                   <g></g>
+                   {/* <g></g> */}
                </g>
-            </g>
+            // </g>
         );
         
     }

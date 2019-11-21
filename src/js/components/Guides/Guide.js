@@ -59,45 +59,42 @@ class Guide extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             
-
+        /*
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '40')
             .attr('stroke-opacity', '0.1')
+        */
             
             
         d3.select('#item-'+that.props.stroke.id)
-                // .call(drag)
-                .on('pointerdown', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-                        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-                        that.dragstarted(that);
+            .on('pointerdown', function(d){
+                if (d3.event.pointerType == 'touch'){
+                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
+                    that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+                    that.dragstarted(that);
+                }
+            })
+            .on('pointermove', function(d){
+                if (d3.event.pointerType == 'touch'){
+                    var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+                    var differenceTime = that.startPosition.time - Date.now();
+                    
+                    if (dist > 10 ){
+                        that.dragged(that);
                     }
-                })
-                .on('pointermove', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                        var differenceTime = that.startPosition.time - Date.now();
-                        
-                        // console.log(differenceTime, dist)
-                        if (dist > 10 ){
-                            that.dragged(that);
-                        }
-                    }
-                })
-                .on('pointerup', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        that.dragended(that);
-                    }
-    
-                    // console.log('Hello')
-                })
-                .on('contextmenu', function(){
-                    d3.event.preventDefault();
-                })
+                }
+            })
+            .on('pointerup', function(d){
+                if (d3.event.pointerType == 'touch'){
+                    that.dragended(that);
+                }
+            })
+            .on('contextmenu', function(){
+                d3.event.preventDefault();
+            })
             
             
             
@@ -138,6 +135,7 @@ class Guide extends Component {
             if (that.drag == false){
                 // d3.event.preventDefault();
                 // that.expandSelection(that.props.stroke.id);
+                that.colorForHolding(true);
                 that.props.holdGuide(that.props.stroke.id);
                 // console.log(that.props)
                 that.press = true;
@@ -196,26 +194,29 @@ class Guide extends Component {
         // d3.select('#item-'+env.props.stroke.id).classed("dragging", false);
 
         // To say nothing is holded anymore and dragged
+        clearTimeout(that.timerPress);
         that.props.dragItem(false);
         that.props.holdGuide(false);
 
-
+        that.colorForHolding(false)
         // TO detect the tap
         var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
         var time = Date.now() -  that.startPosition['time'];
 
-        // console.log(dist, time)
+        console.log(dist, time)
         if (dist < 10 && time < 100){
             clearTimeout(that.timerPress);
-            console.log('Thats a tap')
-            var BBox = _getBBox('item-'+env.props.stroke.id)
-            that.props.shouldOpenMenu({
-                'id': guid(),
-                'shouldOpen': true,
-                'position': [BBox.x, BBox.y],
-                'idGuide': env.props.stroke.id,
-                'idLines': env.props.stroke.data.linesAttached
-            })
+
+            that.props.setGuideTapped({'item': this.props.stroke.id})
+            // console.log('Thats a tap')
+            // var BBox = _getBBox('item-'+env.props.stroke.id)
+            // that.props.shouldOpenMenu({
+            //     'id': guid(),
+            //     'shouldOpen': true,
+            //     'position': [BBox.x, BBox.y],
+            //     'idGuide': env.props.stroke.id,
+            //     'idLines': []//env.props.stroke.data.linesAttached
+            // })
         }
     }
     componentDidUpdate(){
@@ -225,10 +226,9 @@ class Guide extends Component {
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', 'red')
+            .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
-
-        
+            .attr("stroke-dasharray", "5");
         // console.log(this.props.stroke)
     }
     addLine = (d) => {
@@ -239,6 +239,33 @@ class Guide extends Component {
            'data': d.data
        })
 
+    }
+    /**
+     * WHEN SELECTED ITEM
+     * @param {*} isIt 
+     */
+    colorForHolding(isIt){
+        
+        d3.select('#rect-'+this.props.stroke.id)
+            .attr('width', 0)
+            .attr('height', 0)
+        
+       
+        if (isIt == true){
+            var BBox = _getBBox('item-'+this.props.stroke.id);
+            var x = this.props.stroke.position[0] - BBox.x;
+            var y = this.props.stroke.position[1] - BBox.y;
+            // console.log(BBox)
+
+            d3.select('#rect-'+this.props.stroke.id)
+                .attr('x', -x)
+                .attr('y', -y)
+                .attr('width', BBox.width)
+                .attr('height', BBox.height)
+
+                .attr('fill', '#9C9EDEDF')
+                .attr('opacity', '0.2')
+        }
     }
     render() {
         // console.log(this.props.stroke.placeHolder)
@@ -253,17 +280,19 @@ class Guide extends Component {
                     addLine={this.addLine}
                 />
         });
-        console.log(this.props.stroke)
+        // console.log(this.props.stroke)
 
         return (
-            <g  id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+                <rect id={'rect-'+this.props.stroke.id} />
                 <path id={this.props.stroke.id}></path>
-                <path id={'fake-'+this.props.stroke.id}></path>
+                {/* <path id={'fake-'+this.props.stroke.id}></path> */}
                 {listPlaceHolder}
                 <PlaceHolderText 
                     data={this.props.stroke.textPosition}
                     dataParent={this.props.stroke} 
                 />
+                
                 
             </g>
         );

@@ -24,6 +24,9 @@ class Guides extends Component {
     componentDidMount(){
    
     }  
+    setGuideTapped = (d) => {
+        this.props.setGuideTapped(d)
+    }
     render() {
 
         // console.log( this.props.sketchLines)
@@ -31,8 +34,10 @@ class Guides extends Component {
                 return <Guide 
                     key={i} 
                     stroke={d}
+
                     holdGuide={this.props.holdGuide}
                     dragItem={this.props.dragItem}
+                    setGuideTapped={this.setGuideTapped}
             />
         });
         console.log(listItems);

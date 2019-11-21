@@ -39,3 +39,7 @@ export const moveSketchLines = data => ({
     type: 'MOVE_SKETCH_LINES',
     data
 })
+export const changeModelGroupLines = data => ({
+    type: 'CHANGE_MODEL_GROUP_LINES',
+    data
+})

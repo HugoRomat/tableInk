@@ -17,7 +17,7 @@ class LinePlaceHolder extends Component {
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke.data))
-            .attr('stroke', 'black')
+            .attr('stroke', '#9C9EDEDF')
             .attr('fill', 'none')
             .attr('stroke-width', '2')
     }
