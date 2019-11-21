@@ -19,17 +19,29 @@ class LinesGrouping extends Component {
     }
 
     componentDidMount(){
+        var that = this;
         this.BBox = this.getBoundinxBoxEveryone();
+        this.movePoints();
+        
+        // setTimeout(function(){
+        //     that.BBox = that.getBoundinxBoxEveryone();
+        // }, 1000)
         // this.organizedCorners = this.knowWhereIsLeftOrRight(this.BBox);
-        console.log(this.props)
+        // console.log(this.props)
        
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
         //Si j'udpate la BBox
         if (this.props.placeholders != prevProps.placeholders){
+            
             // console.log(this.array)
             this.addPlaceHolder();
+        }
+        else if (this.props.sketchLines != prevProps.sketchLines){
+            this.BBox = this.getBoundinxBoxEveryone();
+            this.addPlaceHolder();
+            // console.log('UPDATE SKECTHLINES')
         }
     }
     /**
@@ -61,7 +73,7 @@ class LinesGrouping extends Component {
             else rectangle = unionRectangles(rectangle, BB);
 
         })
-        showBboxBB(rectangle, 'red');
+        // showBboxBB(rectangle, 'red');
         // console.log(rectangle)
         // showOmBB(oobb);
         return rectangle;
@@ -109,7 +121,9 @@ class LinesGrouping extends Component {
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
      * @param {*} arrayPositionBox 
      */
-    movePoints(arrayPositionBox){
+    movePoints(){
+
+        // console.log(this.props.line)
         var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
         var begin = points[0];
         var end = points[points.length-1];
@@ -119,14 +133,17 @@ class LinesGrouping extends Component {
         end[0] += this.props.stroke.position[0];
         end[1] += this.props.stroke.position[1];
 
-        var pointOnLine = getSpPoint({'x':begin[0], 'y': begin[1]}, {'x':end[0], 'y': end[1]}, arrayPositionBox[0]);
+        var pointOnLine = getSpPoint({'x':begin[0], 'y': begin[1]}, {'x':end[0], 'y': end[1]}, {'x': this.BBox['x'], 'y': this.BBox['y']});
         // drawCircle(pointOnLine.x, pointOnLine.y, 4,  'blue');
 
-        var offsetX = pointOnLine.x - arrayPositionBox[0]['x'];
-        var offsetY = pointOnLine.y - arrayPositionBox[0]['y'];
+        var offsetX = pointOnLine.x - this.BBox['x']
+        var offsetY = pointOnLine.y - this.BBox['y']
 
-        var changePositionArraySketchLines = this.props.sketchLines.map((d)=>{
-            return {'id': d.id, 'position': [d.position[0]+offsetX, d.position[1]+offsetY]}
+
+        var changePositionArraySketchLines = this.props.line.map((d)=>{
+            var stroke = this.props.sketchLines.find(x => x.id == d);
+            stroke = JSON.parse(JSON.stringify(stroke))
+            return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]+offsetY]}
         })
         this.props.moveSketchLines(changePositionArraySketchLines);
 
@@ -134,11 +151,11 @@ class LinesGrouping extends Component {
 // 
         // console.log(arrayPositionBox)
 
-        var arrayModified = arrayPositionBox.map((d, i)=>{
-            return {'x':d.x +offsetX, 'y':d.y + offsetY};
-        })
+        // var arrayModified = arrayPositionBox.map((d, i)=>{
+        //     return {'x':d.x +offsetX, 'y':d.y + offsetY};
+        // })
 
-        return arrayModified;
+        // return arrayModified;
     }
     addPlaceHolder(){
         // console.log(this.props.placeholders);
@@ -165,9 +182,9 @@ class LinesGrouping extends Component {
                     .attr('stroke', 'black')
                     .attr('stroke-width', '2')
                 
-                console.log(d)
-                    var X = this.BBox.x- (d.BBox.width/2) - 50;
-                    var Y = (this.BBox.height / 2) + this.BBox.y - (d.BBox.height/2);
+                // console.log(d)
+                var X = this.BBox.x- (d.BBox.width/2) - 50;
+                var Y = (this.BBox.height / 2) + this.BBox.y - (d.BBox.height/2);
                 // var begin = [array[0]['x'], array[0]['y']];
 
                 // drawCircle(newArray[0]['x'], newArray[0]['y'], 10, 'blue')
@@ -179,17 +196,17 @@ class LinesGrouping extends Component {
                 // var X = ((end[0] - begin[0]) / 2) + begin[0]- (d.BBox.width/2);
                 // var Y = ((end[1] - begin[1]) / 2) + begin[1]- (d.BBox.height/2);
 
-                // var cx = this.BBox.x + this.BBox.width/2;
-                // var cy = this.BBox.y + this.BBox.height/2;
+                var cx = d.BBox.x + d.BBox.width/2;
+                var cy = d.BBox.y + d.BBox.height/2;
                 
                 // console.log(this.BBox)
 
                 // drawCircle(cx, cy, 10, 'blue')
                 // drawCircle(array[0]['x'], array[0]['y'], 10, 'blue')
                 //FOR SCALING
-                // var scale = 0.7;
-                // var x = (-cx * (scale - 1)) ;
-                // var y = (-cy * (scale - 1)) ;
+                var scale = 0.7;
+                var x = (-cx * (scale - 1)) ;
+                var y = (-cy * (scale - 1)) ;
                 // console.log(d)
                 d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).select('g').attr('transform', 'translate('+X+','+Y+')')
                 // d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+x+','+y+')scale(0.7)')

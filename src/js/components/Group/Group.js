@@ -29,7 +29,8 @@ class Group extends Component {
         super(props);
 
         this.state = {
-            'placeholders':[]
+            'placeholders':[],
+            'sketchLines': this.props.sketchLines
         }
     }
     componentDidMount(){
@@ -93,8 +94,12 @@ class Group extends Component {
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
-    componentDidUpdate(){
-        
+    componentDidUpdate(prevProps, prevState){
+        var that = this;
+        if (this.props.sketchLines != prevProps.sketchLines){
+            console.log('UPDATE SKECTHLINES')
+            this.setState({'sketchLines': this.props.sketchLines})
+        }
     }
     getBoundinxBoxEveryong(){
         // console.log(this.props)
@@ -107,7 +112,7 @@ class Group extends Component {
             return <LinesGrouping 
                 key={i} 
                 line={d}
-                sketchLines={JSON.parse(JSON.stringify(this.props.sketchLines))}
+                sketchLines={this.state.sketchLines}
                 placeholders={this.state.placeholders}
                 stroke={this.props.group.stroke}
                 id={this.props.group.id}
