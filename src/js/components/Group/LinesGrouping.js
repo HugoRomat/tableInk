@@ -131,7 +131,7 @@ class LinesGrouping extends Component {
 
 
                 
-                var X = this.BBox.x - d.BBox.width;
+                var X = this.BBox.x - d.BBox.width - 50;
                 var Y = this.BBox.y;
                 // var begin = [array[0]['x'], array[0]['y']];
 

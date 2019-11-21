@@ -82,7 +82,7 @@ class Group extends Component {
             })
 
 
-
+        // console.log(JSON.parse(JSON.stringify(this.placeHolder)))
         this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
     }
     dragstarted(env) {
@@ -183,7 +183,7 @@ class Group extends Component {
         var itemsGuide = [];
         placeholder.forEach(element => {
             var lines = element.lines;
-
+            // console.log(lines)
             if (lines.length > 0){
                 var arrayBBox = []
                 lines.forEach((d)=>{

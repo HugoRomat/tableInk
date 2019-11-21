@@ -25,7 +25,7 @@ class LinePlaceHolder extends Component {
     render() {
         return (
  
-            <path id={'stroke-'+this.props.stroke.id} />
+            <path id={'stroke-'+this.props.stroke.id} />//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
 
         );
         

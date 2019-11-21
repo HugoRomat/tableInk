@@ -98,7 +98,7 @@ class Guide extends Component {
             
             
             
-        console.log('GUIDE')
+        // console.log('GUIDE')
         var BBox = _getBBox(this.props.stroke.id);
         this.setState({'BBox': BBox})
        
@@ -220,7 +220,7 @@ class Guide extends Component {
         }
     }
     componentDidUpdate(){
-        console.log('HELLO')
+        // console.log('HELLO')
         var line = d3.line()
         var that = this;
         d3.select('#'+that.props.stroke.id)
@@ -232,7 +232,7 @@ class Guide extends Component {
         // console.log(this.props.stroke)
     }
     addLine = (d) => {
-        console.log('DOOO')
+        // console.log('DOOO')
        this.props.addLineToStickyGroup({
            'idGuide': d.idGuide,
            'where':d.where,

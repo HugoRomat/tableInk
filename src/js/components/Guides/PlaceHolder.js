@@ -44,11 +44,22 @@ class PlaceHolder extends Component {
             })
             .on('pointerup', function(d){
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
+
+
+                    // var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
+                    // var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke))
+                    // arrayPoints.forEach((d)=>{
+                    //     d[0] = d[0] - firstPoint[0];
+                    //     d[1] = d[1] - firstPoint[1]
+                    // })
+                    // console.log(arrayPoints[0])
                     var data = {
                         'idGuide':that.props.parent.id,
                         'where':that.props.data.id,
-                        'data':[{'id': guid(),
+                        'data':[{
+                            'id': guid(),
                             'data': that.tempArrayStroke
+                            // 'position': [firstPoint[0],firstPoint[1]]
                         }]
                     }
                     that.props.addLine(data);
