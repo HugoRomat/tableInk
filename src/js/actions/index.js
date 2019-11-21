@@ -34,3 +34,8 @@ export const addLineToStickyGroup = data => ({
     type: 'ADD_LINE_TO_STICKY_GROUP',
     data
 })
+
+export const moveSketchLines = data => ({
+    type: 'MOVE_SKETCH_LINES',
+    data
+})

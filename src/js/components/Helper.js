@@ -470,6 +470,14 @@ export function mergeRectangles(r1, r2) {
             height: Math.max(r1.height, r2.height)
           }
 }
+
+export function unionRectangles(r1, r2) {
+    return { x: Math.min(r1.x, r2.x),
+             y: Math.min(r1.y, r2.y),
+             width: Math.max(r1.x+r1.width, r2.x+r2.width) -  Math.min(r1.x, r2.x),
+             height: Math.max(r1.y+r1.height, r2.y+r2.height) -  Math.min(r1.y, r2.y)
+           }
+ }
 export function drawPath(oobb){
     var line = d3.line()
     // oobb.push(oobb[0]);
