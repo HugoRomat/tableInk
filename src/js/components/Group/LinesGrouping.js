@@ -40,6 +40,8 @@ class LinesGrouping extends Component {
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
             this.BBox = this.getBoundinxBoxEveryone();
+
+            // showBboxBB(this.BBox, 'red');
             this.addPlaceHolder();
             // console.log('UPDATE SKECTHLINES')
         }

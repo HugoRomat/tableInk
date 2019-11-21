@@ -34,7 +34,7 @@ class PlaceHolder extends Component {
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
                     if (that.down){
 
-                        
+                        // console.log('#item-' + that.props.parent.id)
                         var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
                         that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
                         that.drawLine();
@@ -65,12 +65,12 @@ class PlaceHolder extends Component {
     removeTempLine(){
         var that = this;
         var line = d3.line()
-        d3.select('#tempStroke-' + that.props.data.id).attr("d", null)
+        d3.select('#tempStroke-' + that.props.data.id + '-' + this.props.parent.id).attr("d", null)
     }
     drawLine(){
         var that = this;
         var line = d3.line()
-        d3.select('#tempStroke-' + this.props.data.id)
+        d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id)
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
             .attr('stroke', 'black')
@@ -147,7 +147,7 @@ class PlaceHolder extends Component {
         return (
             <g id={'placeHolder-' + this.props.data.id + '-' + this.props.parent.id}>
                 <rect id={'rect-' + this.props.data.id} />
-                <path id={'tempStroke-'+this.props.data.id} />
+                <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
 
                 <g className='paths'>
                     {listItems}

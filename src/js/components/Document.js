@@ -404,64 +404,6 @@ class Document extends Component {
 
         // console.log(selection)
     }
-    /*findClosestElementsDistance(objects, idGuide){
-        this.alreadyGoInsideLines = [];
-        objects.forEach((objectIntersection)=>{
-
-            var objectId = objectIntersection.id;
-            this.alreadyGoInsideLines.push(objectId);
-            
-            var lines = JSON.parse(JSON.stringify(this.props.sketchLines));
-            var line = lines.find(x => x.id == objectId);
-
-            var transform = getTransformation(d3.select('#item-'+objectId).attr('transform'))
-            console.log()
-            var startPoint = [line.points[0][0] + transform.translateX, line.points[0][1] + transform.translateY];
-            var endPoint =  [line.points[line.points.length-1][0] + transform.translateX, line.points[line.points.length-1][1] + transform.translateY];
-
-            console.log(startPoint, endPoint)
-            // findCloseToEndPoint(endPoint)
-            drawCircle(startPoint[0], startPoint[1], 5, 'green')
-            drawCircle(endPoint[0], endPoint[1], 5, 'green')
-            
-            findCloseToStartPoint(lines, startPoint, this.alreadyGoInsideLines)
-            
-        })
-
-        function findCloseToStartPoint(lines, startPoint, alreadyGoInsideLines){
-            var isIn = false;
-            // console.log(lines)
-            lines.forEach((d)=>{
-                // console.log(d)
-                d = JSON.parse(JSON.stringify(d));
-                if (alreadyGoInsideLines.indexOf(d.id) == -1){
-                    // console.log(d.id)
-                    var transform = getTransformation(d3.select('#item-'+d.id).attr('transform'))
-                    var lastPoint =  [d.points[d.points.length-1][0] + transform.translateX, d.points[d.points.length-1][1] + transform.translateY];
-                    // drawCircle(lastPoint[0], lastPoint[1], 1, 'red')
-                    var dist = distance(startPoint[0], lastPoint[0],startPoint[1], lastPoint[1] );
-                    console.log(dist)
-                    if (dist < 40){
-                        alreadyGoInsideLines.push(d.id);
-                        isIn = d.points[0];
-                        console.log(alreadyGoInsideLines)
-                    }
-                }
-               
-            })
-            // if (isIn != false){
-            //     findCloseToStartPoint(isIn)
-            // }
-        }
-        // function findCloseToEndPoint(endPoint){
-        //     lines.forEach((d)=>{
-        //         var firstPoint = d.points[0];
-        //         var dist = distance(endPoint[0], firstPoint[0],endPoint[1], firstPoint[1] );
-        //         console.log(dist)
-        //     })
-        // }
-    }*/
-
     findClosestElements(objects, idGuide){
         return new Promise((resolve, reject) => {
 
