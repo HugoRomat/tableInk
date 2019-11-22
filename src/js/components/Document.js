@@ -460,7 +460,7 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
-                // showBboxBB(BB, 'red')
+                showBboxBB(BB, 'red')
                 // showBbox('item-'+objectId, 'red');
                 
                 centerBox[i] = getCenterPolygon(points);
@@ -725,7 +725,7 @@ class Document extends Component {
             <div>
                 
                 <svg id="canvasVisualization">
-                    <rect id='eventReceiver' height={window.innerWidth} width={window.innerHeight} x={0} y={0} fill='red' opacity='0' />
+                    <rect id='eventReceiver'  x={0} y={0} fill='red' opacity='0' />
                     
                     <g id="item-feedBackVoice">
                         <circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" />
