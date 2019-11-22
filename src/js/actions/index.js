@@ -43,3 +43,11 @@ export const changeModelGroupLines = data => ({
     type: 'CHANGE_MODEL_GROUP_LINES',
     data
 })
+export const addText = data => ({
+    type: 'ADD_TEXT',
+    data
+})
+export const addLinesLetter = data => ({
+    type: 'ADD_LINES_LETTER',
+    data
+})

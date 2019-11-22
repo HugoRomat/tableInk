@@ -4,10 +4,12 @@ import { connect } from 'react-redux';
 
 
 import { 
+    addLinesLetter
   } from './../../actions';
 import Lettre from "./Lettre";
 
 const mapDispatchToProps = { 
+    addLinesLetter
 };
 const mapStateToProps = (state, ownProps) => {  
     // console.log(state)
@@ -21,36 +23,47 @@ const mapStateToProps = (state, ownProps) => {
 class Lettres extends Component {
     constructor(props) {
         super(props);
-        
     }
     componentDidMount(){
-   
+        // console.log('LETTRES')
+        var that = this;
+
+        d3.select('#closeModal')
+            .on('pointerdown', function(d){
+                setTimeout(function(){
+                    // d3.event.preventDefault();
+                    that.props.openAlphabet(false);
+                }, 100)
+                
+            })
     }  
+    addLine = (d) => {
+        this.props.addLinesLetter(d);
+    }
     render() {
 
-        // console.log( this.props.sketchLines)
+        // console.log( this.props.lettres)
         const listItems = this.props.lettres.map((d, i) => {
                 return <Lettre 
                     key={i} 
-                    lettre={d}
+                    lettre={d.id}
                     iteration={i}
+                    lines={d.lines}
+                    iteration={i}
+
+                    addLine={this.addLine}
             />
         });
-        // console.log(this.props.groupLines)
-        // const groupItems = this.props.groupLines.map((d, i) => {
-        //     // console.log(d)
-        //     return <g className="group" id={d.id} key={i} transform={`translate(${d.position[0]},${d.position[1]})`} > 
-        //         {d.data.map((e, j) => { return <g key={j} transform={`translate(${e.position[0]},${e.position[1]})`}>
-        //             <Line key={j} stroke={e}/>
-        //             </g> })}
-        //     </g>
-        // });
 
-        // console.log(groupItems)
+
         
         return (
             // <g id="linesGroup">
-                <g className="lettres">{listItems}</g>
+                <div className="lettres">
+
+                    <div className={'containerLetters'}>{listItems}</div>
+                    <button id={'closeModal'}>CLOSE</button>
+                </div>
             
             // </g>
         );

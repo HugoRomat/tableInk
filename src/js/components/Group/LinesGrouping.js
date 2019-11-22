@@ -28,7 +28,7 @@ class LinesGrouping extends Component {
         var that = this;
         //Si j'udpate la BBox
         if (this.props.placeholders != prevProps.placeholders){
-
+            this.BBox = this.getBoundinxBoxEveryone();
             // console.log('UPDATE PLACEHOLDER')
             this.addPlaceHolder();
         }
@@ -46,17 +46,31 @@ class LinesGrouping extends Component {
     getBoundinxBoxEveryone(){
         var line = this.props.line;
         var rectangle = null;
+        var that = this;
+
         line.forEach(strokeId => {
+            // console.log(strokeId)
             // console.log(rectangle)
+            // var transform = getTransformation(d3.select('group-'+strokeId).attr('transform'));
             var BB = _getBBox('item-'+strokeId);
-            // showBboxBB(BB, 'red');
+            // BB.x += transform.translateX;
+            // BB.y += transform.translateY;
+
             if (rectangle == null) rectangle = BB;
             else rectangle = unionRectangles(rectangle, BB);
+            
 
         })
+        // GET apres le drag en compte sur les BBox
+        var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+        rectangle.x -= transform.translateX;
+        rectangle.y -= transform.translateY;
+        // showBboxBB(rectangle, 'red');
         // showOmBB(oobb);
         return rectangle;
-        
+        // group-b58de6f6236d5f1d8f90172fba4461da7
+        // b58de6f6236d5f1d8f90172fba4461da7 
+
     }
     /**
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
@@ -76,6 +90,7 @@ class LinesGrouping extends Component {
 
         var pointOnLine = getSpPoint({'x':begin[0], 'y': begin[1]}, {'x':end[0], 'y': end[1]}, {'x': this.BBox['x'], 'y': this.BBox['y']});
         // drawCircle(pointOnLine.x, pointOnLine.y, 4,  'blue');
+        // drawCircle(this.BBox.x, this.BBox.y, 4,  'blue');
 
         var offsetX = pointOnLine.x - this.BBox['x']
         var offsetY = pointOnLine.y - this.BBox['y']
@@ -113,7 +128,7 @@ class LinesGrouping extends Component {
 
         this.props.placeholders.forEach((d)=>{
             if (d.id == 'left' && d.lines.length > 0){
-                console.log('GOOOO', d.lines[0]['data'][0])
+                // console.log('GOOOO', d.lines[0]['data'][0])
                 // d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).append('path')
 
                 d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path').remove()
@@ -147,7 +162,7 @@ class LinesGrouping extends Component {
                 var cx = d.BBox.x + d.BBox.width/2;
                 var cy = d.BBox.y + d.BBox.height/2;
                 
-                // console.log(this.BBox)
+                // console.log(this.BBox, d.id)
 
                 // drawCircle(cx, cy, 10, 'blue')
                 // drawCircle(array[0]['x'], array[0]['y'], 10, 'blue')

@@ -106,13 +106,13 @@ class Group extends Component {
         that.drag = true;
 
         clearTimeout(that.timerPress);
-        var transform = getTransformation(d3.select('#item-'+env.props.group.id).attr('transform'));
+        var transform = getTransformation(d3.select('#group-'+env.props.group.id).attr('transform'));
 
         var offsetX = d3.event.x - that.lastPosition.x;
         var offsetY = d3.event.y - that.lastPosition.y;
         var X = offsetX + transform.translateX;
         var Y = offsetY + transform.translateY;
-        d3.select('#item-'+env.props.group.id).attr('transform', 'translate('+X+','+Y+')')
+        d3.select('#group-'+env.props.group.id).attr('transform', 'translate('+X+','+Y+')')
 
 
         var linesAttached = that.props.group['lines'];

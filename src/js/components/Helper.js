@@ -463,6 +463,19 @@ export function lineIntersectsPolygone(begin, end, arrayVector){
     })
     return isIntersectSquare;
 }
+export function calculateBB(points) {
+    var minX = Math.min.apply(null, points.map(function(a){return a[0];}))
+    var maxX = Math.max.apply(null, points.map(function(a){return a[0];}))
+
+    var minY = Math.min.apply(null, points.map(function(a){return a[1];}))
+    var maxY = Math.max.apply(null, points.map(function(a){return a[1];}))
+
+    var width = maxX - minX;
+    var height = maxY - minY;
+
+    return {'x': minX, 'y': minY, 'width': width, 'height': height};
+ }
+ 
 export function mergeRectangles(r1, r2) {
    return { x: Math.min(r1.x, r2.x),
             y: Math.min(r1.y, r2.y),

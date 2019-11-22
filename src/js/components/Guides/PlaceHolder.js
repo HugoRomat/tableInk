@@ -22,7 +22,7 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                console.log(d3.event)
+                // console.log(d3.event)
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
                     that.down = true;
@@ -139,7 +139,7 @@ class PlaceHolder extends Component {
                 rect.attr('stroke', 'black')
                     .attr('fill', 'rgba(0,0,0,0)')
                     .attr('stroke-dasharray', 10)
-                    .attr('opacity', '0.2')
+                    .attr('opacity', '0')
                     // .attr('stroke-width', '4')
             }
         }

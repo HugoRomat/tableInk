@@ -20,7 +20,8 @@ import {
     addStickyLines,
     addLinesClass,
     addLinesToSticky,
-    changeModelGroupLines
+    changeModelGroupLines,
+    addText
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -28,6 +29,8 @@ import Interface from "./Interface";
 import Menus from "./Menus/Menus";
 import Lettres from "./Lettres/Lettres";
 import Groups from "./Group/Groups";
+import { SpeechRecognitionClass } from "./SpeechReognition/Speech";
+import Textes from "./Textes/Textes";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -36,7 +39,8 @@ const mapDispatchToProps = {
     addStickyLines,
     addLinesClass,
     addLinesToSticky,
-    changeModelGroupLines
+    changeModelGroupLines,
+    addText
 };
 
 
@@ -74,7 +78,12 @@ class Document extends Component {
 
         this.linesInselection = [];
         this.guideTapped = null;
+        this.press = false;
 
+        this.state = {
+            shouldOpenAlphabet: false
+        }
+        // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
     init(){
@@ -85,7 +94,10 @@ class Document extends Component {
         d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
         // d3.select('#eventReceiver').style('width', '100%').style('height', '100%');
         
-        // this.listenHammer();
+        this.listenHammer();
+
+        this.speech = new SpeechRecognitionClass(this);
+
         // this.init();
 
         // this.isMount = true;
@@ -95,12 +107,12 @@ class Document extends Component {
     }
     listenHammer(){
         var that = this;
-        var el = document.getElementById("canvasVisualization");
+        var el = document.getElementById("eventReceiver");
         this.mc = new Hammer.Manager(el);
         var press = new Hammer.Press({time: 250});
         var pan = new Hammer.Pan({'pointers':2, threshold: 5});
         this.mc.add(press);
-        this.mc.add(pan);
+        // t3his.mc.add(pan);
 
         // pan.recognizeWith(press);
 
@@ -125,22 +137,27 @@ class Document extends Component {
         //       }
         //     }
         //   })
-        //   this.mc.on("press", function(ev) {
-        //     //   ev.preventDefault();
-        //         // console.log(that)
-        //       if (ev.pointers[0]['pointerType'] == 'touch'){
-        //         // console.log('PRESS')
-        //         that.press = true;
-        //         // that.press(ev);
-        //       }
-        //     })
-        //     this.mc.on("pressup", function(ev) {
-        //         //   ev.preventDefault();
-        //             // console.log(that)
-        //           if (ev.pointers[0]['pointerType'] == 'touch'){
-        //             that.press = false;
-        //           }
-        //         })
+        this.mc.on("press", function(ev) {
+            ev.preventDefault();
+            if (ev.pointers[0]['pointerType'] == 'touch'){
+                ev.srcEvent.preventDefault();
+                that.press = true;
+                console.log(ev)
+                that.speech.start({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
+
+                
+            }
+        })
+        this.mc.on("pressup", function(ev) {
+              ev.preventDefault();
+                // console.log(that)
+                if (ev.pointers[0]['pointerType'] == 'touch'){
+                    that.press = false;
+                    console.log(that.speech)
+                    that.speech.stop();
+                    
+                }
+        })
     }
     
     panEnd(e){
@@ -155,7 +172,7 @@ class Document extends Component {
             .on('pointerdown', function(){
 
                 // getNearestElement('be5a214fa3b0575c82931d4084bd29367', that.props.sketchLines)
-                // console.log('HEY')
+                console.log('HEY')
                 // if (d3.event.pointerType == 'pen'){
                 that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]}
                 // that.selecting =false;
@@ -237,16 +254,19 @@ class Document extends Component {
 
                             
                             that.tempArrayStroke.push([d3.event.x, d3.event.y])
-                            if (that.drawing){
+                            if (that.press){
+
+                            }
+                            else if (that.drawing){
                                 that.drawTempStroke();
                             }
-                            if (that.sticky){
+                            else if (that.sticky){
                                 that.drawTempStroke();
                             }
-                            if (that.selecting){
+                            else if (that.selecting){
                                 that.drawTempSelectingStroke();
                             }
-                            if (that.duplicating){
+                            else if (that.duplicating){
                                 that.drawTempStroke();
                                 // console.log('Hello world')
                             }
@@ -295,7 +315,10 @@ class Document extends Component {
                     //     // selectionGroup
                     //     that.selecting = false;
                     // }
-                    if (that.duplicating){
+                    if (that.press){
+
+                    }
+                    else if (that.duplicating){
                         // that.drawTempStroke();
                         var objectsSelected = that.findIntersection('penTemp');
                         var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
@@ -555,6 +578,7 @@ class Document extends Component {
         var that = this;
         // console.log( this.objectIn)
         
+        
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
         var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
         arrayPoints.forEach((d)=>{
@@ -609,27 +633,32 @@ class Document extends Component {
 
     addStroke(){
         var id = guid();
-        // To have everything in 0,0
-        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-        var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
-        arrayPoints.forEach((d)=>{
-            d[0] = d[0] - firstPoint[0];
-            d[1] = d[1] - firstPoint[1]
-        })
-        // console.log(arrayPoints)
-        var data = {
-            'points': arrayPoints, 
-            'data': {'class':[]}, 
-            'id': id, 
-            'position': [firstPoint[0],firstPoint[1]]
+
+        if (this.tempArrayStroke.length > 1){
+            // To have everything in 0,0
+            var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+            var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
+            arrayPoints.forEach((d)=>{
+                d[0] = d[0] - firstPoint[0];
+                d[1] = d[1] - firstPoint[1]
+            })
+            // console.log(arrayPoints)
+            var data = {
+                'points': arrayPoints, 
+                'data': {'class':[]}, 
+                'id': id, 
+                'position': [firstPoint[0],firstPoint[1]]
+            }
+            this.props.addSketchLine(data);
         }
-        this.props.addSketchLine(data);
-       
     }
 
     changeWidthStroke = (d) => {
         // console.log(d)
         this.strokeWidth = String(d);
+    }
+    addText (d){
+        this.props.addText(d);
     }
     changeColorStroke = (d, opacity) => {
         // console.log(d, this)
@@ -661,6 +690,10 @@ class Document extends Component {
     setSelection = (d) => {
         this.linesInselection = d;
     }
+    openAlphabet = (d) => {
+        // console.log('HEY')
+        this.setState({shouldOpenAlphabet:d});
+    }
     setGuideTapped = (d) => {
 
         console.log(this.linesInselection, d)
@@ -685,35 +718,52 @@ class Document extends Component {
             <div>
                 
                 <svg id="canvasVisualization">
-                        <rect id='eventReceiver' height={window.innerWidth} width={window.innerHeight} x={0} y={0} fill='red' opacity='0' />
-                        
-                        <Lines />
-                        <Guides 
-                            holdGuide={this.holdGuide} 
-                            dragItem={this.dragItem}
-                            setGuideTapped={this.setGuideTapped}
-                        />
-                        <Interface />
+                    <rect id='eventReceiver' height={window.innerWidth} width={window.innerHeight} x={0} y={0} fill='red' opacity='0' />
+                    
+                    <g id="item-feedBackVoice">
+                        <circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" />
+                    </g>
 
-                        <Menus />
-                        <Lettres />
-                        <Groups 
-                            setSelection={this.setSelection}
-                        />
 
-                        <g id="tempLines">
-                            <path id="penTemp"></path>
-                        </g>
-                        
-                        {/* <g id="eventReceiver">
-                            </g>     */}
-                        {/* <ColorMenu isSticky={this.isSticky} changeColorStroke={this.changeColorStroke} changeWidthStroke={this.changeWidthStroke} changeActionPen={this.changeActionPen}/> */}
+                    <Lines />
+                    <Guides 
+                        holdGuide={this.holdGuide} 
+                        dragItem={this.dragItem}
+                        setGuideTapped={this.setGuideTapped}
+                    />
+                    <Interface />
+
+                    <Menus />
+                    
+                    <Groups 
+                        setSelection={this.setSelection}
+                    />
+                    <Textes />
+
+                    <g id="tempLines">
+                        <path id="penTemp"></path>
+                    </g>
+
+
+                   
+
+
+                    {/* <g id="eventReceiver">
+                        </g>     */}
+                    {/* <ColorMenu isSticky={this.isSticky} changeColorStroke={this.changeColorStroke} changeWidthStroke={this.changeWidthStroke} changeActionPen={this.changeActionPen}/> */}
                         
                
 
                 </svg>
+                
                 {/* <svg id="eventReceiver"></svg> */}
-                <ColorMenu isSticky={this.isSticky} isGroup ={this.isGroup} />
+                <ColorMenu 
+                    openAlphabet={this.openAlphabet}
+
+                    isSticky={this.isSticky} 
+                    isGroup ={this.isGroup} 
+                />
+                {this.state.shouldOpenAlphabet ? <Lettres openAlphabet={this.openAlphabet} /> : null}
             </div>
         );
     }

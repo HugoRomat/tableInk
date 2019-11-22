@@ -104,19 +104,7 @@ class Guide extends Component {
        
     
     }
-    expandSelection(id){
 
-        getNearestElement(id).then((d)=> {
-
-            for (var i in d){
-                var id = d[i];
-                // console.log(id)
-                showBbox(id, 'black');
-               
-            }
-            
-        })
-    }
     dragstarted(env) {
         // if (d3.event.sourceEvent == tou
         // console.log(d3.event.sourceEvent)
@@ -228,7 +216,7 @@ class Guide extends Component {
             .attr('fill', 'none')
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
-            .attr("stroke-dasharray", "5");
+            .attr("stroke-dasharray", "7");
         // console.log(this.props.stroke)
     }
     addLine = (d) => {

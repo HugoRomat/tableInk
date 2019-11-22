@@ -14,7 +14,7 @@ body::before {
     border-color: transparent #efe4e4;
   
   }
-svg, canvas{
+#canvasVisualization{
     /* background: grey; */
     /* background: rgb(178, 172, 162); */
     position: absolute;
@@ -36,6 +36,7 @@ svg, canvas{
 .buttonMenu{
     padding:20px;
 }
+
 #rectVisualization{
     /* width: 100%;
     height: 100%;
@@ -44,5 +45,39 @@ svg, canvas{
     user-select: none;
     touch-action: none;
     cursor: text; */
+}
+.SVGitem{
+    width: 100%;
+    height: 100%;
+    user-select: none;
+    touch-action: none;
+}
+
+.lettres{
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    top: 2.5%;
+    left: 2.5%;
+    background: white;
+    
+}
+.containerLetters{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.lettreSVG{
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+
+    width: 100px;
+    height: 100px;
+    margin: 10px;
+    margin-top: 50px;
+
+}
+.textLabel{
+    text-align: center;
 }
 /* // no-repeat bottom center fixed; */
