@@ -1,4 +1,4 @@
-import { guid } from "../Helper";
+import { guid, mergeRectangles, calculateBB } from "../Helper";
 import * as d3 from 'd3';
 
 export class SpeechRecognitionClass { 
@@ -38,6 +38,9 @@ export class SpeechRecognitionClass {
             if (that.isStop == false) that.animate()
         })
     }
+    setAlphabet(alphabet){
+        this.alphabet =  JSON.parse(JSON.stringify(alphabet));
+    }
     start(position){
         console.log('START')
         var that = this;
@@ -51,7 +54,7 @@ export class SpeechRecognitionClass {
             .on('contextmenu', function(){d3.event.preventDefault();})
             
 
-           this.animate();
+        this.animate();
             
             
        
@@ -59,12 +62,13 @@ export class SpeechRecognitionClass {
 
         this.recognition.onresult = function(event) {
             var texte = event.results[0][0].transcript;
-            console.log(texte)
-            that.document.addText({
-                'id': guid(),
-                'content': texte.toLowerCase(),
-                'position': [position.x, position.y]
-            })
+            // console.log(texte)
+            that.addText(texte, position)
+            // that.document.addText({
+            //     'id': guid(),
+            //     'content': texte.toLowerCase(),
+            //     'position': [position.x, position.y]
+            // })
         }
 
     }
@@ -75,6 +79,65 @@ export class SpeechRecognitionClass {
         .attr('cx', 0)
         .attr('cy', 0)
     }
+    addText(texte, position){
+        console.log(texte)
+        this.alphabet.forEach((d)=>{
+            this.computeLinesPlaceHOlder(d)
+        })
+        var bufferX = 0;
+        var oldValue = 0;
+
+        var simplifiedTexte = texte.toLowerCase().split('');
+
+        simplifiedTexte.forEach((d)=>{
+            var index = this.alphabet.indexOf(this.alphabet.find(x => x.id == d));
+
+            if (d == ' '){
+                bufferX += 20;
+            }
+            else if (index > -1 && this.alphabet[index]['BBox'] != undefined){
+                var BBox = this.alphabet[index]['BBox'];
+                // console.log(letter['BBox'])
+                bufferX += oldValue;
+                oldValue = BBox.width;
+                this.alphabet[index].lines.forEach((d)=>{
+                    var data = {
+                        'points': d.points, 
+                        'data': {'class':[]}, 
+                        'id': guid(), 
+                        'isAlphabet': true,
+                        'position': [bufferX + position.x,position.y-50],
+                    }
+                    this.document.addStrokeFilledData(data);
+                    // console.log(d)
+                })
+            }
+        })
+    
+    }
+    computeLinesPlaceHOlder(data){
+        var arrayBBox = [];
+        data.lines.forEach(line => {
+            var BB = calculateBB(line['points']);
+            BB.height = 100;
+            BB.y = 0;
+            arrayBBox.push(BB)
+        });
+        var polygon;
+        if (arrayBBox.length > 1){
+            polygon = mergeRectangles(arrayBBox[0], arrayBBox[1])
+            for (var i = 2; i < arrayBBox.length; i++){
+                polygon = mergeRectangles(polygon, arrayBBox[i])
+            }
+        } else polygon = arrayBBox[0]
+        
+        data.lines.forEach((d)=>{
+            d['points'] = d['points'].map((f)=> [f[0] - polygon.x, f[1] - polygon.y])
+        })
+        // console.log(lines)
+        data.BBox = polygon;
+    }
+
     
  } 
 

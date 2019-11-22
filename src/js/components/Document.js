@@ -49,7 +49,8 @@ function mapStateToProps(state, ownProps) {
     // console.log(state)
     return {
         sketchLines: state.rootReducer.present.sketchLines,
-        stickyLines: state.rootReducer.present.stickyLines
+        stickyLines: state.rootReducer.present.stickyLines,
+        lettres: state.rootReducer.present.lettres
     };
 }
 
@@ -142,7 +143,8 @@ class Document extends Component {
             if (ev.pointers[0]['pointerType'] == 'touch'){
                 ev.srcEvent.preventDefault();
                 that.press = true;
-                console.log(ev)
+                // console.log(ev)
+                that.speech.setAlphabet(that.props.lettres)
                 that.speech.start({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
 
                 
@@ -172,7 +174,7 @@ class Document extends Component {
             .on('pointerdown', function(){
 
                 // getNearestElement('be5a214fa3b0575c82931d4084bd29367', that.props.sketchLines)
-                console.log('HEY')
+                // console.log('HEY')
                 // if (d3.event.pointerType == 'pen'){
                 that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]}
                 // that.selecting =false;
@@ -565,7 +567,7 @@ class Document extends Component {
             // console.log(line, ))
             line.forEach((D)=>{
                 var oobb = getoobb(D, sketchLines);
-                // drawPath(oobb.oobb)
+                drawPath(oobb.oobb)
             })
             // var oobb = getoobb(line, JSON.parse(JSON.stringify(this.props.sketchLines)));
             // console.log(oobb)
@@ -630,7 +632,10 @@ class Document extends Component {
         var line = d3.line()
         d3.select('#penTemp').attr("d", line([]))
     }
-
+    addStrokeFilledData(data){
+        // console.log(data)
+        this.props.addSketchLine(data);
+    }
     addStroke(){
         var id = guid();
 
@@ -647,6 +652,7 @@ class Document extends Component {
                 'points': arrayPoints, 
                 'data': {'class':[]}, 
                 'id': id, 
+                'isAlphabet': false,
                 'position': [firstPoint[0],firstPoint[1]]
             }
             this.props.addSketchLine(data);

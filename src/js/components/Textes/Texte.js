@@ -17,7 +17,26 @@ class Texte extends Component {
         //     .html(that.props.texte.content)
 
     }
+    addStroke(){
+        var id = guid();
+
     
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
+        arrayPoints.forEach((d)=>{
+            d[0] = d[0] - firstPoint[0];
+            d[1] = d[1] - firstPoint[1]
+        })
+        // console.log(arrayPoints)
+        var data = {
+            'points': arrayPoints, 
+            'data': {'class':[]}, 
+            'id': id, 
+            'position': [firstPoint[0],firstPoint[1]]
+        }
+        this.props.addSketchLine(data);
+        
+    }
     componentDidUpdate(){
         
     }
@@ -43,14 +62,15 @@ class Texte extends Component {
                 oldValue = BBox.width;
                 // console.log(BBox.width)
                 // bufferY+= BBox.width;
-                return <LettreVoice
-                        id={that.props.texte.id}
-                        key={i} 
-                        lettre={d}
-                        lettreDefinition={that.props.lettresDefinition[index]}
-                        position={[bufferX,-50]}
-                        iteration={i}
-                   />
+                // that.addStrokeGuide()
+                // return <LettreVoice
+                //         id={that.props.texte.id}
+                //         key={i} 
+                //         lettre={d}
+                //         lettreDefinition={that.props.lettresDefinition[index]}
+                //         position={[bufferX,-50]}
+                //         iteration={i}
+                //    />
             }
            
         });
