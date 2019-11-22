@@ -12,7 +12,7 @@ export class SpeechRecognitionClass {
         // var speechRecognitionList = new SpeechGrammarList();
         // speechRecognitionList.addFromString(grammar, 1);
         // recognition.grammars = speechRecognitionList;
-        this.recognition.lang = 'fr-FR';
+        this.recognition.lang = 'en-EN';
         this.recognition.continuous = false;
         this.recognition.interimResults = false;
         this.recognition.maxAlternatives = 10;

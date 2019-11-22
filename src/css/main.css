@@ -36,7 +36,32 @@ body::before {
 .buttonMenu{
     padding:20px;
 }
+#abcd{
+    position: absolute;
+    top: 0px;
+    left: 20px;
+    width: 100px;
+    border-radius: 10%;
+    padding: 2px;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+    
+}
+#abcd img{
+    width: 100%;
+}
 
+#closeModal{
+    width: 100px;
+    position: absolute;
+    left: 45%;
+    top: 87%;
+    border-radius: 10%;
+    padding: 2px;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+}
+#closeModal img{
+    width: 100%;
+}
 #rectVisualization{
     /* width: 100%;
     height: 100%;

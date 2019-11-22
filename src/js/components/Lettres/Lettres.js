@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import { connect } from 'react-redux';
-
+import close from './../../../../static/close.png';
 
 import { 
     addLinesLetter
@@ -62,7 +62,10 @@ class Lettres extends Component {
                 <div className="lettres">
 
                     <div className={'containerLetters'}>{listItems}</div>
-                    <button id={'closeModal'}>CLOSE</button>
+                    
+                    <div id="closeModal" >  <img src={close} /></div>
+
+                    {/* <button id={'closeModal'}>CLOSE</button> */}
                 </div>
             
             // </g>

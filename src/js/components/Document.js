@@ -460,6 +460,7 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
+                // showBboxBB(BB, 'red')
                 // showBbox('item-'+objectId, 'red');
                 
                 centerBox[i] = getCenterPolygon(points);
@@ -502,10 +503,10 @@ class Document extends Component {
             if (alreadyAdded.indexOf(id) == -1){
                 
                 var BB = _getBBox('item-'+id);
-                BB.x -= 10;
-                BB.y -= 10;
-                BB.width +=20;
-                BB.height += 20
+                BB.x -= 15;
+                BB.y -= 15;
+                BB.width +=30;
+                BB.height += 30
                 var oobbNew = [
                     {'x': BB.x, 'y':BB.y},
                     {'x': BB.x+ BB.width, 'y':BB.y},

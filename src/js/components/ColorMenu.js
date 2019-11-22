@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import paper, { Path } from 'paper';
 import $ from 'jquery';
 
-import highlighter from './../../../static/highlighter.svg';
+import highlighter from './../../../static/alphabet.png';
 import pencil from './../../../static/pencil.svg';
 import pen from './../../../static/pen.svg';
 import { 
@@ -69,7 +69,12 @@ class ColorsMenu extends Component {
        
         return (
            <div id="buttons">
-               <button className="buttonMenu" issticky='false' id="abcd"> abcd </button>
+               {/* <button className="buttonMenu" issticky='false' id="abcd"> abcd </button> */}
+
+               <div id="abcd" className="buttonMenu"> 
+                    <img src={highlighter} />
+
+               </div>
                {/* <button className="buttonMenu" issticky='false' id="rule"> noSticky </button> */}
                {/* <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button> */}
                 {/* <g id="rule" issticky='false' transform={'translate(400,20)'}>
