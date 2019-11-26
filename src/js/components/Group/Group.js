@@ -12,6 +12,7 @@ import CalcConvexHull from "../../../../customModules/convexhull";
 import CalcOmbb from "../../../../customModules/ombb";
 import LinesGrouping from "./LinesGrouping";
 import Polygon from 'polygon'
+import Background from "./Background";
 
 const mapDispatchToProps = { 
     moveSketchLines
@@ -180,20 +181,32 @@ class Group extends Component {
     }
     //SERT A METTRE MES OBJETS EN 0 ABSOLU ++ Update ma BBOX de mon objet PLACEHOLDER
     computeLinesPlaceHOlder(placeholder){
+        var that = this;
         var itemsGuide = [];
+
+        // console.log(placeholder[1]['lines'][0]['data'][0])
+        
         placeholder.forEach(element => {
             var lines = element.lines;
             // console.log(lines)
             if (lines.length > 0){
-                var arrayBBox = []
+                var arrayBBox = [];
+                // console.log('#placeHolder-'+element.id +'-' + that.props.group.model.id);
+                var node = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).node();
+                var nodeParent = d3.select(node.parentNode.parentNode);
+
+                var transform = getTransformation(nodeParent.attr('transform'));
+                var BB = node.getBBox();
+                BB.x = BB.x+transform.translateX;
+                BB.y = BB.y+transform.translateY;
+                BB.width = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width');
+                BB.height = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('height')
+                arrayBBox.push(BB);
+
+                // console.log(BB, d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width'))
+                // // console.log(transform)
                 lines.forEach((d)=>{
-                    var node = d3.select('#stroke-'+d.id).node();
-                    var nodeParent = d3.select(node.parentNode.parentNode.parentNode);
-                    var transform = getTransformation(nodeParent.attr('transform'));
-                    var BB = node.getBBox();
-                    BB.x = BB.x+transform.translateX;
-                    BB.y = BB.y+transform.translateY;
-                    arrayBBox.push(BB);
+                    
                     d.data = d.data.map((f)=> [f[0] + transform.translateX, f[1] + transform.translateY])
                 })
                 // SERT A TROUVER LE COIN EN HAUT A GAUCHE
@@ -212,19 +225,21 @@ class Group extends Component {
                     // console.log(d.data)
                 })
                 element.BBox = polygon;
-               
+
+                // console.log(lines)
+                // showBboxBB(polygon, 'red');
             }
             
-            // console.log(element)
+            // console.log(polygon, element.id)
         });
-//  console.log(placeholder)
+        // console.log(placeholder)
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
         if (this.props.sketchLines != prevProps.sketchLines){
-            // console.log('UPDATE SKECTHLINES')
+            console.log('UPDATE SKECTHLINES')
             this.setState({'sketchLines': this.props.sketchLines})
         }
         // console.log('UPDATE', this.props.model, prevProps.model)
@@ -234,7 +249,7 @@ class Group extends Component {
         }
 
         if (this.props.group.model != prevProps.group.model){
-            // console.log('GOO')
+            console.log('UPDATE PLACEHOLDER')
             this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
         } 
     }
@@ -245,6 +260,9 @@ class Group extends Component {
         this.props.moveSketchLines(d);
     }
     render() {
+
+        // console.log(this.props.group)
+        //Pour chaque ligne reconnu dans mon groupe
         const listItems = this.props.group.lines.map((d, i) => {
             return <LinesGrouping 
                 key={i} 
@@ -262,6 +280,18 @@ class Group extends Component {
         return (
             <g id={'group-'+this.props.group.id} transform={`translate(0,0)`}>
                 {listItems}
+
+                <Background
+                    sketchLines={this.state.sketchLines}
+                    placeholders={this.state.placeholders}
+                    stroke={this.props.group.stroke}
+                    id={this.props.group.id}
+
+                    group={this.props.group}
+
+                />
+                 
+                
                 <g id={'item-'+this.props.group.id} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
                     <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/>
                     <path id={'fake-'+this.props.group.id}></path>

@@ -40,7 +40,7 @@ class Guides extends Component {
                     setGuideTapped={this.setGuideTapped}
             />
         });
-        console.log(listItems);
+        // console.log(listItems);
 
 
 

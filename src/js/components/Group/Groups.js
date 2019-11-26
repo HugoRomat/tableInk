@@ -47,7 +47,7 @@ class Groups extends Component {
     }
     render() {
 
-        // console.log( this.props.groupLines)
+        console.log(this.props.groupLines)
         const listItems = this.props.groupLines.map((d, i) => {
             return <Group 
                 key={i} 

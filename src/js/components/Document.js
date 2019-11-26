@@ -13,6 +13,8 @@ import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
 import CalcOmbb from './../../../customModules/ombb';
 
+import {boxBox} from 'intersects';
+
 import { 
     addSketchLine,
     removeSketchLines,
@@ -446,6 +448,8 @@ class Document extends Component {
             var centerBox = [0];
             var pointsThroughLine = [];
             var alreadyAdded = [];
+
+            console.log(objects)
             objects.forEach((objectIntersection, i)=>{
                 pointsThroughLine.push([]);
                 alreadyAdded.push([])
@@ -460,7 +464,7 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
-                showBboxBB(BB, 'red')
+                // showBboxBB(BB, 'red');
                 // showBbox('item-'+objectId, 'red');
                 
                 centerBox[i] = getCenterPolygon(points);
@@ -477,7 +481,25 @@ class Document extends Component {
 
             })
 
-            resolve(alreadyAdded)
+
+            /**
+             * REMOVE DOUBLONS
+             */
+            var arrayDoublons = [];
+            var realArray = [];
+            alreadyAdded.forEach((d)=>{
+                var newArr = [];
+                d.forEach((e)=>{
+                    if (arrayDoublons.indexOf(e) == -1) newArr.push(e)
+                    // else console.log('doublon');
+                    arrayDoublons.push(e)
+                })
+                realArray.push(newArr)
+            })
+    
+
+            // console.log(realArray)
+            resolve(realArray)
 
         })
 
@@ -549,13 +571,49 @@ class Document extends Component {
             var isIn = false;
             var i = 0;
             var length = d3.select('#penTemp').node().getTotalLength();
-            while( isIn == false && i< length){
+            while(isIn == false && i< length){
                 var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
                 var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
                 if (isIn) that.objectIn.push({'id':d3.select(this).attr('id').split('-')[1]})
-                i++;
+                i+=10;
             }
         })
+
+
+        /**
+        *   CHECK INTERSECTION BETWEEN BOXES
+        */
+        var indexToSLice = []
+        for (var i = 0; i < that.objectIn.length; i++){
+            var id1 = that.objectIn[i];
+            var BB1 = _getBBox('item-'+id1.id);
+            BB1.x -= 10
+            BB1.width += 20
+            
+            // showB/boxBB(BB1, 'red');
+            for (var j = i+1; j < that.objectIn.length; j++){
+                var id2 = that.objectIn[j];
+                var BB2 = _getBBox('item-'+id2.id);
+                var intersected = boxBox(BB1.x, BB1.y, BB1.width, BB1.height, BB2.x, BB2.y, BB2.width, BB2.height);
+                //  indexToSLice.push(i);
+                if (intersected) {
+                    // console.log(intersected, i, j)
+                    indexToSLice.push(i);
+                }
+            }
+            
+        }
+
+        for (var i = indexToSLice.length - 1; i >= 0; i--) {
+            that.objectIn.splice(indexToSLice[i], 1);
+        }
+       
+
+        // for (var i = 0; i < that.objectIn.length; i++){
+        //     var id1 = that.objectIn[i];
+        //     var BB1 = _getBBox('item-'+id1.id)
+        //     showBboxBB(BB1, 'red');
+        // }
 
         // console.log(that.objectIn)
         return JSON.parse(JSON.stringify(that.objectIn))
@@ -591,7 +649,7 @@ class Document extends Component {
         var data = {
             'points': arrayPoints, 
             'id': id, 
-            'placeHolder': [{'id':'left', 'data': {}, 'lines':[]}, {'id':'right', 'data': {}, 'lines':[]}, {'id':'top', 'data': {}, 'lines':[]}, {'id':'bottom', 'data': {}, 'lines':[]}, {'id':'middle', 'data': {}, 'lines':[]}],
+            'placeHolder': [{'id':'background', 'data': {}, 'lines':[]}, {'id':'left', 'data': {}, 'lines':[]}, {'id':'right', 'data': {}, 'lines':[]}, {'id':'middle', 'data': {}, 'lines':[]}],
             'position': [firstPoint[0],firstPoint[1]],
             'textPosition': {'where': 'right', 'position': [10,50]},
         }

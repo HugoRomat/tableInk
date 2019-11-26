@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox } from "./../Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB } from "./../Helper";
 import { connect } from 'react-redux';
 
 
@@ -39,7 +39,7 @@ class Guide extends Component {
         };
     }
     componentDidMount(){
-        // console.log(this.props.stroke)
+        
         var line = d3.line()
         var that = this;
 
@@ -98,9 +98,10 @@ class Guide extends Component {
             
             
             
-        // console.log('GUIDE')
-        var BBox = _getBBox(this.props.stroke.id);
-        this.setState({'BBox': BBox})
+        // console.log('GUIDE', this.props.stroke.id)
+        // var BBox = _getBBox(this.props.stroke.id);
+        // console.log(BBox)
+        // this.setState({'BBox': BBox})
        
     
     }
@@ -256,14 +257,19 @@ class Guide extends Component {
         }
     }
     render() {
-        // console.log(this.props.stroke.placeHolder)
+        // console.log(this.props.stroke);
+
+        var BB = calculateBB(this.props.stroke.points);
+        // console.log(BB)
+        // var height = 
+
 
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
                     key={i}
                     data={d}
                     parent={this.props.stroke}
-                    BBoxParent={this.state.BBox}
+                    BBoxParent={BB}
                     lines={d['lines']}
                     addLine={this.addLine}
                 />

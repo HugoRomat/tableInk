@@ -17,12 +17,14 @@ class PlaceHolder extends Component {
     // }
     
     componentDidMount(){
+
+        this.drawPlaceHolder();
         // console.log(this.props.data)
         var that = this;
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                // console.log(d3.event)
+                console.log(d3.select(this).attr('id'))
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
                     that.down = true;
@@ -45,7 +47,7 @@ class PlaceHolder extends Component {
             .on('pointerup', function(d){
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
-
+                    console.log('ADD')
                     // var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
                     // var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke))
                     // arrayPoints.forEach((d)=>{
@@ -91,62 +93,59 @@ class PlaceHolder extends Component {
         
     }
     componentDidUpdate(prevProps, prevState){
+    }
+    drawPlaceHolder(){
+
+    
         var that = this;
         //Si j'udpate la BBox
-        if (this.props.BBoxParent != prevProps.BBoxParent){
+        // if (this.props.BBoxParent != prevProps.BBoxParent){
             // console.log('UPDATE BOX', that.props.data.id);
-            var height = this.props.BBoxParent.height;
-            var width = this.props.BBoxParent.width;
-            var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
-            var rect = null;
-            if (this.props.data.id == 'left'){
-                rect = element
-                    .attr('width', 150-(width))
-                    .attr('height', height)
-                    .attr('x', -150)
-                    .attr('y',0)
-            }
-            else if (this.props.data.id == 'right'){
-                rect = element
-                    .attr('width', 150 -(width))
-                    .attr('height', height)
-                    .attr('x', (width))
-                    .attr('y',0)
-            }
-            else if (this.props.data.id == 'top'){
-                rect = element
-                    .attr('width', 150*2)
-                    .attr('height', 50)
-                    .attr('x', -150)
-                    .attr('y',-50)
-            }
-            else if (this.props.data.id == 'bottom'){
-                rect = element
-                    .attr('width', 150*2)
-                    .attr('height', 50)
-                    .attr('x', -150)
-                    .attr('y',height)
-            }
-            else if (this.props.data.id == 'middle'){
-                rect = element
-                    .attr('width', width*2)
-                    .attr('height', height)
-                    .attr('x', -width)
-                    .attr('y',0)
-            }
-    
-            if (rect != null){
-                rect.attr('stroke', 'black')
-                    .attr('fill', 'rgba(0,0,0,0)')
-                    .attr('stroke-dasharray', 10)
-                    .attr('opacity', '0')
-                    // .attr('stroke-width', '4')
-            }
+        var height = this.props.BBoxParent.height;
+        var width = this.props.BBoxParent.width;
+        var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
+        var rect = null;
+        if (this.props.data.id == 'left'){
+            rect = element
+                .attr('width', 100-(width))
+                .attr('height', height)
+                .attr('x', -100)
+                .attr('y',0)
         }
+        else if (this.props.data.id == 'right'){
+            rect = element
+                .attr('width', 120 -(width))
+                .attr('height', height)
+                .attr('x', (width))
+                .attr('y',0)
+        }
+        else if (this.props.data.id == 'background'){
+            rect = element
+                .attr('width', 200*2)
+                .attr('height', height+100)
+                .attr('x', -200)
+                .attr('y',-50)
+        }
+        else if (this.props.data.id == 'middle'){
+            rect = element
+                .attr('width', width*2)
+                .attr('height', height)
+                .attr('x', -width)
+                .attr('y',0)
+        }
+
+        if (rect != null){
+            rect.attr('stroke', 'black')
+                .attr('fill', 'rgba(0,0,0,0)')
+                .attr('stroke-dasharray', 10)
+                .attr('opacity', '1')
+                // .attr('stroke-width', '4')
+        }
+        // }
     }
    
     render() {
-        // console.log(this.props.data.id,  this.props.lines)
+        // console.log('placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
         const listItems = this.props.lines.map((d, i) => {
             return <LinePlaceHolder 
                 key={i} 
