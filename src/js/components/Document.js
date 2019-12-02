@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
+import  $ from 'jquery';
 import Lines from './Lines'
 import './../../css/main.css';
-import paper from 'paper';
+
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify } from "./Helper";
 import ColorMenu from "./ColorMenu";
 import Polygon from 'polygon'
 
@@ -86,6 +87,12 @@ class Document extends Component {
         this.state = {
             shouldOpenAlphabet: false
         }
+
+        this.swipe = false;
+
+        this.pointerOnInterface = [];
+
+       
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
@@ -93,11 +100,12 @@ class Document extends Component {
 
     }
     componentDidMount(){
+        this.listenHammer();
         this.listenEvents();
-        d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
+        // d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
         // d3.select('#eventReceiver').style('width', '100%').style('height', '100%');
         
-        this.listenHammer();
+        
 
         this.speech = new SpeechRecognitionClass(this);
 
@@ -112,34 +120,51 @@ class Document extends Component {
         var that = this;
         var el = document.getElementById("eventReceiver");
         this.mc = new Hammer.Manager(el);
+
         var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':2, threshold: 5});
+        var pan = new Hammer.Pan({'pointers':1, threshold: 5});
+        var swipe = new Hammer.Swipe({threshold: 0, pointers: 3});
+
         this.mc.add(press);
-        // t3his.mc.add(pan);
+        this.mc.add(swipe);
+        // this.mc.add([pan]);
+
+        // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
         // pan.recognizeWith(press);
-
-        // this.mc.on("panstart", function(ev) {
-        //     // if (that.penPressed == null){
-        //       if (ev.pointers[0].pointerType == 'touch'){
-        //           that.panStart(ev);
-        //       }
-        //     // }
-        //   })
-        //   this.mc.on("pan", function(ev) {
-        //     // if (that.penPressed == null){
-        //       if (ev.pointers[0].pointerType == 'touch'){
-        //         that.panMove(ev);
-        //       }
-        //     // } 
-        //   })
-        //   this.mc.on("panend", function(ev) {
-        //     if (that.penPressed == null){
-        //       if (ev.pointers[0].pointerType == 'touch'){
-        //           that.panEnd(ev);
-        //       }
-        //     }
-        //   })
+        
+        /*
+        this.mc.on("panstart", function(ev) {
+            // if (that.penPressed == null){
+            //   if (ev.pointers[0].pointerType == 'touch'){
+                //   that.panStart(ev);
+                console.log(ev)
+            //   }
+            // }
+          })
+          this.mc.on("pan", function(ev) {
+            // if (that.penPressed == null){
+            //   if (ev.pointers[0].pointerType == 'touch'){
+                  console.log('PAN', ev)
+                // that.panMove(ev);
+            //   }
+            // } 
+          })
+          this.mc.on("panend", function(ev) {
+            // if (that.penPressed == null){
+              if (ev.pointers[0].pointerType == 'touch'){
+                //   that.panEnd(ev);
+              }
+            // }
+          })
+          */
+          
+         this.mc.on("swipe", function(ev) {
+            that.swipe = true;
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 3){
+                that.createSwipe(ev);
+            }
+        })
         this.mc.on("press", function(ev) {
             ev.preventDefault();
             if (ev.pointers[0]['pointerType'] == 'touch'){
@@ -163,7 +188,9 @@ class Document extends Component {
                 }
         })
     }
-    
+    createSwipe(){
+        console.log('SWIPE')
+    }
     panEnd(e){
         console.log('panEnd')
     }
@@ -174,6 +201,10 @@ class Document extends Component {
         //Mon click est forcement une selection
         d3.select('#eventReceiver')
             .on('pointerdown', function(){
+                // console.log(d3.event);
+
+                // that.pointerOnInterface();
+
 
                 // getNearestElement('be5a214fa3b0575c82931d4084bd29367', that.props.sketchLines)
                 // console.log('HEY')
@@ -304,7 +335,7 @@ class Document extends Component {
             })
             .on('pointerup', function(){
 
-                that.detectingFlick();
+                if (d3.event.pointerType == 'pen') that.detectingFlick();
                 // console.log(that.isGuideHold.length, that.isItemDragged)
                 if (that.down && that.isItemDragged == false){
                     // console.log(that.drawing, that.sticky)
@@ -464,7 +495,7 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
-                // showBboxBB(BB, 'red');
+                showBboxBB(BB, 'red');
                 // showBbox('item-'+objectId, 'red');
                 
                 centerBox[i] = getCenterPolygon(points);
@@ -575,7 +606,7 @@ class Document extends Component {
                 var pointSticky = d3.select('#penTemp').node().getPointAtLength(i);
                 var isIn = is_point_inside_selection([pointSticky.x, pointSticky.y],  selection);
                 if (isIn) that.objectIn.push({'id':d3.select(this).attr('id').split('-')[1]})
-                i+=10;
+                i+=1;
             }
         })
 
@@ -620,25 +651,18 @@ class Document extends Component {
     }
     
     showBlockOfLinesElement(lines){
-        // console.log(lines)
         lines.forEach((line)=>{
             var sketchLines = JSON.parse(JSON.stringify(this.props.sketchLines))
-            // console.log(line, ))
             line.forEach((D)=>{
                 var oobb = getoobb(D, sketchLines);
                 drawPath(oobb.oobb)
             })
-            // var oobb = getoobb(line, JSON.parse(JSON.stringify(this.props.sketchLines)));
-            // console.log(oobb)
-            // drawPath(oobb.oobb)
         })
         
     }
     addStrokeGuide(){
         var id = guid();
         var that = this;
-        // console.log( this.objectIn)
-        
         
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
         var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
@@ -646,10 +670,24 @@ class Document extends Component {
             d[0] = d[0] - firstPoint[0];
             d[1] = d[1] - firstPoint[1]
         })
+
+
+       arrayPoints = simplify(arrayPoints, 2)
+
         var data = {
             'points': arrayPoints, 
-            'id': id, 
-            'placeHolder': [{'id':'background', 'data': {}, 'lines':[]}, {'id':'left', 'data': {}, 'lines':[]}, {'id':'right', 'data': {}, 'lines':[]}, {'id':'middle', 'data': {}, 'lines':[]}],
+            'id': id,
+            'paddingBetweenLines': 50,  
+            'placeHolder': [
+                {'id':'background', 'data': {}, 'lines':[]}, 
+                {'id':'topbackground', 'data': {}, 'lines':[]}, 
+                {'id':'leftbackground', 'data': {}, 'lines':[]}, 
+                {'id':'rightbackground', 'data': {}, 'lines':[]}, 
+                {'id':'bottombackground', 'data': {}, 'lines':[]}, 
+               
+                {'id':'left', 'data': {}, 'lines':[]}, 
+                {'id':'right', 'data': {}, 'lines':[]}, 
+                {'id':'middle', 'data': {}, 'lines':[]}],
             'position': [firstPoint[0],firstPoint[1]],
             'textPosition': {'where': 'right', 'position': [10,50]},
         }
@@ -675,7 +713,7 @@ class Document extends Component {
             .attr("stroke-dasharray", 'none');
 
 
-        if (this.sticky) d3.select('#penTemp').attr('stroke', '#9C9EDEDF')
+        // if (this.sticky) d3.select('#penTemp').attr('stroke', '#9C9EDEDF')
     }
     drawTempSelectingStroke(){
         var that = this;
@@ -790,7 +828,7 @@ class Document extends Component {
                     </g>
 
 
-                    <Lines />
+                    
                     <Guides 
                         holdGuide={this.holdGuide} 
                         dragItem={this.dragItem}
@@ -808,10 +846,10 @@ class Document extends Component {
                     <g id="tempLines">
                         <path id="penTemp"></path>
                     </g>
-
+                    <Lines />
 
                    
-
+                    {/* <rect id='swipeLayer'  x={0} y={0} fill='red' opacity='0' /> */}
 
                     {/* <g id="eventReceiver">
                         </g>     */}

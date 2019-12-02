@@ -1,0 +1,308 @@
+import React, { Component } from "react";
+import * as d3 from 'd3';
+import shallowCompare from 'react-addons-shallow-compare';
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles } from "../Helper";
+
+import Vector from "../../../../customModules/vector";
+import CalcConvexHull from "../../../../customModules/convexhull";
+import CalcOmbb from "../../../../customModules/ombb";
+import Polygon from 'polygon';
+
+
+/**
+ * C'est la LIGNE ENTIER DE MOT
+ */
+
+class Background extends Component {
+    constructor(props) {
+        super(props);
+        this.organizedCorners = [];
+    }
+    componentDidMount(){
+        var that = this;
+        this.BBox = this.getBoundinxBoxEveryone();
+        // this.movePoints();
+
+    }
+    componentDidUpdate(prevProps, prevState){
+        var that = this;
+        //Si j'udpate la BBox
+        if (this.props.placeholders != prevProps.placeholders){
+            this.BBox = this.getBoundinxBoxEveryone();
+            this.addPlaceHolder();
+        }
+        else if (this.props.sketchLines != prevProps.sketchLines){
+            this.BBox = this.getBoundinxBoxEveryone();
+            this.addPlaceHolder();
+        }
+    }
+    /**
+     * FAIT LA BOUNDING BOX DE TOUT LE MONDE
+     */
+    getBoundinxBoxEveryone(){
+        var that = this;
+        var rectangle = null;
+        // var line = this.props.line;
+        
+
+        this.props.group.lines.forEach((line)=>{
+            line.forEach(strokeId => {
+                var BB = _getBBox('item-'+strokeId);
+                
+                if (rectangle == null) rectangle = BB;
+                else rectangle = unionRectangles(rectangle, BB);
+    
+            })
+            // GET apres le drag en compte sur les BBox
+            //
+            // // console.log(transform)
+            // rectangle.x -= transform.translateX;
+            // rectangle.y -= transform.translateY;
+        })
+        // showBboxBB(rectangle, 'red');
+        
+        // console.log(rectangle)
+        
+        return rectangle;
+
+    }
+   
+    addPlaceHolder(){
+        var line = d3.line().curve(d3.curveBasis)
+        var that = this;
+
+        var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+        var offsetX = 0;
+        var offsetY = 0;
+        var totalHeight = 0;
+        var totalWidth = 0;
+        var offsetWidth = 25 + transform.translateX;
+        var offsetHeight = 25 + transform.translateY;
+
+
+        // var placeHolders = JSON.parse(JSON.stringify(this.props.placeholders))
+
+        // d3.select('#placeHolderBG-'+that.props.id).selectAll('path').remove()
+        d3.select('#placeHolderBGLeft-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderBGRight-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderBGTop-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderBGBottom-'+that.props.id).selectAll('g').remove()
+        this.props.placeholders.forEach((d)=>{
+
+            if (d.id == 'topbackground' && d.lines.length > 0){
+                var width = this.BBox.width; 
+                var widthPlaceHolder = d.BBox.width;
+                var numberIn = Math.ceil(width/widthPlaceHolder);
+                offsetX = (numberIn - (width/widthPlaceHolder)) * d.BBox.width; 
+                totalWidth = numberIn * widthPlaceHolder
+            }
+
+            if (d.id == 'leftbackground' && d.lines.length > 0){
+                var height = this.BBox.height; 
+                var heightPlaceHolder = d.BBox.height;
+                var numberIn = Math.ceil(height/heightPlaceHolder);
+                offsetY = (numberIn - (height/heightPlaceHolder)) * d.BBox.height; 
+                totalHeight = numberIn * heightPlaceHolder
+            }
+        })
+
+        // offsetX = offsetX - 100//offsetWidth;
+            // console.log(d)
+            // var width = this.BBox.width; 
+            // var widthPlaceHolder = d.BBox.width;
+            // var numberXIn = Math.ceil(width/widthPlaceHolder);
+
+            // var height = this.BBox.height; 
+            // var heightPlaceHolder = d.BBox.height;
+            // var numberIn = Math.ceil(height/heightPlaceHolder)
+        this.props.placeholders.forEach((d)=>{
+
+            if (d.id == 'topbackground' && d.lines.length > 0){
+
+
+                var width = this.BBox.width; 
+                var widthPlaceHolder = d.BBox.width;
+                var numberIn = Math.ceil(width/widthPlaceHolder)
+                var arrayLines = [];
+                var lines = d.lines;
+                for (var i = 0; i < numberIn; i++){
+                    arrayLines.push(lines);
+                }
+                // console.log(offsetHeight, offsetWidth)
+                // offsetX = (numberIn - (width/widthPlaceHolder)) * d.BBox.width;
+
+                d3.select('#placeHolderBGTop-'+that.props.id).attr('transform', 'translate('+(that.BBox.x  - (offsetX/2) - offsetWidth)+','+(that.BBox.y - 25 - (offsetY/2) - offsetHeight)+')')
+                var Gelement = d3.select('#placeHolderBGTop-'+that.props.id).selectAll('g')
+                    .data(arrayLines).enter()
+                    .append('g')
+                    .attr('transform', function (e,i){ return 'translate('+((d.BBox.width*i))+',0)'})
+
+                Gelement.selectAll('path')
+                    .data(d.lines).enter()
+                    .append('path')
+                    .attr('d', (d)=>line(d.data))
+                    .attr('fill', 'none')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '2')
+            }
+  
+            if (d.id == 'leftbackground' && d.lines.length > 0){
+
+
+                var height = this.BBox.height; 
+                var heightPlaceHolder = d.BBox.height;
+                var numberIn = Math.ceil(height/heightPlaceHolder)
+                var arrayLines = [];
+                var lines = d.lines;
+                for (var i = 0; i < numberIn; i++){
+                    arrayLines.push(lines);
+                }
+            
+                d3.select('#placeHolderBGLeft-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - 50 - (offsetX/2) - offsetWidth)+','+(that.BBox.y + 25 - (offsetY/2) - offsetHeight)+')')
+                var Gelement = d3.select('#placeHolderBGLeft-'+that.props.id).selectAll('g')
+                    .data(arrayLines).enter()
+                    .append('g')
+                    .attr('transform', function (e,i){ return 'translate(0,'+((d.BBox.height*i))+')'})
+
+                Gelement.selectAll('path')
+                    .data(d.lines).enter()
+                    .append('path')
+                    .attr('d', (d)=>line(d.data))
+                    .attr('fill', 'none')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '2')
+            }
+            if (d.id == 'bottombackground' && d.lines.length > 0){
+                var width = this.BBox.width; 
+                var widthPlaceHolder = d.BBox.width;
+                var numberIn = Math.ceil(width/widthPlaceHolder)
+                var arrayLines = [];
+                var lines = d.lines;
+                for (var i = 0; i < numberIn; i++){
+                    arrayLines.push(lines);
+                }
+
+                d3.select('#placeHolderBGBottom-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight - 25 - offsetHeight)+')')
+                var Gelement = d3.select('#placeHolderBGBottom-'+that.props.id).selectAll('g')
+                    .data(arrayLines).enter()
+                    .append('g')
+                    .attr('transform', function (e,i){ return 'translate('+((d.BBox.width*i))+',0)'})
+
+                Gelement.selectAll('path')
+                    .data(d.lines).enter()
+                    .append('path')
+                    .attr('d', (d)=>line(d.data))
+                    .attr('fill', 'none')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '2')
+            }
+            if (d.id == 'rightbackground' && d.lines.length > 0){
+                var height = this.BBox.height; 
+                var heightPlaceHolder = d.BBox.height;
+                var numberIn = Math.ceil(height/heightPlaceHolder)
+                var arrayLines = [];
+                var lines = d.lines;
+                for (var i = 0; i < numberIn; i++){
+                    arrayLines.push(lines);
+                }
+            
+                d3.select('#placeHolderBGRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth - (offsetX/2) - offsetWidth)+','+(that.BBox.y  + 25 - (offsetY/2) - offsetHeight)+')')
+                var Gelement = d3.select('#placeHolderBGRight-'+that.props.id).selectAll('g')
+                    .data(arrayLines).enter()
+                    .append('g')
+                    .attr('transform', function (e,i){ return 'translate(0,'+((d.BBox.height*i))+')'})
+
+                Gelement.selectAll('path')
+                    .data(d.lines).enter()
+                    .append('path')
+                    .attr('d', (d)=>line(d.data))
+                    .attr('fill', 'none')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '2')
+            }
+            // console.log(d.id)
+            if (d.id == 'background' && d.lines.length > 0){
+                var height = this.BBox.height; 
+                var heightPlaceHolder = d.BBox.height;
+                var numberInHeight = Math.ceil(height/heightPlaceHolder)
+
+                var width = this.BBox.width; 
+                var widthPlaceHolder = d.BBox.width;
+                var numberInWidth = Math.ceil(width/widthPlaceHolder)
+                // var lines = d.lines;
+                // for (var i = 0; i < numberIn; i++){
+                //     arrayLines.push(lines);
+                // }
+
+                // console.log(numberInHeight, numberInWidth)
+                var arrayLines = [];
+                for (var j = 0; j < numberInWidth; j++){
+                    var array = [];
+                    var lines = d.lines;
+                    for (var i = 0; i < numberInHeight; i++){
+                        array.push(lines);
+                    }
+                    arrayLines.push(array)
+                }
+
+                // console.log(arrayLines)
+            
+                d3.select('#placeHolderBG-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - offsetWidth - (offsetX/2))+','+(that.BBox.y -  offsetHeight - (offsetY/2))+')')
+                var Gelement = d3.select('#placeHolderBG-'+that.props.id).selectAll('g')
+                    .data(arrayLines).enter()
+                    .append('g')
+                    .attr('transform', function (e,i){ console.log(i); return 'translate('+(d.BBox.width*i)+',0)'})
+                
+                var cellElement = Gelement.selectAll('g')
+                    .data((d)=>(d)).enter()
+                    .append('g').attr('class', 'cell')
+                    .attr('transform', function (e,i){  return 'translate(0,'+((d.BBox.height*i))+')'})
+
+                cellElement.selectAll('path')
+                    .data(d.lines).enter()
+                    .append('path')
+                    .attr('d', (d)=>line(d.data))
+                    .attr('fill', 'none')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '2')
+                    .attr('opacity', '0.3')
+
+            }
+        
+            //OLD for replicating
+            // if (d.id == 'background' && d.lines.length > 0){
+            //     var offsetHeight = that.BBox.height/3
+            //     var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 150, that.BBox.x + that.BBox.width + 60]);
+            //     var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - (offsetHeight*1.3), that.BBox.y + that.BBox.height +  (offsetHeight)]);
+            //     var lines = JSON.parse(JSON.stringify(d.lines))
+            //     lines.forEach((line)=>{
+            //         line.data = line.data.map((e)=> {
+            //             return [myScaleY(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
+            //         })
+            //     })
+            //     d3.select('#placeHolderBG-'+that.props.iteration +'-'+that.props.id).selectAll('path')
+            //         .data(lines).enter()
+            //         .append('path')
+            //         .attr('d', (d)=>line(d.data))
+            //         .attr('fill', 'none')
+            //         .attr('stroke', 'black')
+            //         .attr('stroke-width', '2')
+            // }
+
+        })
+        // if (this.props.placeholders)
+    }
+    render() {
+        return (
+            <g transform={`translate(0,0)`}>
+               <g id={'placeHolderBG-'+this.props.id} ></g>
+               <g id={'placeHolderBGLeft-'+this.props.id} ></g>
+               <g id={'placeHolderBGRight-'+this.props.id} ></g>
+               <g id={'placeHolderBGTop-'+this.props.id} ></g>
+               <g id={'placeHolderBGBottom-'+this.props.id} ></g>
+            </g>
+        );
+        
+    }
+}
+export default Background;

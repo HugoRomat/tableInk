@@ -286,6 +286,7 @@ class Group extends Component {
                     placeholders={this.state.placeholders}
                     stroke={this.props.group.stroke}
                     id={this.props.group.id}
+                    
 
                     group={this.props.group}
 

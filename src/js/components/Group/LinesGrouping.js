@@ -7,8 +7,7 @@ import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
 import CalcOmbb from "../../../../customModules/ombb";
 import Polygon from 'polygon';
-
-
+import {boxPoint} from 'intersects';
 /**
  * C'est la LIGNE ENTIER DE MOT
  */
@@ -80,9 +79,38 @@ class LinesGrouping extends Component {
      * @param {*} arrayPositionBox 
      */
     movePoints(){
+        var that = this;
+        // console.log(this.props)
 
-        // console.log(this.props.line)
-        var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
+        // console.log(d3.select('#'+ that.props.id).attr('d'))
+       /* var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
+        points = points.map((d)=>{
+            return [d[0] + this.props.stroke.position[0], d[1] + this.props.stroke.position[1]]
+        })
+
+        var i = 0;
+        var isIn = false;
+        while (isIn == false && i < points.length-1){
+            var isIn = boxPoint(this.BBox['x'], this.BBox['y'], this.BBox['width'], this.BBox['height'], points[i][0], points[i][1])
+            i++;
+        }
+        if (isIn){
+            var pointOnLine = points[i];
+            var offsetX = pointOnLine[0] - this.BBox['x']
+            var offsetY = pointOnLine[1] - this.BBox['y']
+            var changePositionArraySketchLines = this.props.line.map((d)=>{
+                var stroke = this.props.sketchLines.find(x => x.id == d);
+                stroke = JSON.parse(JSON.stringify(stroke))
+                // console.log(stroke.position)
+                return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]+offsetY]}
+            })
+        }
+        else {
+            console.log('ERROR')
+        }
+        */
+
+       var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
         var begin = points[0];
         var end = points[points.length-1];
         begin[0] += this.props.stroke.position[0];
@@ -91,10 +119,14 @@ class LinesGrouping extends Component {
         end[0] += this.props.stroke.position[0];
         end[1] += this.props.stroke.position[1];
 
+
+
         var pointOnLine = getSpPoint({'x':begin[0], 'y': begin[1]}, {'x':end[0], 'y': end[1]}, {'x': this.BBox['x'], 'y': this.BBox['y']});
         // drawCircle(pointOnLine.x, pointOnLine.y, 4,  'blue');
         // drawCircle(this.BBox.x, this.BBox.y, 4,  'blue');
 
+        //CODE TO MOVE THE LINE
+        
         var offsetX = pointOnLine.x - this.BBox['x']
         var offsetY = pointOnLine.y - this.BBox['y']
 
@@ -105,7 +137,7 @@ class LinesGrouping extends Component {
             return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]+offsetY]}
         })
         this.props.moveSketchLines(changePositionArraySketchLines);
-
+        
         
 // 
         // console.log(arrayPositionBox)
@@ -143,7 +175,7 @@ class LinesGrouping extends Component {
                     .attr('stroke-width', '2')
                 
                 var X = this.BBox.x - d.BBox.width;
-                var Y = this.BBox.y - 15;
+                var Y = this.BBox.y - d.BBox.height/3;
 
                 var cx = d.BBox.x + d.BBox.width/2;
                 var cy = d.BBox.y + d.BBox.height/2;

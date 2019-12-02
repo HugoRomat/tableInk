@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, _getBBox, getTransformation, guid } from "../Helper";
+import { getNearestElement, _getBBox, getTransformation, guid, simplify } from "../Helper";
 import LinePlaceHolder from "./LinePlaceHolder";
 import PlaceHolderText from "./PlaceHolderText";
 
@@ -55,6 +55,9 @@ class PlaceHolder extends Component {
                     //     d[1] = d[1] - firstPoint[1]
                     // })
                     // console.log(arrayPoints[0])
+
+                    // that.tempArrayStroke = simplify( that.tempArrayStroke, 0)
+
                     var data = {
                         'idGuide':that.props.parent.id,
                         'where':that.props.data.id,
@@ -107,24 +110,19 @@ class PlaceHolder extends Component {
         var rect = null;
         if (this.props.data.id == 'left'){
             rect = element
-                .attr('width', 100-(width))
-                .attr('height', height)
-                .attr('x', -100)
-                .attr('y',0)
+                .attr('width', 100-(width) - 10)
+                .attr('height', 100)
+                .attr('x', -100 + 5)
+                .attr('y',5)
+                .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'right'){
             rect = element
-                .attr('width', 120 -(width))
-                .attr('height', height)
-                .attr('x', (width))
-                .attr('y',0)
-        }
-        else if (this.props.data.id == 'background'){
-            rect = element
-                .attr('width', 200*2)
-                .attr('height', height+100)
-                .attr('x', -200)
-                .attr('y',-50)
+                .attr('width', 120 -(width) - 10)
+                .attr('height', 100)
+                .attr('x', (width) + 5)
+                .attr('y',5)
+                .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'middle'){
             rect = element
@@ -132,11 +130,56 @@ class PlaceHolder extends Component {
                 .attr('height', height)
                 .attr('x', -width)
                 .attr('y',0)
+                .attr('fill', 'rgba(166, 166, 166, 1)')
         }
 
+       
+
+
+        else if (this.props.data.id == 'topbackground'){
+            rect = element
+                .attr('width', 100-(width) +(width*2) + 120 -(width))
+                .attr('height', 50)
+                .attr('x', -100)
+                .attr('y',-50)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'bottombackground'){
+            rect = element
+            .attr('width', 100-(width) +(width*2) + 120 -(width))
+                .attr('height', 50)
+                .attr('x', -100)
+                .attr('y', height)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'leftbackground'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', height)
+                .attr('x', -150)
+                .attr('y',0)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'rightbackground'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', height)
+                .attr('x', width + 120 -(width))
+                .attr('y',0)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        
+        else if (this.props.data.id == 'background'){
+            rect = element
+                .attr('width', 100-(width) +(width*2) + 120 -(width))
+                .attr('height', height)
+                .attr('x', -100)
+                .attr('y',0)
+                .attr('fill', 'rgba(94, 130, 237, 1)')
+        }
         if (rect != null){
             rect.attr('stroke', 'black')
-                .attr('fill', 'rgba(0,0,0,0)')
+                // .attr('fill', 'rgba(0,0,0,0)')
                 .attr('stroke-dasharray', 10)
                 .attr('opacity', '1')
                 // .attr('stroke-width', '4')

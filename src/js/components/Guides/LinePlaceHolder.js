@@ -13,11 +13,11 @@ class LinePlaceHolder extends Component {
     
     componentDidMount(){
         // console.log(this.props.stroke)
-        var line = d3.line()
+        var line = d3.line().curve(d3.curveBasis)
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke.data))
-            .attr('stroke', '#9C9EDEDF')
+            .attr('stroke', 'black')
             .attr('fill', 'none')
             .attr('stroke-width', '2')
     }

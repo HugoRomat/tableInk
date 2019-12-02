@@ -40,7 +40,7 @@ class Guide extends Component {
     }
     componentDidMount(){
         
-        var line = d3.line()
+        var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
 
@@ -56,7 +56,7 @@ class Guide extends Component {
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', '#9C9EDEDF')
+            // .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             
         /*
@@ -215,7 +215,7 @@ class Guide extends Component {
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', '#9C9EDEDF')
+            // .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "7");
         // console.log(this.props.stroke)
@@ -252,7 +252,7 @@ class Guide extends Component {
                 .attr('width', BBox.width)
                 .attr('height', BBox.height)
 
-                .attr('fill', '#9C9EDEDF')
+                // .attr('fill', '#9C9EDEDF')
                 .attr('opacity', '0.2')
         }
     }

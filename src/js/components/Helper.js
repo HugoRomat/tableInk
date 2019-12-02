@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { ENETUNREACH } from 'constants';
-
+import paper from 'paper';
 import CalcOmbb from './../../../customModules/ombb';
 import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
@@ -8,6 +8,8 @@ import Vector from './../../../customModules/vector';
 import {polygonPolygon} from 'intersects';
 import Polygon from 'polygon'
 
+
+paper.setup([640, 480]);
 // console.log(Polygon)
 export function guid() {
     function s4() {
@@ -16,6 +18,13 @@ export function guid() {
         .substring(1);
     }
     return 'b' + s4() + s4() + s4() +  s4() +s4() +  s4() + s4() + s4();
+}
+
+export function simplify(arrayPoints, tolerance){
+    var pathPaper = new paper.Path(arrayPoints);
+    pathPaper.simplify(tolerance);
+    pathPaper = pathPaper.segments.map((d)=>{ return [d.point.x, d.point.y]})
+    return pathPaper;
 }
 export function distance(x1, x2, y1, y2){
     var a = x1 - x2;

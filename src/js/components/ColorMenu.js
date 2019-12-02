@@ -37,6 +37,20 @@ class ColorsMenu extends Component {
             that.props.openAlphabet(true)
 
         })
+
+        d3.select('#highlighting').on("click", function(d, index){
+            d3.event.stopPropagation();
+            
+            // that.props.openAlphabet(true)
+
+        })
+
+        d3.select('#inking').on("click", function(d, index){
+            d3.event.stopPropagation();
+            
+            // that.props.openAlphabet(true)
+
+        })
         // d3.select('#rule').on("click", function(d, index){
         //     d3.event.stopPropagation();
         //     if (d3.select(this).attr('issticky') == 'false'){
@@ -73,8 +87,16 @@ class ColorsMenu extends Component {
 
                <div id="abcd" className="buttonMenu"> 
                     <img src={highlighter} />
-
                </div>
+
+
+               <div id="pens" > 
+                    <div className="pen" id="inking">
+                    </div>
+                    <div className="pen" id="highlighting">
+                    </div>
+               </div>
+
                {/* <button className="buttonMenu" issticky='false' id="rule"> noSticky </button> */}
                {/* <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button> */}
                 {/* <g id="rule" issticky='false' transform={'translate(400,20)'}>
