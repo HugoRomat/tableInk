@@ -15,8 +15,9 @@ class Line extends Component {
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '2')
+            .attr('stroke', that.props.stroke.data.colorStroke)
+            .attr('stroke-width', that.props.stroke.data.sizeStroke)
+            .attr('stroke-linejoin', "round")
 
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))

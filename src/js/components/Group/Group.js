@@ -264,6 +264,8 @@ class Group extends Component {
         // console.log(this.props.group)
         //Pour chaque ligne reconnu dans mon groupe
         const listItems = this.props.group.lines.map((d, i) => {
+
+            // console.log(d)
             return <LinesGrouping 
                 key={i} 
                 line={d}

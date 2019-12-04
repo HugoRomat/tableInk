@@ -51,3 +51,9 @@ export const addLinesLetter = data => ({
     type: 'ADD_LINES_LETTER',
     data
 })
+
+export const addGuideToSticky = data => ({
+    type: 'ADD_GUIDE_TO_STICKY',
+    data
+})
+

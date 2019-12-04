@@ -24,7 +24,21 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                console.log(d3.select(this).attr('id'))
+
+                /**
+                * TO FADEOUT
+                */
+               if (d3.event.pointerType == 'pen'){
+                    var idItem = d3.select(this).attr('id').split('-');
+                    if (idItem[1] == 'background' || idItem[1] == 'right' || idItem[1] == 'middle'){
+                        d3.select('#placeHolder-' + 'left' + '-' + that.props.parent.id).style('opacity', 0.1);
+                        d3.select('#placeHolder-' + 'right' + '-' + that.props.parent.id).style('opacity', 0.1)
+                        d3.select('#placeHolder-' + 'middle' + '-' + that.props.parent.id).style('opacity', 0.1);
+                        d3.select('#placeHolderText' + '-' + that.props.parent.id).style('opacity', 0.1);
+                        
+                    }
+                }
+                // console.log(d3.select(this).attr('id'))
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
                     that.down = true;
@@ -47,6 +61,17 @@ class PlaceHolder extends Component {
             .on('pointerup', function(d){
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
+                    /**
+                     * TO FADEOUT
+                     */
+                    var idItem = d3.select(this).attr('id').split('-');
+                    if (idItem[1] == 'background' || idItem[1] == 'right' || idItem[1] == 'middle'){
+                        d3.select('#placeHolder-' + 'left' + '-' + that.props.parent.id).style('opacity', 1)
+                        d3.select('#placeHolder-' + 'right' + '-' + that.props.parent.id).style('opacity', 1)
+                        d3.select('#placeHolder-' + 'middle' + '-' + that.props.parent.id).style('opacity', 1);
+                        d3.select('#placeHolderText' + '-' + that.props.parent.id).style('opacity', 1);
+                    }
+
                     console.log('ADD')
                     // var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
                     // var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke))
@@ -63,7 +88,9 @@ class PlaceHolder extends Component {
                         'where':that.props.data.id,
                         'data':[{
                             'id': guid(),
-                            'data': that.tempArrayStroke
+                            'data': that.tempArrayStroke,
+                            'colorStroke': that.props.colorStroke,
+                            'sizeStroke': that.props.sizeStroke
                             // 'position': [firstPoint[0],firstPoint[1]]
                         }]
                     }
@@ -89,8 +116,8 @@ class PlaceHolder extends Component {
         d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id)
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '2')
+            .attr('stroke', that.props.colorStroke)
+            .attr('stroke-width', that.props.sizeStroke)
             .attr("stroke-dasharray", 'none');
 
         
@@ -104,8 +131,8 @@ class PlaceHolder extends Component {
         //Si j'udpate la BBox
         // if (this.props.BBoxParent != prevProps.BBoxParent){
             // console.log('UPDATE BOX', that.props.data.id);
-        var height = this.props.BBoxParent.height;
-        var width = this.props.BBoxParent.width;
+        var height = 200//this.props.BBoxParent.height;
+        var width = 10//this.props.BBoxParent.width;
         var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
         var rect = null;
         if (this.props.data.id == 'left'){
@@ -113,7 +140,7 @@ class PlaceHolder extends Component {
                 .attr('width', 100-(width) - 10)
                 .attr('height', 100)
                 .attr('x', -100 + 5)
-                .attr('y',5)
+                .attr('y',40)
                 .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'right'){
@@ -121,7 +148,7 @@ class PlaceHolder extends Component {
                 .attr('width', 120 -(width) - 10)
                 .attr('height', 100)
                 .attr('x', (width) + 5)
-                .attr('y',5)
+                .attr('y',40)
                 .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'middle'){
@@ -133,12 +160,51 @@ class PlaceHolder extends Component {
                 .attr('fill', 'rgba(166, 166, 166, 1)')
         }
 
-       
+
+
+        // {'id':'topLeftCorner', 'data': {}, 'lines':[]}, 
+        // {'id':'topRightCorner', 'data': {}, 'lines':[]}, 
+        // {'id':'bottomLeftCorner', 'data': {}, 'lines':[]}, 
+        // {'id':'bottomRightCorner', 'data': {}, 'lines':[]}, 
+
+
+       else if (this.props.data.id == 'topLeftCorner'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', 50)
+                .attr('x', -150)
+                .attr('y',-50)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'topRightCorner'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', 50)
+                .attr('x',  120)
+                .attr('y',-50)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'bottomLeftCorner'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', 50)
+                .attr('x', -150)
+                .attr('y',height)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
+        else if (this.props.data.id == 'bottomRightCorner'){
+            rect = element
+                .attr('width', 50)
+                .attr('height', 50)
+                .attr('x', 120)
+                .attr('y',height)
+                .attr('fill', 'rgba(166, 166, 166, 0.2)')
+        }
 
 
         else if (this.props.data.id == 'topbackground'){
             rect = element
-                .attr('width', 100-(width) +(width*2) + 120 -(width))
+                .attr('width', 100+ 120 )
                 .attr('height', 50)
                 .attr('x', -100)
                 .attr('y',-50)
@@ -146,7 +212,7 @@ class PlaceHolder extends Component {
         }
         else if (this.props.data.id == 'bottombackground'){
             rect = element
-            .attr('width', 100-(width) +(width*2) + 120 -(width))
+            .attr('width', 100+ 120 )
                 .attr('height', 50)
                 .attr('x', -100)
                 .attr('y', height)
@@ -164,14 +230,14 @@ class PlaceHolder extends Component {
             rect = element
                 .attr('width', 50)
                 .attr('height', height)
-                .attr('x', width + 120 -(width))
+                .attr('x', 120)
                 .attr('y',0)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         
         else if (this.props.data.id == 'background'){
             rect = element
-                .attr('width', 100-(width) +(width*2) + 120 -(width))
+                .attr('width', 100 + 120 )
                 .attr('height', height)
                 .attr('x', -100)
                 .attr('y',0)
@@ -193,6 +259,9 @@ class PlaceHolder extends Component {
             return <LinePlaceHolder 
                 key={i} 
                 stroke={d}
+
+                colorStroke = {this.props.colorStroke}
+                sizeStroke = {this.props.sizeStroke}
             />
         });
 

@@ -12,15 +12,25 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        // console.log(this.props.stroke)
+        // console.log(this.props)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke.data))
-            .attr('stroke', 'black')
+            .attr('stroke', that.props.stroke.colorStroke)
+            .attr('stroke-width', that.props.stroke.sizeStroke)
+            // .attr('stroke', that.props.colorStroke)
+            // .attr('stroke-width', that.props.sizeStroke)
             .attr('fill', 'none')
-            .attr('stroke-width', '2')
     }
+    // componentDidUpdate(){
+    //     var that = this;
+    //     d3.select('#stroke-'+that.props.stroke.id)
+    //         .attr("d", line(that.props.stroke.data))
+    //         .attr('stroke', that.props.stroke.colorStroke)
+    //         .attr('stroke-width', that.props.stroke.sizeStroke)
+    //         .attr('fill', 'none') 
+    // }
    
     render() {
         return (

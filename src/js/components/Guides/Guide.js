@@ -43,7 +43,7 @@ class Guide extends Component {
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
-
+        
         var drag = d3.drag()
             // .subject(function (d) { return d; })
             .on("start", function(e){ that.dragstarted(that)})
@@ -184,29 +184,58 @@ class Guide extends Component {
 
         // To say nothing is holded anymore and dragged
         clearTimeout(that.timerPress);
-        that.props.dragItem(false);
-        that.props.holdGuide(false);
+        
+        if (that.props.isGallery == false){
+            that.props.dragItem(false);
+            that.props.holdGuide(false);
+            that.colorForHolding(false)
+       
 
-        that.colorForHolding(false)
-        // TO detect the tap
-        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-        var time = Date.now() -  that.startPosition['time'];
+        
+            // TO detect the tap
+            var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+            var time = Date.now() -  that.startPosition['time'];
 
-        console.log(dist, time)
-        if (dist < 10 && time < 100){
-            clearTimeout(that.timerPress);
+            // console.log(dist, time)
+            if (dist < 10 && time < 100){
+                clearTimeout(that.timerPress);
 
-            that.props.setGuideTapped({'item': this.props.stroke.id})
-            // console.log('Thats a tap')
-            // var BBox = _getBBox('item-'+env.props.stroke.id)
-            // that.props.shouldOpenMenu({
-            //     'id': guid(),
-            //     'shouldOpen': true,
-            //     'position': [BBox.x, BBox.y],
-            //     'idGuide': env.props.stroke.id,
-            //     'idLines': []//env.props.stroke.data.linesAttached
-            // })
+                that.props.setGuideTapped({'item': this.props.stroke.id});
+                
+                // console.log('Thats a tap')
+                // var BBox = _getBBox('item-'+env.props.stroke.id)
+                // that.props.shouldOpenMenu({
+                //     'id': guid(),
+                //     'shouldOpen': true,
+                //     'position': [BBox.x, BBox.y],
+                //     'idGuide': env.props.stroke.id,
+                //     'idLines': []//env.props.stroke.data.linesAttached
+                // })
+            }
         }
+
+        if (that.props.isGallery){
+            if (d3.event.x < 450){
+                var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+                that.props.addGuideToSticky({'guide':that.props.stroke, 'position':[transform.translateX, transform.translateY]});
+                that.goBackInitialposition();
+            }
+        }
+    }
+    goBackInitialposition(){
+        var that = this;
+        // console.log('GOOO')
+        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+that.props.stroke.position[0]+','+that.props.stroke.position[1]+')')
+        var linesAttached = that.props.stroke.linesAttached;
+        for (var i in linesAttached){
+            var line = linesAttached[i];
+            var identifier = 'item-'+line;
+            var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+            var X = transform.translateX;
+            var Y = transform.translateY;
+            d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
+        }
+
     }
     componentDidUpdate(){
         // console.log('HELLO')
@@ -272,6 +301,9 @@ class Guide extends Component {
                     BBoxParent={BB}
                     lines={d['lines']}
                     addLine={this.addLine}
+
+                    colorStroke = {this.props.colorStroke}
+                    sizeStroke = {this.props.sizeStroke}
                 />
         });
         // console.log(this.props.stroke)

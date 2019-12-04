@@ -1,13 +1,18 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles } from "./../Helper";
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, distToSegment } from "./../Helper";
 
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
 import CalcOmbb from "../../../../customModules/ombb";
 import Polygon from 'polygon';
-import {boxPoint} from 'intersects';
+import {boxPoint, polygonBox} from 'intersects';
+
+import intersect from 'path-intersection'
+
+import paper from 'paper';
+paper.setup([640, 480]);
 /**
  * C'est la LIGNE ENTIER DE MOT
  */
@@ -63,11 +68,12 @@ class LinesGrouping extends Component {
             
 
         })
+        // console.log(rectangle)
         // GET apres le drag en compte sur les BBox
         var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
         rectangle.x -= transform.translateX;
         rectangle.y -= transform.translateY;
-        // showBboxBB(rectangle, 'red');
+        showBboxBB(rectangle, 'red');
         // showOmBB(oobb);
         return rectangle;
         // group-b58de6f6236d5f1d8f90172fba4461da7
@@ -80,35 +86,50 @@ class LinesGrouping extends Component {
      */
     movePoints(){
         var that = this;
+        var line = d3.line()
         // console.log(this.props)
 
         // console.log(d3.select('#'+ that.props.id).attr('d'))
-       /* var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
+        var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
         points = points.map((d)=>{
             return [d[0] + this.props.stroke.position[0], d[1] + this.props.stroke.position[1]]
         })
 
+
         var i = 0;
         var isIn = false;
-        while (isIn == false && i < points.length-1){
-            var isIn = boxPoint(this.BBox['x'], this.BBox['y'], this.BBox['width'], this.BBox['height'], points[i][0], points[i][1])
+        var distanceMemory = 1000000;
+        var increment = 0;
+        while (i < points.length-1){
+            var dist = distToSegment([points[i][0], points[i][1]], [this.BBox['x'], this.BBox['y'] + (this.BBox['height']/2)], [this.BBox['x'] + this.BBox['width'], this.BBox['y'] + (this.BBox['height']/2)])
+            // var dist = distance(this.BBox['x'] , points[i][0], this.BBox['y'] + (this.BBox['height']/2),  points[i][1])
+            // console.log(dist)
+            if (dist < distanceMemory){
+                increment = i;
+                distanceMemory = dist;
+            }
+            // var isIn = boxPoint(this.BBox['x'], this.BBox['y'], this.BBox['width'], this.BBox['height'], points[i][0], points[i][1])
             i++;
         }
-        if (isIn){
-            var pointOnLine = points[i];
-            var offsetX = pointOnLine[0] - this.BBox['x']
-            var offsetY = pointOnLine[1] - this.BBox['y']
-            var changePositionArraySketchLines = this.props.line.map((d)=>{
-                var stroke = this.props.sketchLines.find(x => x.id == d);
-                stroke = JSON.parse(JSON.stringify(stroke))
-                // console.log(stroke.position)
-                return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]+offsetY]}
-            })
-        }
-        else {
-            console.log('ERROR')
-        }
-        */
+        var pointOnLine = points[increment];
+        // drawCircle(pointOnLine[0], pointOnLine[1], 4,  'blue');
+      
+        var pointOnLine = points[increment];
+        var offsetX = pointOnLine[0] - this.BBox['x']
+        var offsetY = pointOnLine[1] - this.BBox['y']
+
+        var changePositionArraySketchLines = this.props.line.map((d)=>{
+            var stroke = this.props.sketchLines.find(x => x.id == d);
+            stroke = JSON.parse(JSON.stringify(stroke))
+            // console.log(stroke.position)
+            return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]]}
+        })
+        this.props.moveSketchLines(changePositionArraySketchLines);
+
+            
+    
+
+        /*
 
        var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
         var begin = points[0];
@@ -137,16 +158,8 @@ class LinesGrouping extends Component {
             return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]+offsetY]}
         })
         this.props.moveSketchLines(changePositionArraySketchLines);
-        
-        
-// 
-        // console.log(arrayPositionBox)
+        */
 
-        // var arrayModified = arrayPositionBox.map((d, i)=>{
-        //     return {'x':d.x +offsetX, 'y':d.y + offsetY};
-        // })
-
-        // return arrayModified;
     }
     addPlaceHolder(){
         // console.log(this.props.placeholders);
@@ -165,14 +178,14 @@ class LinesGrouping extends Component {
             // console.log(d)
             // 
             if (d.id == 'left' && d.lines.length > 0){
-
+                console.log(d)
                 d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path')
                     .data(d.lines).enter()
                     .append('path')
                     .attr('d', (d)=>line(d.data))
                     .attr('fill', 'none')
-                    .attr('stroke', 'black')
-                    .attr('stroke-width', '2')
+                    .attr('stroke', (d)=>d.colorStroke)
+                    .attr('stroke-width', (d)=>d.sizeStroke)
                 
                 var X = this.BBox.x - d.BBox.width;
                 var Y = this.BBox.y - d.BBox.height/3;

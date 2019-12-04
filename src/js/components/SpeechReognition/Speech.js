@@ -27,16 +27,16 @@ export class SpeechRecognitionClass {
     animate(){
         var that = this;
         d3.select('#circlefeedBackVoice')
-        .transition()
-        .ease(d3.easeCubic)   
-        .duration(1000).attr("r", 150)
-        .transition()
-        .ease(d3.easeCubic)   
-        .duration(1000)
-        .attr("r", 80)
-        .on('end', function(d){
-            if (that.isStop == false) that.animate()
-        })
+            .transition()
+            .ease(d3.easeCubic)   
+            .duration(1000).attr("r", 150)
+            .transition()
+            .ease(d3.easeCubic)   
+            .duration(1000)
+            .attr("r", 80)
+            .on('end', function(d){
+                if (that.isStop == false) that.animate()
+            })
     }
     setAlphabet(alphabet){
         this.alphabet =  JSON.parse(JSON.stringify(alphabet));
@@ -63,6 +63,7 @@ export class SpeechRecognitionClass {
         this.recognition.onresult = function(event) {
             var texte = event.results[0][0].transcript;
             // console.log(texte)
+            // position[0] += 15
             that.addText(texte, position)
             // that.document.addText({
             //     'id': guid(),
@@ -103,7 +104,7 @@ export class SpeechRecognitionClass {
                 this.alphabet[index].lines.forEach((d)=>{
                     var data = {
                         'points': d.points, 
-                        'data': {'class':[]}, 
+                        'data': {'class':[], 'sizeStroke': this.document.sizePen, 'colorStroke': this.document.colorPen}, 
                         'id': guid(), 
                         'isAlphabet': true,
                         'position': [bufferX + position.x,position.y-50],

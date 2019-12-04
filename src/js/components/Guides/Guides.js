@@ -34,10 +34,14 @@ class Guides extends Component {
                 return <Guide 
                     key={i} 
                     stroke={d}
+                    isGallery={false}
 
                     holdGuide={this.props.holdGuide}
                     dragItem={this.props.dragItem}
                     setGuideTapped={this.setGuideTapped}
+
+                    colorStroke = {this.props.colorStroke}
+                    sizeStroke = {this.props.sizeStroke}
             />
         });
         // console.log(listItems);
