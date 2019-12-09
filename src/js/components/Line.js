@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
 import { getNearestElement } from "./Helper";
+import reducers from "../reducers";
 
 class Line extends Component {
     constructor(props) {
@@ -9,9 +10,13 @@ class Line extends Component {
         
     }
     componentDidMount(){
-        // console.log(this.props.stroke)
+        // console.log(this.props.stroke.device)
         var line = d3.line()
         var that = this;
+
+
+
+
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
@@ -27,7 +32,18 @@ class Line extends Component {
             .attr('stroke-opacity', '0.1')
             
            
-            
+        // if (this.props.stroke.device != undefined){
+        //     // var scale = d3.scaleOrdinal(d3.schemeCategory10);
+        //     var scale = d3.scaleOrdinal(d3.schemeCategory10)
+
+        //     // console.log(scale(1), scale(2), scale(3));
+        //     // console.log(that.props.stroke.device)
+        //     // console.log(that.props.stroke.device)
+        //     // var color = 'green';
+        //     // if (that.props.stroke.device == 1) color = 'red';
+        //     // else color = 'blue'
+        //     d3.select('#'+that.props.stroke.id).attr('stroke', scale(that.props.stroke.device +1))
+        // }
     
     }
     

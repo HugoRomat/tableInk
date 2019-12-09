@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles } from "../Helper";
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, _getBBoxPromise } from "../Helper";
 
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
@@ -66,7 +66,6 @@ class Background extends Component {
         return rectangle;
 
     }
-   
     addPlaceHolder(){
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
@@ -189,7 +188,7 @@ class Background extends Component {
                     arrayLines.push(lines);
                 }
 
-                d3.select('#placeHolderBGBottom-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight - 50 - offsetHeight)+')')
+                d3.select('#placeHolderBGBottom-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight +25 - offsetHeight)+')')
                 var Gelement = d3.select('#placeHolderBGBottom-'+that.props.id).selectAll('g')
                     .data(arrayLines).enter()
                     .append('g')
@@ -213,7 +212,7 @@ class Background extends Component {
                     arrayLines.push(lines);
                 }
             
-                d3.select('#placeHolderBGRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth - (offsetX/2) - offsetWidth)+','+(that.BBox.y  + 25 - (offsetY/2) - offsetHeight)+')')
+                d3.select('#placeHolderBGRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth +25 - (offsetX/2) - offsetWidth)+','+(that.BBox.y  + 25 - (offsetY/2) - offsetHeight)+')')
                 var Gelement = d3.select('#placeHolderBGRight-'+that.props.id).selectAll('g')
                     .data(arrayLines).enter()
                     .append('g')
@@ -269,7 +268,7 @@ class Background extends Component {
 
             }
             if (d.id == 'topRightCorner' && d.lines.length > 0){
-                d3.select('#placeHolderCornerTopRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth - (offsetX/2) - offsetWidth)+','+(that.BBox.y  -25  - (offsetY/2) - offsetHeight)+')')
+                d3.select('#placeHolderCornerTopRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth + 25 - (offsetX/2) - offsetWidth)+','+(that.BBox.y  -25  - (offsetY/2) - offsetHeight)+')')
                 var Gelement = d3.select('#placeHolderCornerTopRight-'+that.props.id)
                     .append('g').attr('transform', function (e,i){ return 'translate(0,0)'})
 
@@ -296,7 +295,7 @@ class Background extends Component {
                     .attr('stroke-width', (d)=> d.sizeStroke)
             }
             if (d.id == 'bottomLeftCorner' && d.lines.length > 0){
-                d3.select('#placeHolderCornerBottomLeft-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - 50 - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight - 50 - offsetHeight)+')')
+                d3.select('#placeHolderCornerBottomLeft-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - 50 - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight +25 - offsetHeight)+')')
                 var Gelement = d3.select('#placeHolderCornerBottomLeft-'+that.props.id)
                     .append('g')
                     .attr('transform', function (e,i){ return 'translate(0,0)'})
@@ -310,7 +309,7 @@ class Background extends Component {
                     .attr('stroke-width', (d)=> d.sizeStroke)
             }
             if (d.id == 'bottomRightCorner' && d.lines.length > 0){
-                d3.select('#placeHolderCornerBottomRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight - 50 - offsetHeight)+')')
+                d3.select('#placeHolderCornerBottomRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth +25 - (offsetX/2) - offsetWidth)+','+(that.BBox.y+totalHeight +25 - offsetHeight)+')')
                 var Gelement = d3.select('#placeHolderCornerBottomRight-'+that.props.id)
                     .append('g')
                     .attr('transform', function (e,i){ return 'translate(0,0)'})
@@ -322,35 +321,20 @@ class Background extends Component {
                     .attr('fill', 'none')
                     .attr('stroke', (d)=> d.colorStroke )
                     .attr('stroke-width', (d)=> d.sizeStroke)
+
             }
 
-           
-            //OLD for replicating
-            // if (d.id == 'background' && d.lines.length > 0){
-            //     var offsetHeight = that.BBox.height/3
-            //     var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 150, that.BBox.x + that.BBox.width + 60]);
-            //     var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - (offsetHeight*1.3), that.BBox.y + that.BBox.height +  (offsetHeight)]);
-            //     var lines = JSON.parse(JSON.stringify(d.lines))
-            //     lines.forEach((line)=>{
-            //         line.data = line.data.map((e)=> {
-            //             return [myScaleY(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
-            //         })
-            //     })
-            //     d3.select('#placeHolderBG-'+that.props.iteration +'-'+that.props.id).selectAll('path')
-            //         .data(lines).enter()
-            //         .append('path')
-            //         .attr('d', (d)=>line(d.data))
-            //         .attr('fill', 'none')
-            //         .attr('stroke', 'black')
-            //         .attr('stroke-width', '2')
-            // }
-
         })
-        // if (this.props.placeholders)
+
+        
+       
+            
+   
+
     }
     render() {
         return (
-            <g transform={`translate(0,0)`}>
+            <g id={'background-'+this.props.id} transform={`translate(0,0)`}>
 
 
                 <g id={'placeHolderCornerTopRight-'+this.props.id} ></g>

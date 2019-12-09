@@ -37,6 +37,7 @@ import Groups from "./Group/Groups";
 import { SpeechRecognitionClass } from "./SpeechReognition/Speech";
 import Textes from "./Textes/Textes";
 import GalleryItmes from "./Gallery/GalleryItmes";
+import Tags from "./Tags/Tags";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -56,7 +57,8 @@ function mapStateToProps(state, ownProps) {
     return {
         sketchLines: state.rootReducer.present.sketchLines,
         stickyLines: state.rootReducer.present.stickyLines,
-        lettres: state.rootReducer.present.lettres
+        lettres: state.rootReducer.present.lettres,
+        UIid: state.rootReducer.present.UIid
     };
 }
 
@@ -92,7 +94,8 @@ class Document extends Component {
             openGalleryModel: false,
             
             colorStroke: 'black',
-            sizeStroke: 2
+            sizeStroke: 2,
+            tagHold: false
         }
 
         this.swipe = false;
@@ -103,13 +106,17 @@ class Document extends Component {
         this.sizePen = 2;
         this.colorPen = 'black';
 
-        this.marginOffset = 450;
+        this.marginOffset = 300;
        
+        this.init();
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
     init(){
-
+        if (window.innerWidth < 769){
+            this.marginOffset = 110;
+            d3.select('.lineRed').style('left', '110px')
+        }
     }
     componentDidMount(){
         this.listenHammer();
@@ -122,11 +129,13 @@ class Document extends Component {
         //     // svg.attr("transform", d3.event.transform)
         //  })
 
-        d3.select('#panItems').attr("transform", 'translate(0,0)')
+        // d3.select('#panItems').attr("transform", 'translate(0,0)')
 
         this.speech = new SpeechRecognitionClass(this);
 
 
+
+        
 
         var defs = d3.select('svg').append('svg:defs');
         defs.append("svg:pattern")
@@ -213,7 +222,7 @@ class Document extends Component {
 
         
         this.mc.on("panstart", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
+            if (ev.pointers[0].pointerType == 'pen' ){
                 that.pointerDown(ev.srcEvent)
             }
             if (ev.pointers[0].pointerType == 'touch'){
@@ -245,7 +254,7 @@ class Document extends Component {
             if (ev.pointers[0]['pointerType'] == 'touch'){
                 ev.srcEvent.preventDefault();
                 that.press = true;
-                // console.log(ev)
+                console.log(that.props.lettres)
                 that.speech.setAlphabet(that.props.lettres)
                 that.speech.start({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
 
@@ -313,7 +322,7 @@ class Document extends Component {
             that.down = true;
             // that.createLine();
             // console.log(d3.event)
-            that.duplicating = that.isGuideHold; 
+            // that.duplicating = that.isGuideHold; 
             // if (that.isGuideHold != false){
             //     that.duplicating = true;
             //     // console.log('GO')
@@ -348,7 +357,7 @@ class Document extends Component {
 
             that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY]);
 
-
+            // console.log(that.isGuideHold)
 
             if (that.press){
 
@@ -377,7 +386,7 @@ class Document extends Component {
         if (that.down && that.isItemDragged == false){
             // console.log(that.drawing, that.sticky)
             // console.log(that.drawing)
-            // console.log(that.isGuideHold.length)
+            // console.log(that.isGuideHold)
             // if (that.duplicating && that.isGuideHold != false){
 
             // }
@@ -390,7 +399,7 @@ class Document extends Component {
             if (that.press){
 
             }
-            else if (that.duplicating){
+            else if (that.isGuideHold){
                 // that.drawTempStroke();
                 var objectsSelected = that.findIntersection('penTemp');
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
@@ -549,7 +558,7 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
-                showBboxBB(BB, 'red');
+                // showBboxBB(BB, 'red');
                 // showBbox('item-'+objectId, 'red');
                 
                 centerBox[i] = getCenterPolygon(points);
@@ -702,7 +711,7 @@ class Document extends Component {
         for (var i = 0; i < that.objectIn.length; i++){
             var id1 = that.objectIn[i];
             var BB1 = _getBBox('item-'+id1.id)
-            showBboxBB(BB1, 'red');
+            // showBboxBB(BB1, 'red');
         }
 
         console.log(that.objectIn)
@@ -753,7 +762,7 @@ class Document extends Component {
                 {'id':'right', 'data': {}, 'lines':[]}, 
                 {'id':'middle', 'data': {}, 'lines':[]}],
             'position': [firstPoint[0],firstPoint[1]],
-            'textPosition': {'where': 'right', 'position': [25,90]},
+            'textPosition': {'where': 'right', 'position': [25,20]},
             
         }
 
@@ -805,20 +814,21 @@ class Document extends Component {
         if (this.tempArrayStroke.length > 1){
             // To have everything in 0,0
             var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-            var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke))
+            var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
+            
             arrayPoints.forEach((d)=>{
                 d[0] = d[0] - firstPoint[0];
                 d[1] = d[1] - firstPoint[1]
             })
-            // console.log(arrayPoints)
+            // console.log(JSON.stringify(arrayPoints))
             var data = {
                 'points': arrayPoints, 
                 'data': {'class':[], 'sizeStroke': this.sizePen, 'colorStroke': this.colorPen}, 
-                'id': id, 
+                'id': id , 
+                'device':this.props.UIid,
                 'isAlphabet': false,
                 'position': [firstPoint[0],firstPoint[1]]
             }
-            // console.log(data)
             this.props.addSketchLine(data);
         }
     }
@@ -849,6 +859,10 @@ class Document extends Component {
     //     // console.log(d);
     //     this.pointText = d;
     // }
+    holdTag = (d) => {
+        console.log('Selection ',d)
+        this.setState({'tagHold': d})
+    }
     holdGuide = (d) => {
         console.log('Selection '+d)
         this.isGuideHold = d;
@@ -877,7 +891,7 @@ class Document extends Component {
     }
     setGuideTapped = (d) => {
 
-        console.log(this.linesInselection, d)
+        // console.log(this.linesInselection, d)
         this.guideTapped = d;
 
         if (this.linesInselection.elements.length != 0){
@@ -889,7 +903,7 @@ class Document extends Component {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky
             };
-            console.log(data)
+            // console.log(data)
 
             this.props.changeModelGroupLines(data);
         }
@@ -914,18 +928,21 @@ class Document extends Component {
                    
 
 
-                    <g id='panItems' transform={'translate(0,0)'}>
+                    <g id='panItems' transform={'translate(110,0)'}>
 
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
                         <g id="tempLines"><path id="penTemp"></path></g>
-
+                        <Lines />
                         <Groups 
                             setSelection={this.setSelection}
+
+                            tagHold={this.state.tagHold}
+                            // holdGroup={this.holdGroup}
                         />
                         <Textes />
 
                     
-                        <Lines />
+                        
                     </g>
                     <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0}  fill={'url(#grump_avatar)'}/>
 
@@ -940,6 +957,12 @@ class Document extends Component {
                         dragItem={this.dragItem}
                         setGuideTapped={this.setGuideTapped}
 
+                        colorStroke = {this.state.colorStroke}
+                        sizeStroke = {this.state.sizeStroke}
+                    />
+                    <Tags 
+                    
+                        holdTag={this.holdTag} 
                         colorStroke = {this.state.colorStroke}
                         sizeStroke = {this.state.sizeStroke}
                     />

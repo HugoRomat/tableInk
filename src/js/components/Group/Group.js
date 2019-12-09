@@ -1,10 +1,11 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getTransformation, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox } from "./../Helper";
+import { getTransformation, unionRectangles, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox, _getBBoxPromise, _getBBoxPan, guid } from "./../Helper";
 import { connect } from 'react-redux';
-
+// import shallowCompare from 'react-addons-shallow-compare';
 import {
+    addTagToGroup,
     moveSketchLines
 } from './../../actions';
 import Vector from "../../../../customModules/vector";
@@ -15,12 +16,14 @@ import Polygon from 'polygon'
 import Background from "./Background";
 
 const mapDispatchToProps = { 
-    moveSketchLines
+    moveSketchLines,
+    addTagToGroup,
 };
 const mapStateToProps = (state, ownProps) => {  
 
   return { 
       sketchLines: state.rootReducer.present.sketchLines,
+      tagsGroup: state.rootReducer.present.tagsGroup,
   };
 };
 
@@ -31,10 +34,25 @@ class Group extends Component {
 
         this.state = {
             'placeholders':[],
-            'sketchLines': this.props.sketchLines
+            'sketchLines': this.props.sketchLines,
+            'BBs': [],
+            'offsetY': []
         }
 
         this.selected = false;
+        this.getIn = false;
+
+        this.i= 0;
+        // setTimeout(()=> {
+        
+        // }, 3000)
+        // console.log('-------------------------ENDED');
+
+
+        // setTimeout(()=>{
+            // console.log(JSON.stringify(d3.select('#panItems').node().getBBox()))
+        // }, 1000)
+        // this.forLoop()
     }
     componentDidMount(){
         var that = this;
@@ -84,7 +102,90 @@ class Group extends Component {
 
 
         // console.log(JSON.parse(JSON.stringify(this.placeHolder)))
-        this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
+        this.getBoundinxBoxEveryone().then(()=> {
+            this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
+        })
+
+
+        //Swipe on the BIG box
+        var that = this;
+        var el = d3.select('#rect-'+this.props.group.id).node()
+        this.mc = new Hammer.Manager(el);
+        var swipe = new Hammer.Swipe({pointers: 1});
+        this.mc.add(swipe);
+
+        this.mc.on("swipeleft", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                console.log('swipeleft', ev.direction)
+                that.createTable();
+                
+                // var data = {
+                //     'id': guid(), 
+                //     'idGroupline':that.props.iteration +'-'+that.props.id, 
+                //     'position': [0,0],
+                //     'model': that.props.tagHold
+                // };
+                // that.props.addTagToGroup(data)
+                // // console.log('TAP', that.props.tagHold)
+            }
+        }) 
+
+        
+        
+    }
+    initiateTable(){
+        // var tables = this.props.group.tables;
+        // var master = tables[0];
+        // var modelMaster = this.props.allGroups.find(x => x.id == master);
+        // var paddingMaster = modelMaster.model.paddingBetweenLines;
+
+        // //CHANGE PADDING FOR ALL GROUPS
+        // /******************************/
+        // var initial = tables[0];
+
+        // var bb = _getBBoxPan('group-'+initial);
+        
+
+        // if (this.i == 0) showBboxBB(bb, 'red');
+        // // else showBboxBB(bb, 'green');
+        // for (var i = 1; i< tables.length; i++){
+        //     // var 
+        // }
+       
+        
+        // // var allGroups = 
+        // console.log('GO', tables, this.props.group.id);
+        // this.i++;
+    }
+    createTable(){
+        var modelMaster = null;
+        var idTable = null;
+        console.log()
+        this.props.tables.forEach((t)=>{
+            // console.log(t)
+            idTable = t.id;
+            modelMaster = t.data.find(x => x.id == this.props.groupHolded);
+        })
+        // 
+        console.log(modelMaster)
+        if (modelMaster == null){
+            var data = [{
+                            'id': this.props.groupHolded,
+                            'children':[{
+                                'id': this.props.group.id,
+                                'direction': 'left'
+                            }
+                        ]},{   
+                            'id': this.props.group.id,
+                            'children':[]
+                        }]
+            this.props.createTable({'id': guid(), 'data':data});
+            // this.props.computeTables({'id': this.props.group.id});
+        } else {
+            // ADD TO LEFT
+            this.props.addToTable({'idTable':idTable,  'idParent': this.props.groupHolded, 'data':{'id': this.props.group.id,'direction': 'left'}});
+        }
+        // this.props.addTables({'id1': this.props.group.id, 'id2': this.props.groupHolded})
     }
     dragstarted(env) {
         var that = env;
@@ -93,7 +194,7 @@ class Group extends Component {
             console.log('PRESS')
             if (that.drag == false){
                 // that.colorForHolding(true);
-                // that.props.holdGuide(that.props.stroke.id);
+                that.props.holdGuide(env.props.group.id);
                 that.press = true;
                 // that.props.dragItem(false);
                 that.drag = false;
@@ -123,6 +224,8 @@ class Group extends Component {
         linesAttached.forEach((groupLine)=>{
             groupLine.forEach((lineId)=>{
                 var id = 'item-'+lineId;
+
+                
                 var transform = getTransformation(d3.select('#'+id).attr('transform'));
                 var X = offsetX + transform.translateX;
                 var Y = offsetY + transform.translateY;
@@ -150,21 +253,14 @@ class Group extends Component {
         var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
         var time = Date.now() -  that.startPosition['time'];
 
+        that.props.holdGuide(false);
+
         // console.log(dist, time)
         if (dist < 10 && time < 200){
             clearTimeout(that.timerPress);
 
             that.props.addToSelection({'id':env.props.group.id});
             that.colorForTaping(true);
-            // console.log('Thats a tap')
-            // var BBox = _getBBox('item-'+env.props.group.id)
-            // that.props.shouldOpenMenu({
-            //     'id': guid(),
-            //     'shouldOpen': true,
-            //     'position': [BBox.x, BBox.y],
-            //     'idGuide': env.props.stroke.id,
-            //     'idLines': []//env.props.stroke.data.linesAttached
-            // })
         }
     }
     colorForTaping(isIt){
@@ -179,6 +275,7 @@ class Group extends Component {
         }
         else that.selected = false;
     }
+    // POUR TOUS LES PLACEHOLDER
     //SERT A METTRE MES OBJETS EN 0 ABSOLU ++ Update ma BBOX de mon objet PLACEHOLDER
     computeLinesPlaceHOlder(placeholder){
         var that = this;
@@ -232,57 +329,224 @@ class Group extends Component {
             
             // console.log(polygon, element.id)
         });
-        // console.log(placeholder)
+        // console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
+    sleep = () => {
+        return new Promise(resolve => setTimeout(resolve, 200))
+    }
+    forLoop = async () => {
+        console.log('Start')
+      
+        for (let index = 0; index < 800; index++) {
+            console.log(index)
+          await this.sleep()
+        }
+      
+        console.log('End')
+      }
+    // async asyncData (app) {
+    //     const res = await app.$axios.$get('api.v1/feeds')
+    //     return { feeds: res}
+    //   }
+     /**
+     * FAIT LA BOUNDING BOX DE TOUT LE MONDE
+     */
+    getBoundinxBoxEveryone = async () => {
+        // var BB = await _getBBoxPromise('item-'+strokeId);
+        // return new Promise((resolve, reject) => {
+        var BBox = [];
+        // console.log('start')
+
+        for (let i = 0; i < this.props.group.lines.length; i++) {
+            var line = this.props.group.lines[i];
+            var rectangle = null;
+            var that = this;
+
+
+            for (let index = 0; index < line.length; index++) {
+                // console.log(i)
+                var strokeId = line[index];
+                var BB = await _getBBoxPromise('item-'+strokeId);
+    
+                // console.log(JSON.stringify(BB))
+
+                if (rectangle == null) rectangle = BB;
+                else rectangle = unionRectangles(rectangle, BB);
+                
+            }
+           
+            var transformPan = {'translateX': 0, 'translateY': 0}
+            var transformDrag = {'translateX': 0, 'translateY': 0}
+            var item = d3.select('#panItems').node()
+            if (item != null){
+                transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+            } 
+            var item = d3.select('#group-'+ that.props.group.id).node()
+            if (item != null){
+                transformDrag = getTransformation(d3.select('#group-'+ that.props.group.id).attr('transform'));
+            } 
+            // GET apres le drag en compte sur les BBox
+            // console.log(transform)
+            rectangle.x = rectangle.x - transformPan.translateX - transformDrag.translateX;
+            rectangle.y = rectangle.y - transformPan.translateY - transformDrag.translateY;
+            // showBboxBB(rectangle, 'red');
+            // console.log(BBox)
+            BBox.push(rectangle)
+            // console.log('PUSH')
+        }
+
+        this.BB = BBox
+
+        // console.log('endBBox')
+        this.computePosition();
+        
+
+        
+        // return BBox;
+
+    }
+    computePosition(){
+        var offset = [];
+        
+        var padding = this.props.group.model.paddingBetweenLines;
+        var bb = JSON.parse(JSON.stringify(this.BB));
+        // this.BB.forEach((d)=> console.log(d))
+        var bbwithIndex = this.BB.map((d, i)=>{ d.index = i; return d })
+        bbwithIndex.sort((a, b) => a.y - b.y);
+        var initialPosition = JSON.parse(JSON.stringify(bbwithIndex[0]['y']));
+        bbwithIndex.forEach((d, i)=>{
+            offset.push({'position': initialPosition, 'index':d.index});
+            initialPosition += d.height  + padding;
+            
+        })
+
+        // this.BB.sort((a, b) => );
+        this.offset = offset.map((d, i)=>{
+            // console.log(JSON.stringify(bb[i]), d.position )
+            return {'index': d.index, 'value':bbwithIndex[i]['y'] - d.position }
+        })
+        this.offset.sort((a, b) => a.index - b.index);
+        this.offsetY = this.offset.map((d)=>{
+            return d.value;
+        })
+
+        // this.setState({'offsetY': this.offsetY})
+        // console.log(this.offsetY)
+    }
+   
     componentDidUpdate(prevProps, prevState){
         var that = this;
-        if (this.props.sketchLines != prevProps.sketchLines){
-            console.log('UPDATE SKECTHLINES')
-            this.setState({'sketchLines': this.props.sketchLines})
-        }
-        // console.log('UPDATE', this.props.model, prevProps.model)
-        // console.log(this.props.selected, that.selected)
+        
         if (this.props.shouldUnselect != prevProps.shouldUnselect){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
+        if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
+            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+            this.getBoundinxBoxEveryone().then(()=> {
+                this.computeLinesPlaceHOlder(this.placeholder);
+                
+            })
+            // console.log('placeholder')
+        }
+        if (this.props.groupHolded != prevProps.groupHolded){
+            if (this.props.groupHolded == false){
+                d3.select('#rect-'+this.props.group.id).attr('width', 0).attr('height', 0)
+            }
+            else if (this.props.groupHolded != this.props.group.id){
+                // console.log(this.props.groupHolded, this.props.group.id)
+                _getBBoxPromise('group-'+this.props.group.id).then((d)=> {
+                        var transformPan = {'translateX': 0, 'translateY': 0}
+                        var item = d3.select('#panItems').node()
+                        if (item != null){
+                            transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                        }
+                        d3.select('#rect-'+this.props.group.id)
+                            .attr('width', d.width)
+                            .attr('height', d.height)
+                            .attr('x', d.x - transformPan.translateX)
+                            .attr('y', d.y - transformPan.translateY)
+                            .attr('fill', 'rgba(0,255,0,0.2')
+                    
+                })
+            }
+            // console.log('groupHolded')
+        }
 
-        if (this.props.group.model != prevProps.group.model){
-            console.log('UPDATE PLACEHOLDER')
-            this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
-        } 
+        // this.initiateTable()
+        // DRAW The box for swiping
+        /**/
+
+        // var d = _getBBox('background-'+this.props.group.id)
+        
+        // console.log(d)
+        // d3.select('#rect-'+this.props.group.id)
+        //     .attr('width', d.width)
+        //     .attr('height', d.height)
+        //     .attr('x', d.x)
+        //     .attr('y', d.y)
+        //     .attr('fill', 'rgba(0,255,0,0.3')
     }
     getBoundinxBoxEveryong(){
         // console.log(this.props)
     }
-    moveSketchLines = (d) => {
-        this.props.moveSketchLines(d);
+    // moveSketchLines = (d) => {
+    //     // console.log('GO')
+    //     this.props.moveSketchLines(d);
+    // }
+    moveLines = (d) => {
+        this.props.moveSketchLines(d.data);
+        if (d.iteration == this.props.group.lines.length-1){
+            this.getBoundinxBoxEveryone().then(()=> {
+                this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
+                this.props.computeTables({'id': this.props.group.id});
+            })
+        }
     }
     render() {
 
-        // console.log(this.props.group)
+        // console.log(this.props)
+
+       
+        // console.log(BB)
+        // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
+
         //Pour chaque ligne reconnu dans mon groupe
-        const listItems = this.props.group.lines.map((d, i) => {
+        var listItems = this.props.group.lines.map((d, i) => { return <g key={i} ></g>})
+        if (this.state.placeholders.length > 0){
+            listItems = this.props.group.lines.map((d, i) => {
 
-            // console.log(d)
-            return <LinesGrouping 
-                key={i} 
-                line={d}
-                sketchLines={this.state.sketchLines}
-                placeholders={this.state.placeholders}
-                stroke={this.props.group.stroke}
-                id={this.props.group.id}
-                iteration={i}
+                // POUR LES TAGS
+                var results= this.props.tagsGroup.filter(x => x.idGroupline == i + '-' + this.props.group.id);
+                // var sticky = this.props.tagsGroup.find(x => x.idGroupline == i + '-' + this.props.group.id);
+                // console.log(sticky, i + '-' + this.props.group.id)
+                // console.log(results)
+                return <LinesGrouping 
+                    key={i} 
+                    line={d}
+                    sketchLines={this.state.sketchLines}
+                    placeholders={this.state.placeholders}
+                    stroke={this.props.group.stroke}
+                    id={this.props.group.id}
+                    iteration={i}
+                    BBs={this.BB} 
+                    offsetY={this.offsetY}
+    
+                    moveLines={this.moveLines}
 
-                moveSketchLines={this.moveSketchLines}
-            />
-        });
-
+                    tagHold={this.props.tagHold}
+                    addTagToGroup={this.props.addTagToGroup}
+                    tags={results}
+                />
+            });
+        }
+       
+        // console.log(this.props.group)
         return (
-            <g id={'group-'+this.props.group.id} transform={`translate(0,0)`}>
-                {listItems}
-
+            <g id={'group-'+this.props.group.id} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
+                {/* <g>{this.state.placeholders.length > 0 ? : <g></g> }</g> */}
+                {listItems} 
                 <Background
                     sketchLines={this.state.sketchLines}
                     placeholders={this.state.placeholders}
@@ -299,7 +563,7 @@ class Group extends Component {
                     <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/>
                     <path id={'fake-'+this.props.group.id}></path>
                 </g>
-                {/* <rect id={'rect-'+this.props.group.id} /> */}
+                <rect id={'rect-'+this.props.group.id} />
             </g>
         );
         

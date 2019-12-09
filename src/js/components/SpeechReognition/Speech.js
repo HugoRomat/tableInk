@@ -1,4 +1,4 @@
-import { guid, mergeRectangles, calculateBB } from "../Helper";
+import { guid, mergeRectangles, calculateBB, getTransformation } from "../Helper";
 import * as d3 from 'd3';
 
 export class SpeechRecognitionClass { 
@@ -56,13 +56,15 @@ export class SpeechRecognitionClass {
 
         this.animate();
             
-            
+         setTimeout(function(){
+            that.stop();
+         }, 10000)       
        
         
 
         this.recognition.onresult = function(event) {
             var texte = event.results[0][0].transcript;
-            // console.log(texte)
+            console.log(texte)
             // position[0] += 15
             that.addText(texte, position)
             // that.document.addText({
@@ -81,7 +83,7 @@ export class SpeechRecognitionClass {
         .attr('cy', 0)
     }
     addText(texte, position){
-        console.log(texte)
+        // console.log(texte)
         this.alphabet.forEach((d)=>{
             this.computeLinesPlaceHOlder(d)
         })
@@ -91,6 +93,8 @@ export class SpeechRecognitionClass {
         var simplifiedTexte = texte.toLowerCase().split('');
 
         simplifiedTexte.forEach((d)=>{
+
+            // console.log(this.alphabet)
             var index = this.alphabet.indexOf(this.alphabet.find(x => x.id == d));
 
             if (d == ' '){
@@ -101,14 +105,23 @@ export class SpeechRecognitionClass {
                 // console.log(letter['BBox'])
                 bufferX += oldValue;
                 oldValue = BBox.width;
+
+                var transformPan = {'translateX': 0, 'translateY': 0}
+                var item = d3.select('#panItems').node()
+                if (item != null){
+                    transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                } 
+
                 this.alphabet[index].lines.forEach((d)=>{
                     var data = {
                         'points': d.points, 
                         'data': {'class':[], 'sizeStroke': this.document.sizePen, 'colorStroke': this.document.colorPen}, 
                         'id': guid(), 
+                        'device':this.document.props.UIid,
                         'isAlphabet': true,
-                        'position': [bufferX + position.x,position.y-50],
+                        'position': [bufferX + position.x - transformPan.translateX,position.y-50 - transformPan.translateY],
                     }
+                    // console.log(data)
                     this.document.addStrokeFilledData(data);
                     // console.log(d)
                 })

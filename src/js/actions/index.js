@@ -30,10 +30,7 @@ export const shouldOpenMenu = data => ({
     data
 })
 
-export const addLineToStickyGroup = data => ({
-    type: 'ADD_LINE_TO_STICKY_GROUP',
-    data
-})
+
 
 export const moveSketchLines = data => ({
     type: 'MOVE_SKETCH_LINES',
@@ -54,6 +51,39 @@ export const addLinesLetter = data => ({
 
 export const addGuideToSticky = data => ({
     type: 'ADD_GUIDE_TO_STICKY',
+    data
+})
+export const updateGroupPosition = data => ({
+    type: 'UPDATE_GROUP_POSITION',
+    data
+})
+
+export const SetUIId = data => ({
+    type: 'SET_UI_ID',
+    data
+})
+
+export const addLineToStickyGroup = data => ({
+    type: 'ADD_LINE_TO_STICKY_GROUP',
+    data
+})
+
+export const addLineToTagGroup = data => ({
+
+    type: 'ADD_LINE_TO_STICKY_TAG',
+    data
+})
+export const addTagToGroup = data => ({
+
+    type: 'ADD_TAG_TO_GROUP',
+    data
+})
+export const createTables = data => ({
+    type: 'CREATE_TABLES',
+    data
+})
+export const addToTable = data => ({
+    type: 'ADD_TO_TABLE',
     data
 })
 

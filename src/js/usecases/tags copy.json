@@ -1,0 +1,10 @@
+[{
+    "id": "bhdudfhdud1237621736278368217",
+     "placeHolder": [
+        {"id":"left", "data": {"method": "repeat"}, "lines":[]}, 
+        {"id":"right", "data": {"method": "repeat"}, "lines":[]}
+    ],
+    "textPosition": {"where": "right", "position": [0,0]},
+    "position": [50,800]
+}]
+    

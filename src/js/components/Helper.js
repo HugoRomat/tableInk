@@ -352,30 +352,98 @@ export function showBbox(id, color){
     .attr('fill', 'none')
     .attr('stroke', color)
 }
+export function getMyBBox(element){
+    return new Promise(resolve => {
+        var BB = element.getBBox();
+        resolve(BB);
+    })
+}
 
-export function _getBBox(id, offset){
+
+ export function _getBBoxPromise(id, offset){
+
+    return new Promise(resolve => {
+        if (offset == undefined) offset = 0;
+        // console.log('Id', id)
+        var BB = d3.select('#'+id).node().getBoundingClientRect();
+
+        var transformPan = {'translateX': 0, 'translateY': 0}
+
+        // var item = d3.select('#panItems').node()
+        // if (item != null){
+        //     transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        // }
+
+        // var yo = d3.select('svg').node().getBBox();
+        
+        // console.log(JSON.stringify(transformPan))
+
+        BB.x = BB.x- offset - transformPan.translateX ;
+        BB.y = BB.y- offset - transformPan.translateY ;
+        BB.width += 2*offset;
+        BB.height += 2*offset;
+
+        resolve(BB);
+
+       
+    })
+}
+
+export function _getBBoxPan(id, offset){
 
     if (offset == undefined) offset = 0;
-    // console.log('Id', id)
-    var BB = d3.select('#'+id).node().getBBox();
-    // console.log(d3.select('#'+id).node())
-    // console.log(d3.select('#'+id).node().tagName)
-    var transform = {'translateX':0, 'translateY':0}
-    if (d3.select('#'+id).node().tagName == 'g'){
-        transform = getTransformation(d3.select('#'+id).attr('transform'))
+        // console.log('Id', id)
+        var BB = d3.select('#'+id).node().getBBox();
+        // console.log(d3.select('#'+id).node())
+        // console.log(d3.select('#'+id).node().tagName)
+        var transformPan = {'translateX': 0, 'translateY': 0}
+        var transformDrag = {'translateX': 0, 'translateY': 0}
+        var item = d3.select('#panItems').node()
+        if (item != null){
+            transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        } 
+        if (d3.select('#'+id).node().tagName == 'g'){
+            transformDrag = getTransformation(d3.select('#'+id).attr('transform'))
+        }
+        // console.log(transform, d3.select('#'+id).node().tagName)
+        // var selection = [
+        // BB.x = BB.x+transform.translateX, BB.y+transform.translateY],
+        // BBBB.x+transform.translateX+BB.width, BB.y+transform.translateY],
+        //     [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
+        //     [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
+        // ]
+        BB.x = BB.x+transformPan.translateX +transformDrag.translateX - offset;
+        BB.y = BB.y+transformPan.translateY +transformDrag.translateY - offset;
+        BB.width += 2*offset;
+        BB.height += 2*offset;
+        // console.log('GOOO', id)
+        return BB;
     }
-    // console.log(transform, d3.select('#'+id).node().tagName)
-    // var selection = [
-    // BB.x = BB.x+transform.translateX, BB.y+transform.translateY],
-    // BBBB.x+transform.translateX+BB.width, BB.y+transform.translateY],
-    //     [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
-    //     [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
-    // ]
-    BB.x = BB.x+transform.translateX - offset;
-    BB.y = BB.y+transform.translateY - offset;
-    BB.width += 2*offset;
-    BB.height += 2*offset;
-    return BB;
+export function _getBBox(id, offset){
+
+        if (offset == undefined) offset = 0;
+        // console.log('Id', id)
+        var BB = d3.select('#'+id).node().getBBox();
+        // console.log(d3.select('#'+id).node())
+        // console.log(d3.select('#'+id).node().tagName)
+        var transform = {'translateX':0, 'translateY':0}
+        if (d3.select('#'+id).node().tagName == 'g'){
+            transform = getTransformation(d3.select('#'+id).attr('transform'))
+        }
+        // console.log(transform, d3.select('#'+id).node().tagName)
+        // var selection = [
+        // BB.x = BB.x+transform.translateX, BB.y+transform.translateY],
+        // BBBB.x+transform.translateX+BB.width, BB.y+transform.translateY],
+        //     [BB.x+transform.translateX+BB.width, BB.y+transform.translateY+BB.height],
+        //     [BB.x+transform.translateX, BB.y+transform.translateY+BB.height],
+        // ]
+        BB.x = BB.x+transform.translateX - offset;
+        BB.y = BB.y+transform.translateY - offset;
+        BB.width += 2*offset;
+        BB.height += 2*offset;
+        // console.log('GOOO', id)
+        return BB;
+    
 }
 // REtourn un point donne pas sur la ligne
 export function getPerpendicularPoint(A, B, d){

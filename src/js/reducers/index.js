@@ -4,10 +4,14 @@ import { combineReducers } from 'redux';
 import undoable, { distinctState } from 'redux-undo';
 import { includeAction, excludeAction } from 'redux-undo';
 
-import alphabetPerso from './../usecases/alphabet.json';
+import alphabetPerso0 from './../usecases/alphabet0.json';
+import alphabetPerso1 from './../usecases/alphabet1.json';
 import strokes from './../usecases/strokes.json';
 import galleryItems from './../usecases/galleryItems.json';
 import sticky from './../usecases/sticky.json';
+import group from './../usecases/groupLines.json';
+import tables from './../usecases/tables.json';
+import tags from './../usecases/tags.json';
 
 const initialState = { 
     'sketchLines': [],
@@ -16,7 +20,11 @@ const initialState = {
     "menuItems": [],
     "lettres": [],
     "textes":[],
-    'galleryItems': []
+    'galleryItems': [],
+    'UIid': 0,
+    'tags':[],
+    'tagsGroup':[],
+    'tables': []
   };
 
     // console.log(alphabetPerso)
@@ -31,16 +39,13 @@ alphabet.forEach((d)=>{
   lettres.push({'id':d, 'lines':[]})
 })
 
-initialState.lettres = lettres; 
+// initialState.lettres = lettres; 
 initialState.galleryItems = galleryItems;
+initialState.tags = tags
+// initialState.tables = tables
+initialState.lettres = alphabetPerso0;
 
-
-
-
-
-initialState.lettres = alphabetPerso;
-
-// initialState.groupLines =
+initialState.groupLines = group
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
@@ -48,7 +53,7 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.groupLines));
+    // console.log(JSON.stringify(state.tables));
     switch (action.type) {
       
       //Add line to placeholder
@@ -80,12 +85,104 @@ initialState.sketchLines = strokes
         
         return state;
 
+
+        
+        case 'ADD_LINE_TO_STICKY_TAG':
+            var id = action.data.idTag;
+            var where = action.data.where;
+            var data = action.data.data;
+            var index = state.tags.indexOf(state.tags.find(x => x.id == id))
+            if (index > -1){
+    
+              var indexLine = state.tags[index]['placeHolder'].indexOf(state.tags[index]['placeHolder'].find(x => x.id == where))
+              if (indexLine > -1){
+                state = update(state, { 
+                  tags: {
+                    [index] : {
+                      placeHolder: {
+                        [indexLine]: { 
+                          lines: {$push: data}
+                        }
+                      }
+                      
+                    }
+                  }
+                })
+              }
+            }
+            
+            return state;
+    
+    
+      case 'CREATE_TABLES':
+        return {  ...state, tables: [ ...state.tables, action.data] };
+
+      case 'ADD_TO_TABLE':
+          var index = state.tables.indexOf(state.tables.find(x => x.id == action.data.idTable));
+          if (index > -1){
+            var indexParent = state.tables[index]['data'].indexOf(state.tables[index]['data'].find(x => x.id == action.data.idParent))
+            if (indexParent > -1){
+              state = update(state, { 
+                tables: {
+                  [index] : {
+                    data: {
+                      [indexParent]: { 
+                        children: {$push: [action.data.data]}
+                      }
+                    }
+                    
+                  }
+                }
+              })
+              state = update(state, { 
+                tables: {
+                  [index] : {
+                    data: {$push: [{'id':action.data.data.id, 'children':[]}]}
+                  }
+                }
+              })
+            }
+          }
+          return state;
+          // console.log(index, indexParent)
+
+        
+      case 'SET_WORKSPACE':
+          console.log('GO', action)
+
+          state.sketchLines = action.data.sketchLines
+          state.groupLines = action.data.groupLines
+          state.stickyLines = action.data.stickyLines
+          state.menuItems = action.data.menuItems
+          state.textes = action.data.textes
+          state.galleryItems = action.data.galleryItems
+
+          return state;
+
+
+      case 'SET_UI_ID':
+        state.UIid = action.data;
+
+        console.log(action.data, state.lettres)
+
+        if (action.data == 0) state.lettres = alphabetPerso0;
+        else if (action.data == 1) state.lettres = alphabetPerso1;
+        return state;
+
+
       case 'ADD_TEXT':
         // console.log('GO', action.data)
           return { 
             ...state, 
             textes: [ ...state.textes, action.data] 
           };
+
+      case 'ADD_TAG_TO_GROUP':
+          return { 
+            ...state, 
+            tagsGroup: [ ...state.tagsGroup, action.data] 
+          };
+
 
         case 'ADD_LINES_LETTER':
           var idLetter = action.data.id;
@@ -147,6 +244,23 @@ initialState.sketchLines = strokes
             }
           })
           return state;
+
+      case 'UPDATE_GROUP_POSITION':
+        
+          var id = action.data.id;
+          var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
+          // console.log(state.sketchLines[index])
+          if (index > -1){
+            // console.log('GOOO')
+            state = update(state, { 
+              groupLines: {
+                [index] : {
+                  position: {$set: action.data.position},
+                }
+              }
+            })
+          }
+          return state;
         
         case 'CREATE_STICKY_LINES':
             return { 
@@ -200,13 +314,13 @@ initialState.sketchLines = strokes
 
         case 'ADD_LINES_TO_STICKY':
           var id = action.data.id;
-          console.log(action.data)
+          // console.log(action.data)
           // 'data': {'linesAttached': this.objectIn}, 
           // idsLine.forEach((id)=>{
             var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
             // console.log(index)
             if (index > -1){
-              console.log(action.data, state.stickyLines[index])
+              // console.log(action.data, state.stickyLines[index])
               // console.log(state.sketchLines[index]['data']['class'])
               state = update(state, { 
                 stickyLines: {
@@ -220,6 +334,10 @@ initialState.sketchLines = strokes
             }
           
           return state;
+
+
+
+
 
         
         // console.log(action.data)

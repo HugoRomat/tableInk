@@ -18,7 +18,9 @@ module.exports = env => {
       contentBase: "./dist",
       port: 8080
     },
+    
 
+    
     
     module: {
       rules: [

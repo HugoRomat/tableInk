@@ -285,13 +285,25 @@ class Guide extends Component {
                 .attr('opacity', '0.2')
         }
     }
+    resize(){
+
+        var scale = 50/140;
+        return scale
+
+    }
     render() {
         // console.log(this.props.stroke);
+        var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
+        var scale = 1;
+        if (window.innerWidth < 769){
+            var BB = calculateBB(this.props.stroke.points);
+            translate[0] = 50;
+            scale = this.resize()
+        }
 
-        var BB = calculateBB(this.props.stroke.points);
         // console.log(BB)
         // var height = 
-
+        
 
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
@@ -309,7 +321,12 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} transform={`translate(${translate[0]},${translate[1]})scale(${scale})`}>
+                
+                
+                { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null }
+
+
                 <rect id={'rect-'+this.props.stroke.id} />
                 <path id={this.props.stroke.id}></path>
                 {/* <path id={'fake-'+this.props.stroke.id}></path> */}
@@ -318,6 +335,8 @@ class Guide extends Component {
                     data={this.props.stroke.textPosition}
                     dataParent={this.props.stroke} 
                 />
+                
+
                 
                 
             </g>
