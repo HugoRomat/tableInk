@@ -126,14 +126,18 @@ class PlaceHolder extends Component {
     }
     drawPlaceHolder(){
 
-    
+        var widthTotal = this.props.parent.width;
+        var heightTotal = this.props.parent.height;
+        // console.log(this.props.parent.width)
         var that = this;
+
+        var widthContainer = 25;
         //Si j'udpate la BBox
         // if (this.props.BBoxParent != prevProps.BBoxParent){
             // console.log('UPDATE BOX', that.props.data.id);
-        var height = 70;//this.props.BBoxParent.height;
+        // var height = 70;//this.props.BBoxParent.height;
         var size = 50;
-        var width = 5//this.props.BBoxParent.width;
+        // var width = 5//this.props.BBoxParent.width;
         var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
         var rect = null;
         var opacity = 0.2;
@@ -141,8 +145,8 @@ class PlaceHolder extends Component {
             rect = element
                 .attr('width', 30)
                 .attr('height', 30)
-                .attr('x', -45)
-                .attr('y',20)
+                .attr('x', -25)
+                .attr('y', heightTotal/2 -25)
                 .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'right'){
@@ -150,16 +154,16 @@ class PlaceHolder extends Component {
                 .attr('width', 50)
                 .attr('height', 50)
                 .attr('x', 15)
-                .attr('y',10)
+                .attr('y',heightTotal/2 - 35)
                 .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'middle'){
-            rect = element
-                .attr('width', width*2)
-                .attr('height', height)
-                .attr('x', -width)
-                .attr('y',0)
-                .attr('fill', 'rgba(166, 166, 166, 1)')
+            // rect = element
+            //     .attr('width', width*2)
+            //     .attr('height', height)
+            //     .attr('x', -width)
+            //     .attr('y',0)
+            //     .attr('fill', 'rgba(166, 166, 166, 1)')
         }
 
 
@@ -174,7 +178,7 @@ class PlaceHolder extends Component {
             rect = element
                 .attr('width', 25)
                 .attr('height', 25)
-                .attr('x', -80)
+                .attr('x', -widthTotal/2)
                 .attr('y',-25)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
@@ -182,7 +186,7 @@ class PlaceHolder extends Component {
             rect = element
                 .attr('width', 25)
                 .attr('height', 25)
-                .attr('x',  85)
+                .attr('x',  widthTotal/2 + widthContainer)
                 .attr('y',-25)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
@@ -190,75 +194,85 @@ class PlaceHolder extends Component {
             rect = element
                 .attr('width', 25)
                 .attr('height', 25)
-                .attr('x', -80)
-                .attr('y',height)
+                .attr('x', -widthTotal/2)
+                .attr('y',heightTotal)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         else if (this.props.data.id == 'bottomRightCorner'){
             rect = element
                 .attr('width', 25)
                 .attr('height', 25)
-                .attr('x', 85)
-                .attr('y',height)
+                .attr('x', (widthTotal/2) + widthContainer)
+                .attr('y',heightTotal)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
 
 
         else if (this.props.data.id == 'topbackground'){
             rect = element
-                .attr('width',140 )
+                .attr('width',widthTotal  )
                 .attr('height', 25)
-                .attr('x',-55)
+                .attr('x', (-widthTotal/2) + widthContainer)
                 .attr('y',-25)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         else if (this.props.data.id == 'bottombackground'){
             rect = element
-            .attr('width', 140 )
+            .attr('width',widthTotal )
                 .attr('height', 25)
-                .attr('x', -55)
-                .attr('y', height)
+                .attr('x', (-widthTotal/2) + widthContainer)
+                .attr('y', heightTotal)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         else if (this.props.data.id == 'leftbackground'){
             rect = element
                 .attr('width', 25)
-                .attr('height', height)
-                .attr('x', -80)
+                .attr('height', heightTotal)
+                .attr('x', -widthTotal/2)
                 .attr('y',0)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         else if (this.props.data.id == 'rightbackground'){
             rect = element
                 .attr('width', 25)
-                .attr('height', height)
-                .attr('x', 85)
+                .attr('height', heightTotal)
+                .attr('x', widthTotal/2 + widthContainer)
                 .attr('y',0)
                 .attr('fill', 'rgba(166, 166, 166, 0.2)')
         }
         
+        
+        else if (this.props.data.id == 'outerBackground'){
+            rect = element
+                .attr('width', widthTotal + 50)
+                .attr('height', heightTotal + 50)
+                .attr('x', (-widthTotal/2) + widthContainer - 25)
+                .attr('y',-25)
+                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+        }
         else if (this.props.data.id == 'background'){
             rect = element
-                .attr('width', 140)
-                .attr('height', height)
-                .attr('x', -55)
+                .attr('width', widthTotal)
+                .attr('height', heightTotal)
+                .attr('x', (-widthTotal/2) + widthContainer)
                 .attr('y',0)
                 .attr('fill', 'rgba(94, 130, 237, 0.4)')
         }
+        
         if (rect != null){
             rect.attr('stroke', 'grey')
             //     // .attr('fill', 'rgba(0,0,0,0)')
                 // .attr('stroke-dasharray', 80)
-            rect.attr('opacity', 0.0)
-                // .attr('stroke-width', '4')
+            rect.attr('opacity', 1.0)
+                .attr('stroke-width', '1')
 
-            if (this.props.data.id == 'bottomRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")//.attr('stroke-dashoffset', "16")
-            if (this.props.data.id == 'bottomLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
-            if (this.props.data.id == 'topRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
-            if (this.props.data.id == 'topLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
+            // if (this.props.data.id == 'bottomRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")//.attr('stroke-dashoffset', "16")
+            // if (this.props.data.id == 'bottomLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
+            // if (this.props.data.id == 'topRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
+            // if (this.props.data.id == 'topLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
             
-            if (this.props.data.id == 'left') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 24 6 24 6 24 6 24 6")
-            if (this.props.data.id == 'right') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 44 6 44 6 44 6 44 6")
+            // if (this.props.data.id == 'left') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 24 6 24 6 24 6 24 6")
+            // if (this.props.data.id == 'right') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 44 6 44 6 44 6 44 6")
         }
         // }
     }

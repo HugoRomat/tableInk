@@ -51,7 +51,7 @@ class PlaceHolderText extends Component {
         return (
             <g id={'placeHolderText-'+this.props.dataParent.id} transform={`translate(${this.props.data.position[0]},${this.props.data.position[1]})`}>
                 {/* <rect width={40} height={30} x={0} y={0} stroke={'black'} fill={'grey'} opacity={0.5}/> */}
-                <text style={{'fontSize': '17px', 'fontStyle': 'italic', 'opacity': 0.4}} x={2} dy={22} > Item </text>
+                {/* <text style={{'fontSize': '17px', 'fontStyle': 'italic', 'opacity': 0.4}} x={2} dy={22} > Item </text> */}
             </g>
         );
         

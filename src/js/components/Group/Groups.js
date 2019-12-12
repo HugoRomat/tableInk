@@ -23,6 +23,7 @@ const mapStateToProps = (state, ownProps) => {
         groupLines: state.rootReducer.present.groupLines,
         tables: state.rootReducer.present.tables,
         sketchLines: state.rootReducer.present.sketchLines,
+        grid: state.rootReducer.present.grid
     };
   };
 
@@ -32,13 +33,17 @@ class Groups extends Component {
         super(props);
         this.state = {
             'shouldUnselect': guid(),
-            'groupHolded': false
+            'groupHolded': false,
+            'showGrid': false//[200, 75]
         }
         this.selection = [];
+        this.bufferLinesBBox = 0;
+        this.sizeBBox = {'width':0, 'height': 0};
         
     }
     componentDidMount(){
-        console.log(this.props.tables)
+        // console.log(this.props.tables)
+        // this.setState({'showGrid': this.props.grid})
         // for (var i in this.props.tables){
         //     var myTable = this.props.tables[i];
         //     console.log(myTable['id'])
@@ -48,8 +53,19 @@ class Groups extends Component {
     } 
     componentDidUpdate(prevProps, prevState){
         if (this.props.tables != prevProps.tables){
-            console.log('GO')
+            // console.log('GO')
             this.computeTables();
+        }
+        if (this.props.grid != prevProps.grid){
+            if (this.props.grid != false){
+                this.setState({'showGrid': this.props.grid})
+                console.log('ShowGrid',this.props.grid)
+            } else {
+                console.log('GO')
+                this.setState({'showGrid': false})
+            }
+            
+            // this.computeTables();
         }
     }
     orderTables = async () => {
@@ -87,7 +103,7 @@ class Groups extends Component {
                         indexElement[child['id']]['offsetY'] = - offsetY;
                     }
 
-                    console.log(indexElement)
+                    // console.log(indexElement)
                 }
             }
         }
@@ -125,6 +141,21 @@ class Groups extends Component {
         }
         
     }
+    getBBoxEachLine = (d) => {
+        // console.log(d)
+        d.bb.forEach(element => {
+            if (element.width > this.sizeBBox.width)  this.sizeBBox.width = element.width;
+            if (element.height > this.sizeBBox.height)  this.sizeBBox.height = element.height;
+        });
+        // 
+
+        this.bufferLinesBBox++;
+        if (this.bufferLinesBBox == this.props.groupLines.length) {
+            this.props.getBBoxEachLine( this.sizeBBox);
+            this.bufferLinesBBox = 0;
+        }
+        // console.log(this.sizeBBox)
+    }
     addToSelection = (d) => {
         var that = this;
         this.selection.push(d.id);
@@ -153,13 +184,14 @@ class Groups extends Component {
 
     render() {
 
-
+        // console.log(this.state.showGrid)
         // if (this.props.group.tables != 0){
             // var bb = _getBBoxPan('group-'+this.props.groupLines[0].tables[0]);
             // console.log(bb)
         // }
         // console.log(this.props.groupLines)
         const listItems = this.props.groupLines.map((d, i) => {
+            // console.log(i)
             return <Group 
                 key={i} 
                 group={d}
@@ -167,6 +199,8 @@ class Groups extends Component {
                 tables = {JSON.parse(JSON.stringify(this.props.tables))}
                 shouldUnselect={this.state.shouldUnselect}
                 groupHolded={this.state.groupHolded}
+                iteration={i}
+                showGrid={this.state.showGrid}
 
                 tagHold={this.props.tagHold}
                 holdGuide={this.holdGroup}
@@ -174,6 +208,7 @@ class Groups extends Component {
                 createTable={this.createTable}
                 addToTable={this.addTable}
                 computeTables={this.computeTables}
+                getBBoxEachLine={this.getBBoxEachLine}
             />
         });
         // console.log(this.props.groupLines)

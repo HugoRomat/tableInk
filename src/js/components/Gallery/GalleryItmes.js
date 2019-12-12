@@ -33,7 +33,7 @@ class GalleryItmes extends Component {
             
         // .attr('preserveAspectRatio', 'xMinYMin');
 
-        console.log('HELLO');
+        // console.log('HELLO');
 
 
         

@@ -21,7 +21,7 @@ class LinesGrouping extends Component {
     constructor(props) {
         super(props);
         this.organizedCorners = [];
-
+        this.tableAlignement = {'x':0, 'y':0}
         
     }
     componentDidMount(){
@@ -68,6 +68,11 @@ class LinesGrouping extends Component {
             if (this.props.tagHold == false) this.removeContainer();
             else this.addContainer();
         }
+        if (this.props.offsetX != prevProps.offsetX){
+            if (this.props.showGrid != false) this.movePointTable();
+            else this.movePoints();
+            // console.log('GOOO')
+        }
         // else if (this.props.offsetY != prevProps.offsetY){
         //     this.BBox = this.props.BBs[this.props.iteration]
         //     showBboxBB(this.BBox, 'red');
@@ -112,6 +117,20 @@ class LinesGrouping extends Component {
             }
         })
     }
+    movePointTable(){
+        // console.log('GO')
+        var offsetXAlignement = this.props.offsetX[this.props.iteration];
+        var offsetYAlignement = this.props.offsetY[this.props.iteration]
+
+        this.tableAlignement = {'x':-offsetXAlignement, 'y': -offsetYAlignement}
+        var changePositionArraySketchLines = this.props.line.map((d)=>{
+            var stroke = this.props.sketchLines.find(x => x.id == d);
+            stroke = JSON.parse(JSON.stringify(stroke))
+            return {'id': d, 'position': [stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement]}
+        })
+        // console.log(changePositionArraySketchLines)
+        this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
+    }
     /**
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
      * @param {*} arrayPositionBox 
@@ -121,12 +140,20 @@ class LinesGrouping extends Component {
         var line = d3.line()
 
         // console.log(this.props.offsetY)
-        var offsetYAlignement = this.props.offsetY[this.props.iteration]
+        // var offsetXAlignement = 0;
+        // if (this.props.offsetX.length != 0) offsetXAlignement = this.props.offsetX[this.props.iteration];
+        // console.log(offsetXAlignement)
+        // var offsetYAlignement = this.props.offsetY[this.props.iteration]
 
+        // console.log( this.tableAlignement)
         var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
         points = points.map((d)=>{
             return [d[0] + this.props.stroke.position[0], d[1] + this.props.stroke.position[1]]
         })
+        /*var points =  JSON.parse(JSON.stringify(this.props.stroke.points));
+        points = points.map((d)=>{
+            return [d[0] + this.props.stroke.position[0], d[1] + this.props.stroke.position[1]]
+        })*/
 
 
         var i = 0;
@@ -148,7 +175,8 @@ class LinesGrouping extends Component {
         // drawCircle(pointOnLine[0], pointOnLine[1], 4,  'blue');
       
         var pointOnLine = points[increment];
-        var offsetX = pointOnLine[0] - this.BBox['x']
+        var offsetX = pointOnLine[0] - this.BBox['x'];
+        // if (offsetXAlignement != 0) offsetX = 0;
         // var offsetY = pointOnLine[1] - this.BBox['y']
 
         // console.log(offsetX)
@@ -156,8 +184,8 @@ class LinesGrouping extends Component {
         var changePositionArraySketchLines = this.props.line.map((d)=>{
             var stroke = this.props.sketchLines.find(x => x.id == d);
             stroke = JSON.parse(JSON.stringify(stroke))
-            // console.log(stroke.position)
-            return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1] - offsetYAlignement]}
+
+            return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]]}
         })
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});

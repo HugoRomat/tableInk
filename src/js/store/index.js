@@ -10,8 +10,9 @@ import { applyMiddleware } from 'redux'
 // var state = JSON.parse(localStorage.getItem('pageData'));
 // console.log('=====================================', store);
 // store.getState().canvasDrawing.rootReducer.present = state;
-var websocket = false;
+// var websocket = false;
 
+/*
 if (websocket){
     var ws = new WebSocket('ws://10.159.2.39:8080');
 
@@ -50,12 +51,14 @@ if (websocket){
         
     }
 }
-
+*/
 
 const logger = store => next => action => {
 
+    /*
     if (isReceivedAction == false && websocket) ws.send(JSON.stringify(action));
     else isReceivedAction = false;
+    */
 
     // console.log('HELLO', action)
     let result = next(action)

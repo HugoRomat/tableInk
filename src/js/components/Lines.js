@@ -28,8 +28,9 @@ class Lines extends Component {
     } 
     
     render() {
-       
+        // console.log('=============')
         const listItems = this.props.sketchLines.map((d, i) => {
+            // console.log(d.position)
                 return <Line 
                     key={i} 
                     stroke={d}

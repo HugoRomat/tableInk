@@ -41,6 +41,7 @@ class Group extends Component {
 
         this.selected = false;
         this.getIn = false;
+        this.offsetX = [];
 
         this.i= 0;
         // setTimeout(()=> {
@@ -101,8 +102,13 @@ class Group extends Component {
             })
 
 
-        // console.log(JSON.parse(JSON.stringify(this.placeHolder)))
+        // console.log(JSON.parse(JSON.stringify(this.placeHolder)))\
+        console.log('BEGINNING')
         this.getBoundinxBoxEveryone().then(()=> {
+            
+            // console.log(this.props.showGrid)
+            this.computePosition();
+            if (this.props.showGrid) this.computePositionTable();
             this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
         })
 
@@ -356,25 +362,25 @@ class Group extends Component {
     getBoundinxBoxEveryone = async () => {
         // var BB = await _getBBoxPromise('item-'+strokeId);
         // return new Promise((resolve, reject) => {
+            // console.log('GO')
         var BBox = [];
-        // console.log('start')
-
+        // d3.selectAll('.BB').remove()
         for (let i = 0; i < this.props.group.lines.length; i++) {
             var line = this.props.group.lines[i];
             var rectangle = null;
             var that = this;
-
+            
 
             for (let index = 0; index < line.length; index++) {
-                // console.log(i)
+                // console.log(line[index])
                 var strokeId = line[index];
                 var BB = await _getBBoxPromise('item-'+strokeId);
-    
+                // console.log(strokeId, BB)
                 // console.log(JSON.stringify(BB))
 
                 if (rectangle == null) rectangle = BB;
                 else rectangle = unionRectangles(rectangle, BB);
-                
+                // showBboxBB(BB, 'red');
             }
            
             var transformPan = {'translateX': 0, 'translateY': 0}
@@ -391,20 +397,26 @@ class Group extends Component {
             // console.log(transform)
             rectangle.x = rectangle.x - transformPan.translateX - transformDrag.translateX;
             rectangle.y = rectangle.y - transformPan.translateY - transformDrag.translateY;
-            // showBboxBB(rectangle, 'red');
+            
             // console.log(BBox)
             BBox.push(rectangle)
+
+            
+            
             // console.log('PUSH')
         }
+        // console.log('GO',BBox)
+        // showBboxBB(BBox, 'red');
+        this.BB = BBox;
 
-        this.BB = BBox
-
+       
+        this.props.getBBoxEachLine({'bb':this.BB, 'iteration': this.props.iteration});
         // console.log('endBBox')
-        this.computePosition();
+        // this.computePosition();
         
 
         
-        // return BBox;
+        return BBox;
 
     }
     computePosition(){
@@ -416,6 +428,7 @@ class Group extends Component {
         var bbwithIndex = this.BB.map((d, i)=>{ d.index = i; return d })
         bbwithIndex.sort((a, b) => a.y - b.y);
         var initialPosition = JSON.parse(JSON.stringify(bbwithIndex[0]['y']));
+        
         bbwithIndex.forEach((d, i)=>{
             offset.push({'position': initialPosition, 'index':d.index});
             initialPosition += d.height  + padding;
@@ -424,33 +437,97 @@ class Group extends Component {
 
         // this.BB.sort((a, b) => );
         this.offset = offset.map((d, i)=>{
-            // console.log(JSON.stringify(bb[i]), d.position )
             return {'index': d.index, 'value':bbwithIndex[i]['y'] - d.position }
         })
         this.offset.sort((a, b) => a.index - b.index);
-        this.offsetY = this.offset.map((d)=>{
+        this.state.offsetY = this.offset.map((d)=>{
             return d.value;
         })
-
+        this.state.offsetX = []
         // this.setState({'offsetY': this.offsetY})
         // console.log(this.offsetY)
     }
-   
+    //COMPUTE POSITION FOR TABLES
+    computePositionTable(){
+        
+
+        var offset = [];
+        var width = this.props.showGrid[0];
+        var height= this.props.showGrid[1];
+        // console.log(width, height)
+        
+        var bbwithIndex = this.BB.map((d, i)=>{ d.index = i; return d })
+        bbwithIndex.sort((a, b) => a.y - b.y);
+        var initialPositionY = JSON.parse(JSON.stringify(bbwithIndex[0]['y']));
+        var initialPositionX = JSON.parse(JSON.stringify(bbwithIndex[0]['x']));
+        bbwithIndex.forEach((d, i)=>{
+            
+            var diffY = (height - d.height)/2;
+            var diffX = (width - d.width)/2
+            // console.log(diffX)
+            offset.push({
+                'positionY': (Math.ceil(initialPositionY/height)*height)+ diffY, 
+                'index':d.index, 
+                'positionX': (Math.ceil(initialPositionX/width)*width)+ diffX
+            });
+            initialPositionY += height;
+        })
+        this.offset = offset.map((d, i)=>{
+            return {'index': d.index, 'valueY':bbwithIndex[i]['y'] - d.positionY, 'valueX':bbwithIndex[i]['x'] - d.positionX }
+        })
+        // console.log(this.offset)
+        this.offset.sort((a, b) => a.index - b.index);
+        this.state.offsetY = this.offset.map((d)=>{return d.valueY;})
+        this.state.offsetX = this.offset.map((d)=>{return d.valueX;})
+
+        // console.log(this.stateoffsetY)
+    }
     componentDidUpdate(prevProps, prevState){
         var that = this;
         
+        if (this.props.sketchLines != prevProps.sketchLines){
+            this.getBoundinxBoxEveryone().then(()=> {
+                // this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
+            })
+        }
         if (this.props.shouldUnselect != prevProps.shouldUnselect){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
+        if (this.props.sketchLines != prevProps.sketchLines){
+            d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
+        }
         if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
+            
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
+                this.computePosition();
+                if (this.props.showGrid) this.computePositionTable();
                 this.computeLinesPlaceHOlder(this.placeholder);
                 
             })
             // console.log('placeholder')
         }
+        if (this.props.showGrid != prevProps.showGrid){
+            // console.log('HEY', this.props.showGrid)
+            if (this.props.showGrid == false){
+                // console.log('HEY')
+                // this.getBoundinxBoxEveryone().then(()=> {
+                    this.computePosition();
+                    this.computeLinesPlaceHOlder(this.placeholder);
+                    
+                // })
+            } else {
+                this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+                // this.getBoundinxBoxEveryone().then(()=> {
+                    this.computePositionTable();
+                    this.computeLinesPlaceHOlder(this.placeholder);
+                // })
+            }
+            
+            // console.log('placeholder')
+        }
         if (this.props.groupHolded != prevProps.groupHolded){
+            
             if (this.props.groupHolded == false){
                 d3.select('#rect-'+this.props.group.id).attr('width', 0).attr('height', 0)
             }
@@ -497,18 +574,29 @@ class Group extends Component {
     // }
     moveLines = (d) => {
         this.props.moveSketchLines(d.data);
+        // console.log('start')
+        // d3.selectAll('.BB').remove()
+        // showBboxBB(BB, 'red');
+        
         if (d.iteration == this.props.group.lines.length-1){
-            this.getBoundinxBoxEveryone().then(()=> {
+             this.getBoundinxBoxEveryone().then((d)=> {
+                console.log()
+                //console.log(JSON.parse(JSON.stringify(d)))
+
+                // d.forEach((e)=>{
+                //     showBboxBB(e, 'red');
+                // })
                 this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
                 this.props.computeTables({'id': this.props.group.id});
-            })
+             })
         }
+        
     }
     render() {
 
         // console.log(this.props)
 
-       
+        // console.log(this.props.showGrid)
         // console.log(BB)
         // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
 
@@ -525,13 +613,15 @@ class Group extends Component {
                 return <LinesGrouping 
                     key={i} 
                     line={d}
-                    sketchLines={this.state.sketchLines}
+                    sketchLines={this.props.sketchLines}
                     placeholders={this.state.placeholders}
                     stroke={this.props.group.stroke}
                     id={this.props.group.id}
                     iteration={i}
                     BBs={this.BB} 
-                    offsetY={this.offsetY}
+                    offsetY={this.state.offsetY}
+                    offsetX={this.state.offsetX}
+                    showGrid={this.props.showGrid}
     
                     moveLines={this.moveLines}
 
@@ -542,26 +632,28 @@ class Group extends Component {
             });
         }
        
-        // console.log(this.props.group)
+        
         return (
             <g id={'group-'+this.props.group.id} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
                 {/* <g>{this.state.placeholders.length > 0 ? : <g></g> }</g> */}
                 {listItems} 
-                <Background
-                    sketchLines={this.state.sketchLines}
-                    placeholders={this.state.placeholders}
-                    stroke={this.props.group.stroke}
-                    id={this.props.group.id}
-                    
 
-                    group={this.props.group}
+                { (!this.props.showGrid) ?
+                    <Background
+                        sketchLines={this.state.sketchLines}
+                        placeholders={this.state.placeholders}
+                        stroke={this.props.group.stroke}
+                        id={this.props.group.id}
+                        
 
-                />
+                        group={this.props.group}
+
+                    /> : null}
                  
                 
                 <g id={'item-'+this.props.group.id} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
-                    <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/>
-                    <path id={'fake-'+this.props.group.id}></path>
+                    { (!this.props.showGrid) ? <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/> : null}
+                    { (!this.props.showGrid) ? <path id={'fake-'+this.props.group.id}></path>: null}
                 </g>
                 <rect id={'rect-'+this.props.group.id} />
             </g>

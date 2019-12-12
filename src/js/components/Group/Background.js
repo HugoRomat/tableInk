@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, _getBBoxPromise } from "../Helper";
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, _getBBoxPromise, simplify } from "../Helper";
 
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
 import CalcOmbb from "../../../../customModules/ombb";
 import Polygon from 'polygon';
+// import { resolve } from "dns";
 
 
 /**
@@ -22,48 +23,61 @@ class Background extends Component {
         var that = this;
         this.BBox = this.getBoundinxBoxEveryone();
         // this.movePoints();
-
+        console.log('HELLO BG')
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
         //Si j'udpate la BBox
+        
         if (this.props.placeholders != prevProps.placeholders){
-            this.BBox = this.getBoundinxBoxEveryone();
-            this.addPlaceHolder();
+            // console.log('UPDATE')
+            this.getBoundinxBoxEveryone().then((d)=>{
+                this.BBox = d;
+                this.addPlaceHolder();
+            })
+            
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            this.BBox = this.getBoundinxBoxEveryone();
-            this.addPlaceHolder();
+            // console.log('UPDATE')
+            this.getBoundinxBoxEveryone((d)=>{
+                this.BBox = d;
+                this.addPlaceHolder();
+            })
+           
         }
     }
     /**
      * FAIT LA BOUNDING BOX DE TOUT LE MONDE
      */
-    getBoundinxBoxEveryone(){
+    getBoundinxBoxEveryone = async () => {
         var that = this;
         var rectangle = null;
-        // var line = this.props.line;
-        
 
-        this.props.group.lines.forEach((line)=>{
-            line.forEach(strokeId => {
-                var BB = _getBBox('item-'+strokeId);
-                
-                if (rectangle == null) rectangle = BB;
-                else rectangle = unionRectangles(rectangle, BB);
+
+        // this.props.group.lines.forEach((line)=>{
+        for (let i = 0; i < this.props.group.lines.length; i++) {
+            var line = this.props.group.lines[i];
+            // line.forEach(strokeId => {
+            
+                for (let index = 0; index < line.length; index++) {
+                    var strokeId = line[index];
+                    var BB = await _getBBoxPromise('item-'+strokeId);
+                    
+                    if (rectangle == null) rectangle = BB;
+                    else rectangle = unionRectangles(rectangle, BB);
     
-            })
+            }
             // GET apres le drag en compte sur les BBox
             //
             // // console.log(transform)
             // rectangle.x -= transform.translateX;
             // rectangle.y -= transform.translateY;
-        })
-        // showBboxBB(rectangle, 'red');
+        }
+        showBboxBB(rectangle, 'red');
         
         // console.log(rectangle)
-        
         return rectangle;
+        // resolve(rectangle);
 
     }
     addPlaceHolder(){
@@ -91,7 +105,8 @@ class Background extends Component {
         d3.select('#placeHolderBGRight-'+that.props.id).selectAll('g').remove()
         d3.select('#placeHolderBGTop-'+that.props.id).selectAll('g').remove()
         d3.select('#placeHolderBGBottom-'+that.props.id).selectAll('g').remove()
-        d3.select('#placeHolderBG-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderBG-'+that.props.id).selectAll('g').remove();
+        d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove()
         // placeHolderBG
         this.props.placeholders.forEach((d)=>{
 
@@ -202,6 +217,8 @@ class Background extends Component {
                     .attr('stroke', (d)=> d.colorStroke )
                     .attr('stroke-width', (d)=> d.sizeStroke)
             }
+
+
             if (d.id == 'rightbackground' && d.lines.length > 0){
                 var height = this.BBox.height; 
                 var heightPlaceHolder = d.BBox.height;
@@ -226,46 +243,90 @@ class Background extends Component {
                     .attr('stroke', (d)=> d.colorStroke )
                     .attr('stroke-width', (d)=> d.sizeStroke)
             }
-            // console.log(d.id)
-            if (d.id == 'background' && d.lines.length > 0){
-                var height = this.BBox.height; 
-                var heightPlaceHolder = d.BBox.height;
-                var numberInHeight = Math.ceil(height/heightPlaceHolder)
+            if (d.id == 'outerBackground' && d.lines.length > 0){
+                if (d.data.method == 'scale'){
+                    var offsetHeight = that.BBox.height/3
+                    var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +100]);
+                    var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100, that.BBox.y + that.BBox.height + 100]);
+                    var lines = JSON.parse(JSON.stringify(d.lines))
+                    lines.forEach((line)=>{
+                        line.data = line.data.map((e)=> {
+                            return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
+                        })
+                        line.data = simplify(line.data, 2)
+                    })
 
-                var width = this.BBox.width; 
-                var widthPlaceHolder = d.BBox.width;
-                var numberInWidth = Math.ceil(width/widthPlaceHolder)
-              
-                var arrayLines = [];
-                for (var j = 0; j < numberInWidth; j++){
-                    var array = [];
-                    var lines = d.lines;
-                    for (var i = 0; i < numberInHeight; i++){
-                        array.push(lines);
-                    }
-                    arrayLines.push(array)
+                    d3.select('#placeHolderBG-'+that.props.id).selectAll('path')
+                        .data(lines).enter()
+                        .append('path')
+                        .attr('d', (d)=>line(d.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', 'black')
+                        .attr('stroke-width', '2')
                 }
-            
-                d3.select('#placeHolderBG-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - offsetWidth - (offsetX/2))+','+(that.BBox.y + 25 -  offsetHeight - (offsetY/2))+')')
-                var Gelement = d3.select('#placeHolderBG-'+that.props.id).selectAll('g')
-                    .data(arrayLines).enter()
-                    .append('g')
-                    .attr('transform', function (e,i){ return 'translate('+(d.BBox.width*i)+',0)'})
+            }
+            console.log(d.id)
+            if (d.id == 'background' && d.lines.length > 0){
+               
+                if (d.data.method == 'repeat'){
+                   
+                    var height = this.BBox.height; 
+                    var heightPlaceHolder = d.BBox.height;
+                    var numberInHeight = Math.ceil(height/heightPlaceHolder)
+    
+                    var width = this.BBox.width; 
+                    var widthPlaceHolder = d.BBox.width;
+                    var numberInWidth = Math.ceil(width/widthPlaceHolder)
+                  
+                    var arrayLines = [];
+                    for (var j = 0; j < numberInWidth; j++){
+                        var array = [];
+                        var lines = d.lines;
+                        for (var i = 0; i < numberInHeight; i++){
+                            array.push(lines);
+                        }
+                        arrayLines.push(array)
+                    }
                 
-                var cellElement = Gelement.selectAll('g')
-                    .data((d)=>(d)).enter()
-                    .append('g').attr('class', 'cell')
-                    .attr('transform', function (e,i){  return 'translate(0,'+((d.BBox.height*i))+')'})
+                    d3.select('#placeHolderBG-'+that.props.id).attr('transform', 'translate('+(that.BBox.x - offsetWidth - (offsetX/2))+','+(that.BBox.y + 25 -  offsetHeight - (offsetY/2))+')')
+                    var Gelement = d3.select('#placeHolderBG-'+that.props.id).selectAll('g')
+                        .data(arrayLines).enter()
+                        .append('g')
+                        .attr('transform', function (e,i){ return 'translate('+(d.BBox.width*i)+',0)'})
+                    
+                    var cellElement = Gelement.selectAll('g')
+                        .data((d)=>(d)).enter()
+                        .append('g').attr('class', 'cell')
+                        .attr('transform', function (e,i){  return 'translate(0,'+((d.BBox.height*i))+')'})
+    
+                    cellElement.selectAll('path')
+                        .data(d.lines).enter()
+                        .append('path')
+                        .attr('d', (d)=>line(d.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> d.colorStroke )
+                        .attr('stroke-width', (d)=> d.sizeStroke)
+                        .attr('opacity', '0.3')
+                } else if (d.data.method == 'scale'){
+                        var offsetHeight = that.BBox.height/3
+                        var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
+                        var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
+                        var lines = JSON.parse(JSON.stringify(d.lines))
+                        lines.forEach((line)=>{
+                            line.data = line.data.map((e)=> {
+                                return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
+                            })
+                            line.data = simplify(line.data, 2)
+                        })
 
-                cellElement.selectAll('path')
-                    .data(d.lines).enter()
-                    .append('path')
-                    .attr('d', (d)=>line(d.data))
-                    .attr('fill', 'none')
-                    .attr('stroke', (d)=> d.colorStroke )
-                    .attr('stroke-width', (d)=> d.sizeStroke)
-                    .attr('opacity', '0.3')
-
+                        d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path')
+                            .data(lines).enter()
+                            .append('path')
+                            .attr('d', (d)=>line(d.data))
+                            .attr('fill', 'none')
+                            .attr('stroke', 'black')
+                            .attr('stroke-width', '2')
+                }
             }
             if (d.id == 'topRightCorner' && d.lines.length > 0){
                 d3.select('#placeHolderCornerTopRight-'+that.props.id).attr('transform', 'translate('+(that.BBox.x + totalWidth + 25 - (offsetX/2) - offsetWidth)+','+(that.BBox.y  -25  - (offsetY/2) - offsetHeight)+')')
@@ -342,7 +403,7 @@ class Background extends Component {
                 <g id={'placeHolderCornerBottomRight-'+this.props.id} ></g>
                 <g id={'placeHolderCornerBottomLeft-'+this.props.id} ></g>
 
-
+               <g id={'placeHolderOuterBG-'+this.props.id} ></g>
                <g id={'placeHolderBG-'+this.props.id} ></g>
                <g id={'placeHolderBGLeft-'+this.props.id} ></g>
                <g id={'placeHolderBGRight-'+this.props.id} ></g>

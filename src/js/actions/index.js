@@ -86,4 +86,7 @@ export const addToTable = data => ({
     type: 'ADD_TO_TABLE',
     data
 })
-
+export const setGrid = data => ({
+    type: 'SET_GRID',
+    data
+})

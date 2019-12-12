@@ -61,6 +61,7 @@ class Line extends Component {
     }
    
     render() {
+        // console.log(this.props.stroke.position[0])
         return (
             <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path style={{'pointerEvents': 'none' }} id={this.props.stroke.id}></path>

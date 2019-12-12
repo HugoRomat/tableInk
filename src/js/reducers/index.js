@@ -8,7 +8,7 @@ import alphabetPerso0 from './../usecases/alphabet0.json';
 import alphabetPerso1 from './../usecases/alphabet1.json';
 import strokes from './../usecases/strokes.json';
 import galleryItems from './../usecases/galleryItems.json';
-import sticky from './../usecases/sticky.json';
+import sticky from './../usecases/sticky2.json';
 import group from './../usecases/groupLines.json';
 import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
@@ -24,7 +24,8 @@ const initialState = {
     'UIid': 0,
     'tags':[],
     'tagsGroup':[],
-    'tables': []
+    'tables': [],
+    'grid': false
   };
 
     // console.log(alphabetPerso)
@@ -53,9 +54,12 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.tables));
+    console.log(JSON.stringify(state));
     switch (action.type) {
       
+      case 'SET_GRID':
+        state.grid = action.data.data;
+        return state;
       //Add line to placeholder
       case 'ADD_LINE_TO_STICKY_GROUP':
         var id = action.data.idGuide;
@@ -234,6 +238,7 @@ initialState.sketchLines = strokes
           var index = state.sketchLines.indexOf(state.sketchLines.find(x => x.id == id))
           // console.log(state.sketchLines[index])
             if (index > -1){
+              // console.log(position)
               state = update(state, { 
                 sketchLines: {
                   [index] : {

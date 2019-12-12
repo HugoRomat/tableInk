@@ -26,7 +26,8 @@ import {
     addLinesClass,
     addLinesToSticky,
     changeModelGroupLines,
-    addText
+    addText,
+    setGrid
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -47,7 +48,8 @@ const mapDispatchToProps = {
     addLinesClass,
     addLinesToSticky,
     changeModelGroupLines,
-    addText
+    addText,
+    setGrid
 };
 
 
@@ -107,6 +109,10 @@ class Document extends Component {
         this.colorPen = 'black';
 
         this.marginOffset = 300;
+        this.showGrid = false;  
+
+        this.gridSizeTemp = [10 ,10]      
+        this.gridSize = [10 ,10]      
        
         this.init();
         // this.shouldOpenAlphabet = false;
@@ -158,6 +164,74 @@ class Document extends Component {
         // this.forceUpdate();
 
         // console.log(this.props)
+        // this.grid = {'x':0, 'y':0, 'width':window.innerWidth*2, 'height':window.innerHeight*2};
+        // this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        
+    }
+    removeGrid(){
+        d3.selectAll('.line').remove();
+        d3.selectAll('.column').remove();
+    }
+    drawGrid(startX, startY, width, height){
+        // console.log('HEYY', this.gridSize)
+        var that = this;
+        this.gridHeight = this.gridSize[1];
+        this.gridWidth = this.gridSize[0];
+
+
+        var totalWidth = width;
+        var totalHeight = height;
+
+
+        var numberLine = Math.ceil(totalHeight/that.gridHeight);
+        var numberColumn = Math.ceil(totalWidth/that.gridWidth);
+
+        // console.log(totalWidth)
+        d3.selectAll('.line').remove();
+        d3.selectAll('.column').remove();
+
+        for (var i =0; i<numberLine; i++ ){
+            d3.select('#grid').append('line').attr('class', 'line')
+                .attr('x1', startX)
+                .attr('y1', (i*that.gridHeight) + startY)
+                .attr('x2', totalWidth + startX)
+                .attr('y2', (i*that.gridHeight) + startY)
+                .attr('stroke', 'black')
+                .attr('stroke-width', '0.2')
+        }
+        for (var i =0; i<numberColumn; i++ ){
+            // console.log((i*that.gridWidth), (i*that.gridWidth) + that.grid.x)
+            d3.select('#grid').append('line').attr('class', 'column')
+                .attr('x1', (i*that.gridWidth) + startX)
+                .attr('y1', startY)
+                .attr('x2', (i*that.gridWidth) + startX)
+                .attr('y2', totalHeight + startY)
+                .attr('stroke', 'black')
+                .attr('stroke-width', '0.2')
+        }
+    }
+    panGrid(X, Y, offsetX, offsetY){
+        var that = this;
+        // this.drawGrid(0,0, window.innerWidth, window.innerHeight);
+
+        // console.log(-Y, this.grid.y)
+        if (offsetX> 0 && -X < this.grid.x){
+            this.grid.x -= this.gridWidth;
+            this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        }
+        else if (offsetX< 0 && -X > this.grid.x){
+            this.grid.x += this.gridWidth;
+            // console.log(this.grid.x)
+            this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        }
+        if (offsetY> 0 && -Y < this.grid.y){
+            this.grid.y -= this.gridHeight;
+            this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        }
+        else if (offsetY< 0 && -Y > this.grid.y){
+            this.grid.y += this.gridHeight;
+            this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        }
     }
     listenHammerRectangle(){
         var that = this;
@@ -251,7 +325,7 @@ class Document extends Component {
         this.mc.on("press", function(ev) {
             ev.preventDefault();
             console.log('PRESS')
-            if (ev.pointers[0]['pointerType'] == 'touch'){
+            if (ev.pointers[0]['pointerType'] == 'touch' && ev.pointers[0]['pointerType'] == 'pen'){
                 ev.srcEvent.preventDefault();
                 that.press = true;
                 console.log(that.props.lettres)
@@ -265,7 +339,7 @@ class Document extends Component {
             console.log('PRESSUP')
               ev.preventDefault();
                 // console.log(that)
-                if (ev.pointers[0]['pointerType'] == 'touch'){
+                if (ev.pointers[0]['pointerType'] == 'touch' && ev.pointers[0]['pointerType'] == 'pen'){
                     that.press = false;
                     console.log(that.speech)
                     that.speech.stop();
@@ -275,6 +349,8 @@ class Document extends Component {
     }
     panStartCanvas(ev){
         this.lastPosition = {'x': ev.srcEvent.x, 'y': ev.srcEvent.y}
+
+        
     }
     panCanvas(ev){
         // console.log(ev)
@@ -286,6 +362,9 @@ class Document extends Component {
 
         d3.select('#panItems').attr('transform', 'translate('+X+','+Y+')')
         this.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+
+        // console.log(this.showGrid)
+        if (this.showGrid) this.panGrid(X, Y, offsetX, offsetY);
     }
     createSwipeRight(){
         // console.log('GO', window.innerWidth)
@@ -742,25 +821,42 @@ class Document extends Component {
 
        arrayPoints = simplify(arrayPoints, 2)
 
+        // var data = {
+        //     'points': arrayPoints, 
+        //     'id': id,
+        //     'paddingBetweenLines': 50,  
+        //     'width':100,
+        //     'height':100,
+        //     'placeHolder': [
+        //         {'id':'background', 'data': {'method': 'repeat'}, 'lines':[]}, 
+        //         {'id':'topbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
+        //         {'id':'leftbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
+        //         {'id':'rightbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
+        //         {'id':'bottombackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
+
+        //         {'id':'topLeftCorner', 'data': {}, 'lines':[]}, 
+        //         {'id':'topRightCorner', 'data': {}, 'lines':[]}, 
+        //         {'id':'bottomLeftCorner', 'data': {}, 'lines':[]}, 
+        //         {'id':'bottomRightCorner', 'data': {}, 'lines':[]}, 
+               
+        //         {'id':'left', 'data': {}, 'lines':[]}, 
+        //         {'id':'right', 'data': {}, 'lines':[]}, 
+        //         {'id':'middle', 'data': {}, 'lines':[]}],
+        //     'position': [firstPoint[0],firstPoint[1]],
+        //     'textPosition': {'where': 'right', 'position': [25,20]},
+            
+        // }
+
         var data = {
             'points': arrayPoints, 
             'id': id,
             'paddingBetweenLines': 50,  
+            'width':100,
+            'height':100,
             'placeHolder': [
-                {'id':'background', 'data': {'method': 'repeat'}, 'lines':[]}, 
-                {'id':'topbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
-                {'id':'leftbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
-                {'id':'rightbackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
-                {'id':'bottombackground', 'data': {'method': 'repeat'}, 'lines':[]}, 
-
-                {'id':'topLeftCorner', 'data': {}, 'lines':[]}, 
-                {'id':'topRightCorner', 'data': {}, 'lines':[]}, 
-                {'id':'bottomLeftCorner', 'data': {}, 'lines':[]}, 
-                {'id':'bottomRightCorner', 'data': {}, 'lines':[]}, 
-               
-                {'id':'left', 'data': {}, 'lines':[]}, 
-                {'id':'right', 'data': {}, 'lines':[]}, 
-                {'id':'middle', 'data': {}, 'lines':[]}],
+                {'id':'outerBackground', 'data': {'method': 'scale'}, 'lines':[]},
+                {'id':'background', 'data': {'method': 'scale'}, 'lines':[]}
+            ],
             'position': [firstPoint[0],firstPoint[1]],
             'textPosition': {'where': 'right', 'position': [25,20]},
             
@@ -883,11 +979,32 @@ class Document extends Component {
         this.sizePen = d
         this.setState({'sizeStroke': d})
     }
+    setGrid = (d) => {
+        console.log(d)
+        this.showGrid = d;
+
+        if (d == true){
+            this.gridSize = JSON.parse(JSON.stringify(this.gridSizeTemp))
+            this.props.setGrid({'data': this.gridSize})
+            this.grid = {'x':0, 'y':0, 'width':window.innerWidth*2, 'height':window.innerHeight*2};
+            this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
+        } else {
+            this.props.setGrid({'data': false})
+            this.removeGrid();
+        }
+        
+    }
     selectColor = (d) => {
     
         this.setState({'colorStroke': d})
         this.colorPen = d;
        
+    }
+    getBBoxEachLine = (d) => {
+       
+        this.gridSizeTemp[0] = d.width;
+        this.gridSizeTemp[1] = d.height;
+        // console.log(d)
     }
     setGuideTapped = (d) => {
 
@@ -928,8 +1045,8 @@ class Document extends Component {
                    
 
 
-                    <g id='panItems' transform={'translate(110,0)'}>
-
+                    <g id='panItems' transform={'translate(0,0)'}>
+                        <g id="grid" />
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
                         <g id="tempLines"><path id="penTemp"></path></g>
                         <Lines />
@@ -937,6 +1054,7 @@ class Document extends Component {
                             setSelection={this.setSelection}
 
                             tagHold={this.state.tagHold}
+                            getBBoxEachLine={this.getBBoxEachLine}
                             // holdGroup={this.holdGroup}
                         />
                         <Textes />
@@ -988,6 +1106,7 @@ class Document extends Component {
                     openAlphabet={this.openAlphabet}
                     selectPen={this.selectPen}
                     selectThisColor={this.selectColor}
+                    setGrid={this.setGrid}
 
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 

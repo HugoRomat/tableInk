@@ -131,8 +131,19 @@ class ColorsMenu extends Component {
             that.selectThisPen(this);
             that.movePens();
         })
-       
 
+
+        d3.select('#showGrid').attr('selected', 'false');
+        d3.select('#showGrid').on("click", function(d, index){
+            var selected = d3.select(this).attr('selected')
+            if (selected == 'true') {
+                that.props.setGrid(false)
+                d3.select('#showGrid').attr('selected', 'false');
+            } else {
+                that.props.setGrid(true)
+                d3.select('#showGrid').attr('selected', 'true');
+            } 
+        })
     }
     selectThisPen(element){
         d3.selectAll('.pen').each(function (d){
@@ -166,6 +177,7 @@ class ColorsMenu extends Component {
                             <img src={alphabet} />
                     </div>
                     
+                    
                </div>
               
 
@@ -175,8 +187,15 @@ class ColorsMenu extends Component {
                     <div className="pen" id="highlighting"><img src={highlighter} /></div>
                </div>
 
-               <div id="colorsMenu">
+                <div id="colorsMenu">
                 </div>
+
+                <div id="layers">
+                <div id="showGrid" className="buttonMenu"> 
+                        GRID
+                    </div>
+                </div>
+
 
                {/* <button className="buttonMenu" issticky='false' id="rule"> noSticky </button> */}
                {/* <button className="buttonMenu" isgroup='false' id="grouping"> noGroup </button> */}
