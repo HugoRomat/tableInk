@@ -55,10 +55,10 @@ class Group extends Component {
         // }, 1000)
         // this.forLoop()
     }
-    componentDidMount(){
+    updateLine(){
         var that = this;
         // console.log(this.props.group)
-        this.placeHolder = this.props.group.model.placeHolder; 
+        this.placeHolder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder)); 
 
         var line = d3.line()
         var that = this;
@@ -135,7 +135,10 @@ class Group extends Component {
                 // // console.log('TAP', that.props.tagHold)
             }
         }) 
-
+    }
+    componentDidMount(){
+        
+        this.updateLine();
         
         
     }
@@ -283,34 +286,53 @@ class Group extends Component {
     }
     // POUR TOUS LES PLACEHOLDER
     //SERT A METTRE MES OBJETS EN 0 ABSOLU ++ Update ma BBOX de mon objet PLACEHOLDER
-    computeLinesPlaceHOlder(placeholder){
+    computeLinesPlaceHOlder = async(placeholder) => {
         var that = this;
         var itemsGuide = [];
-
+        // console.log(JSON.parse(JSON.stringify(placeholder)))
+        // console.log(this.props.showGrid)
         // console.log(placeholder[1]['lines'][0]['data'][0])
         
-        placeholder.forEach(element => {
+        // placeholder.forEach(element => {
+
+
+        for (var j in placeholder){
+            var element = placeholder[j];
             var lines = element.lines;
             // console.log(lines)
             if (lines.length > 0){
                 var arrayBBox = [];
-                // console.log('#placeHolder-'+element.id +'-' + that.props.group.model.id);
-                var node = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).node();
-                var nodeParent = d3.select(node.parentNode.parentNode);
 
-                var transform = getTransformation(nodeParent.attr('transform'));
-                var BB = node.getBBox();
-                BB.x = BB.x+transform.translateX;
-                BB.y = BB.y+transform.translateY;
-                BB.width = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width');
-                BB.height = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('height')
+                var nodeId = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id');
+                var BB = await _getBBoxPromise(nodeId);
+                var transform = {'translateX': 0, 'translateY': 0}
+                transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
+
+
+                // var transformPan = {'translateX': 0, 'translateY': 0}
+                // transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
+                // }
+                // var BB = node.getBBox();
+
+                // console.log('GO', transformPan)
+                // showBboxBB(BB, 'red');
+                // console.log(transformPan)
+                // console.log(JSON.stringify(BB))
+                // var BB = node.getBBox();
+                
+                // console.log(translate)
+                // console.log(BB, transformPan)
+                BB.x = BB.x-transform.translateX;
+                BB.y = BB.y-transform.translateY;
+                // BB.width = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width');
+                // BB.height = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('height')
                 arrayBBox.push(BB);
-
+                // showBboxBB(BB, 'red');
                 // console.log(BB, d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width'))
                 // // console.log(transform)
                 lines.forEach((d)=>{
-                    
-                    d.data = d.data.map((f)=> [f[0] + transform.translateX, f[1] + transform.translateY])
+                    // d.data = d.data.map((f)=> [f[0] + transformPan.translateX, f[1] + transformPan.translateY])
                 })
                 // SERT A TROUVER LE COIN EN HAUT A GAUCHE
                 var polygon;
@@ -334,7 +356,8 @@ class Group extends Component {
             }
             
             // console.log(polygon, element.id)
-        });
+        };
+        console.log(JSON.parse(JSON.stringify(placeholder)))
         // console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
@@ -486,8 +509,10 @@ class Group extends Component {
         var that = this;
         
         if (this.props.sketchLines != prevProps.sketchLines){
+            console.log('GO')
             this.getBoundinxBoxEveryone().then(()=> {
                 // this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
+                this.props.computeTables({'id': this.props.group.id});
             })
         }
         if (this.props.shouldUnselect != prevProps.shouldUnselect){
@@ -498,10 +523,13 @@ class Group extends Component {
         }
         if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
             
+            // console.log(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
                 if (this.props.showGrid) this.computePositionTable();
+
+                
                 this.computeLinesPlaceHOlder(this.placeholder);
                 
             })
@@ -523,7 +551,7 @@ class Group extends Component {
                     this.computeLinesPlaceHOlder(this.placeholder);
                 // })
             }
-            
+            this.updateLine()
             // console.log('placeholder')
         }
         if (this.props.groupHolded != prevProps.groupHolded){
@@ -579,24 +607,23 @@ class Group extends Component {
         // showBboxBB(BB, 'red');
         
         if (d.iteration == this.props.group.lines.length-1){
-             this.getBoundinxBoxEveryone().then((d)=> {
-                console.log()
+            this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
+            /*this.getBoundinxBoxEveryone().then((d)=> {
+                // console.log()
                 //console.log(JSON.parse(JSON.stringify(d)))
 
                 // d.forEach((e)=>{
                 //     showBboxBB(e, 'red');
                 // })
-                this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
-                this.props.computeTables({'id': this.props.group.id});
-             })
+                
+                // this.props.computeTables({'id': this.props.group.id});
+            })*/
         }
-        
     }
     render() {
 
-        // console.log(this.props)
-
-        // console.log(this.props.showGrid)
+        // console.log(this.state.placeholders)
+        
         // console.log(BB)
         // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
 

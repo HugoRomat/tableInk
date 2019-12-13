@@ -83,9 +83,9 @@ class LinesGrouping extends Component {
     addContainer(){
         var that = this;
         d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id)
-            .attr('width', that.BBox.width)
+            .attr('width', that.BBox.width + 120)
             .attr('height', that.BBox.height)
-            .attr('x', that.BBox.x)
+            .attr('x', that.BBox.x - 60)
             .attr('y', that.BBox.y)
             .attr('fill', 'rgba(255,0,0,0.3)')
     }
@@ -100,12 +100,14 @@ class LinesGrouping extends Component {
         this.mc = new Hammer.Manager(el);
 
         // var press = new Hammer.Press({time: 250});
-        // var pan = new Hammer.Pan({'pointers':1, threshold: 1});
-        var tap = new Hammer.Tap({pointers: 1});
-        this.mc.add(tap);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        // var tap = new Hammer.Tap({pointers: 1});
+        this.mc.add(pan);
 
-        this.mc.on("tap", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch'){
+        this.mc.on("panstart", function(ev) {
+            console.log(ev)
+            if (ev.pointers[0].pointerType == 'pen'){
+                console.log(ev.pointers[0])
                 var data = {
                     'id': guid(), 
                     'idGroupline':that.props.iteration +'-'+that.props.id, 
@@ -195,19 +197,19 @@ class LinesGrouping extends Component {
         var line = d3.line();
         
         if (this.props.tags.length != 0){
-            console.log(that.props.tags)
+            // console.log(that.props.tags)
             var placeHolder = d3.select('#tags-'+that.props.iteration +'-'+that.props.id).selectAll('g')
                 .data(that.props.tags).enter()
                 .append('g')
 
 
-                var X = this.BBox.x + this.BBox.width;
-                var Y = this.BBox.y //+ (this.BBox.height/2);;
+            var X = this.BBox.x + this.BBox.width;
+            var Y = this.BBox.y - 50;//+ (this.BBox.height/2);;
 
             var LeftorRight = placeHolder.selectAll('g')
                 .data((d)=>d.model.placeHolder).enter()
                 .append('g')
-                .attr('transform', 'translate('+X+','+Y+')')
+                .attr('transform', 'translate('+X+','+Y+')scale(2)')
                 
                 LeftorRight.selectAll('path')
                     .data((d)=>d.lines).enter()
@@ -278,7 +280,7 @@ class LinesGrouping extends Component {
 
                <rect id={'containerBackground-'+this.props.iteration +'-'+this.props.id} />
                
-                <g id={'tags-'+this.props.iteration +'-'+this.props.id}>
+                <g id={'tags-'+this.props.iteration +'-'+this.props.id} transform={`translate(0,0)scale(1)`}>
 
                 </g>
             </g>

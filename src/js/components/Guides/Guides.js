@@ -29,7 +29,7 @@ class Guides extends Component {
     }
     render() {
 
-        console.log( this.props.stickyLines)
+        // console.log( this.props.stickyLines)
         const listItems = this.props.stickyLines.map((d, i) => {
                 return <Guide 
                     key={i} 

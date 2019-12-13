@@ -29,7 +29,10 @@ export const shouldOpenMenu = data => ({
     type: 'SHOULD_OPEN_MENU',
     data
 })
-
+export const setWorkspace = data => ({
+    type: 'SET_WORKSPACE',
+    data
+})
 
 
 export const moveSketchLines = data => ({

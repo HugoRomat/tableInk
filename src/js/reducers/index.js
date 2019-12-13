@@ -8,10 +8,12 @@ import alphabetPerso0 from './../usecases/alphabet0.json';
 import alphabetPerso1 from './../usecases/alphabet1.json';
 import strokes from './../usecases/strokes.json';
 import galleryItems from './../usecases/galleryItems.json';
-import sticky from './../usecases/sticky2.json';
+// import sticky from './../usecases/sticky2.json';
 import group from './../usecases/groupLines.json';
 import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
+import sticky from './../usecases/demo/hello.json';
+
 
 const initialState = { 
     'sketchLines': [],
@@ -46,7 +48,7 @@ initialState.tags = tags
 // initialState.tables = tables
 initialState.lettres = alphabetPerso0;
 
-initialState.groupLines = group
+// initialState.groupLines = group
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
@@ -54,7 +56,7 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    console.log(JSON.stringify(state));
+    // console.log(JSON.stringify(state.stickyLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -213,6 +215,7 @@ initialState.sketchLines = strokes
 
       case 'CHANGE_MODEL_GROUP_LINES':
         var idsGroup = action.data.idGroups;
+        // console.log(action.data.model)
         idsGroup.forEach((id)=>{
           var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id));
           // console.log(state.groupLines[index])

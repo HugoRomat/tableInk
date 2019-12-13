@@ -6,15 +6,19 @@ import $ from 'jquery';
 
 import alphabet from './../../../static/alphabet.png';
 import highlighter from './../../../static/highlighter.png';
+
+import w1 from './../../js/usecases/workspace1.json';
+import w2 from './../../js/usecases/workspace2.json';
+
 import pen from './../../../static/pen.png';
 import { 
-    
+    setWorkspace
 } from './../actions';
 import { guid } from "./Helper";
 
 
 const mapDispatchToProps = { 
-    
+    setWorkspace
  };
 const mapStateToProps = (state, ownProps) => {  
     return { 
@@ -89,9 +93,10 @@ class ColorsMenu extends Component {
            
             var sticky = that.props.stickyLines;
 
-            var st = sticky[1]
+            
+            // var st = sticky[1]
             // console.log(sticky)
-            // sticky.forEach(st => {
+            sticky.forEach(st => {
                 st.id = guid();
                 st.placeHolder.forEach(element => {
                     // console.log(element)
@@ -99,10 +104,10 @@ class ColorsMenu extends Component {
                         d.id = guid();
                     })
                 });
-            // });
+            });
             
 
-            console.log(JSON.stringify(st))
+            console.log(JSON.stringify(sticky))
         })
 
         d3.select('#alphabetButton').on("click", function(d, index){
@@ -130,6 +135,14 @@ class ColorsMenu extends Component {
             
             that.selectThisPen(this);
             that.movePens();
+        })
+
+        d3.select('#page1').on("click", function(d, index){
+            that.props.setWorkspace(w1);
+        })
+
+        d3.select('#page2').on("click", function(d, index){
+            that.props.setWorkspace(w2);
         })
 
 
@@ -191,10 +204,18 @@ class ColorsMenu extends Component {
                 </div>
 
                 <div id="layers">
-                <div id="showGrid" className="buttonMenu"> 
+                    <div id="showGrid" className="buttonMenu"> 
                         GRID
                     </div>
                 </div>
+
+                <div id="pageLoading"> 
+                    <div className="page" id="page1"> Page 1</div>
+                    <div className="page" id="page2"> Page 2 </div>
+                </div>
+
+
+
 
 
                {/* <button className="buttonMenu" issticky='false' id="rule"> noSticky </button> */}

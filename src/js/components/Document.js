@@ -308,7 +308,7 @@ class Document extends Component {
                 that.pointermove(ev.srcEvent)
             }
             if (ev.pointers[0].pointerType == 'touch'){
-                that.panCanvas(ev);
+                //that.panCanvas(ev);
             }
           })
           this.mc.on("panend", function(ev) {
@@ -324,11 +324,12 @@ class Document extends Component {
         
         this.mc.on("press", function(ev) {
             ev.preventDefault();
-            console.log('PRESS')
-            if (ev.pointers[0]['pointerType'] == 'touch' && ev.pointers[0]['pointerType'] == 'pen'){
+            // console.log('PRESS', )
+            if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
+                console.log('PRESS')
                 ev.srcEvent.preventDefault();
                 that.press = true;
-                console.log(that.props.lettres)
+                // console.log(that.props.lettres)
                 that.speech.setAlphabet(that.props.lettres)
                 that.speech.start({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
 
@@ -478,6 +479,18 @@ class Document extends Component {
             if (that.press){
 
             }
+            else if (that.sticky && that.isGuideHold == false){
+                // console.log(length)
+                // that.findIntersection('penTemp');
+                that.addStrokeGuide(); 
+                that.sticky = false;
+            }
+            else if (that.sticky && that.isGuideHold){
+                // console.log(length)
+                // that.findIntersection('penTemp');
+                that.addStrokeGuideCopy(this.isGuideHold, event); 
+                that.sticky = false;
+            }
             else if (that.isGuideHold){
                 // that.drawTempStroke();
                 var objectsSelected = that.findIntersection('penTemp');
@@ -488,12 +501,7 @@ class Document extends Component {
                 })
                 
             }
-            else if (that.sticky && that.isGuideHold == false){
-                // console.log(length)
-                // that.findIntersection('penTemp');
-                that.addStrokeGuide(); 
-                that.sticky = false;
-            }
+            
             
             else if (that.drawing && that.sticky == false && that.isGuideHold == false){
                 that.addStroke();
@@ -807,6 +815,23 @@ class Document extends Component {
         })
         
     }
+    addStrokeGuideCopy(guideToCopy, evt){
+        var sticky = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == guideToCopy)));
+        // this.props.stickyLines
+        console.log(evt)
+        // sticky.forEach(st => {
+        sticky.id = guid();
+        sticky.placeHolder.forEach(element => {
+            // console.log(element)
+            element.lines.forEach((d)=>{
+                d.id = guid();
+            })
+        });
+        sticky.position = [evt.x, evt.y];
+
+        this.props.addStickyLines(sticky);
+        // });
+    }
     addStrokeGuide(){
         var id = guid();
         var that = this;
@@ -968,6 +993,8 @@ class Document extends Component {
         this.isItemDragged = d;
     }
     setSelection = (d) => {
+
+        console.log(d)
         this.linesInselection = d;
     }
     openAlphabet = (d) => {
@@ -1008,6 +1035,7 @@ class Document extends Component {
     }
     setGuideTapped = (d) => {
 
+        // console.log('GO')
         // console.log(this.linesInselection, d)
         this.guideTapped = d;
 
@@ -1015,7 +1043,8 @@ class Document extends Component {
 
             // console.log(this.props.stickyLines);
 
-            var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
+            var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item);
+            console.log(sticky)
             var data = {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky
@@ -1062,7 +1091,8 @@ class Document extends Component {
                     
                         
                     </g>
-                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0}  fill={'url(#grump_avatar)'}/>
+                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0} fill={'white'} />
+                     {/* //fill={'url(#grump_avatar)'}/> */}
 
                     {/* <Menus /> */}
                     

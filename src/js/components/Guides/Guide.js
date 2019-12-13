@@ -198,6 +198,7 @@ class Guide extends Component {
 
             // console.log(dist, time)
             if (dist < 10 && time < 100){
+                console.log('GO')
                 clearTimeout(that.timerPress);
 
                 that.props.setGuideTapped({'item': this.props.stroke.id});
@@ -292,14 +293,15 @@ class Guide extends Component {
 
     }
     render() {
+        var BB = calculateBB(this.props.stroke.points);
         // console.log(this.props.stroke);
-        var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
-        var scale = 1;
-        if (window.innerWidth < 769){
-            var BB = calculateBB(this.props.stroke.points);
-            translate[0] = 50;
-            scale = this.resize()
-        }
+        // var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
+        // var scale = 1;
+        // if (window.innerWidth < 769){
+        //     var BB = calculateBB(this.props.stroke.points);
+        //     translate[0] = 50;
+        //     scale = this.resize()
+        // }
 
         // console.log(BB)
         // var height = 
@@ -321,10 +323,10 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${translate[0]},${translate[1]})scale(${scale})`}>
+            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 
                 
-                { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null }
+                {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}
 
 
                 <rect id={'rect-'+this.props.stroke.id} />

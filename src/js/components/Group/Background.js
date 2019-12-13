@@ -32,6 +32,7 @@ class Background extends Component {
         if (this.props.placeholders != prevProps.placeholders){
             // console.log('UPDATE')
             this.getBoundinxBoxEveryone().then((d)=>{
+                
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -40,6 +41,7 @@ class Background extends Component {
         else if (this.props.sketchLines != prevProps.sketchLines){
             // console.log('UPDATE')
             this.getBoundinxBoxEveryone((d)=>{
+                console.log(JSON.stringify(d))
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -73,7 +75,7 @@ class Background extends Component {
             // rectangle.x -= transform.translateX;
             // rectangle.y -= transform.translateY;
         }
-        showBboxBB(rectangle, 'red');
+        // showBboxBB(rectangle, 'red');
         
         // console.log(rectangle)
         return rectangle;
@@ -81,6 +83,7 @@ class Background extends Component {
 
     }
     addPlaceHolder(){
+        
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
@@ -92,7 +95,7 @@ class Background extends Component {
         var offsetWidth = 25 + transform.translateX;
         var offsetHeight = 25 + transform.translateY;
 
-
+        // console.log(that.props.id)
         // var placeHolders = JSON.parse(JSON.stringify(this.props.placeholders))
 
         // d3.select('#placeHolderBG-'+that.props.id).selectAll('path').remove()
@@ -106,11 +109,19 @@ class Background extends Component {
         d3.select('#placeHolderBGTop-'+that.props.id).selectAll('g').remove()
         d3.select('#placeHolderBGBottom-'+that.props.id).selectAll('g').remove()
         d3.select('#placeHolderBG-'+that.props.id).selectAll('g').remove();
-        d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove();
+
+        d3.select('#placeHolderBG-'+that.props.id).selectAll('path').remove();
+        d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path').remove();
+
+
+        // console.log(JSON.parse(JSON.stringify(this.props.placeholders)))
+        // console.log(d3.select('#placeHolderOuterBG-'+that.props.id).node())
         // placeHolderBG
         this.props.placeholders.forEach((d)=>{
-
+            // console.log(JSON.stringify(d.BBox))
             if (d.id == 'topbackground' && d.lines.length > 0){
+                // console.log(d.BBox)
                 var width = this.BBox.width; 
                 var widthPlaceHolder = d.BBox.width;
                 var numberIn = Math.ceil(width/widthPlaceHolder);
@@ -125,6 +136,7 @@ class Background extends Component {
                 offsetY = (numberIn - (height/heightPlaceHolder)) * d.BBox.height; 
                 totalHeight = numberIn * heightPlaceHolder
             }
+
         })
 
         // offsetX = offsetX - 100//offsetWidth;
@@ -137,7 +149,8 @@ class Background extends Component {
             // var heightPlaceHolder = d.BBox.height;
             // var numberIn = Math.ceil(height/heightPlaceHolder)
         this.props.placeholders.forEach((d)=>{
-
+            // console.log(d)
+            // console.log(d.lines.length)
             if (d.id == 'topbackground' && d.lines.length > 0){
 
 
@@ -149,7 +162,7 @@ class Background extends Component {
                 for (var i = 0; i < numberIn; i++){
                     arrayLines.push(lines);
                 }
-                // console.log(offsetHeight, offsetWidth)
+                // console.log(that.BBox.x)
                 // offsetX = (numberIn - (width/widthPlaceHolder)) * d.BBox.width;
 
                 d3.select('#placeHolderBGTop-'+that.props.id).attr('transform', 'translate('+(that.BBox.x  - (offsetX/2) - offsetWidth)+','+(that.BBox.y - 25 - (offsetY/2) - offsetHeight)+')')
@@ -245,7 +258,7 @@ class Background extends Component {
             }
             if (d.id == 'outerBackground' && d.lines.length > 0){
                 if (d.data.method == 'scale'){
-                    var offsetHeight = that.BBox.height/3
+                  
                     var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +100]);
                     var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100, that.BBox.y + that.BBox.height + 100]);
                     var lines = JSON.parse(JSON.stringify(d.lines))
@@ -255,21 +268,22 @@ class Background extends Component {
                         })
                         line.data = simplify(line.data, 2)
                     })
+                    // console.log((that.BBox.x - 100) / d.BBox.x)
 
                     d3.select('#placeHolderBG-'+that.props.id).selectAll('path')
                         .data(lines).enter()
                         .append('path')
                         .attr('d', (d)=>line(d.data))
                         .attr('fill', 'none')
-                        .attr('stroke', 'black')
-                        .attr('stroke-width', '2')
+                        .attr('stroke', (d)=> d.colorStroke )
+                        .attr('stroke-width', (that.BBox.x - 100) / d.BBox.x)
                 }
             }
-            console.log(d.id)
+            // console.log(d.id)
             if (d.id == 'background' && d.lines.length > 0){
                
                 if (d.data.method == 'repeat'){
-                   
+                    
                     var height = this.BBox.height; 
                     var heightPlaceHolder = d.BBox.height;
                     var numberInHeight = Math.ceil(height/heightPlaceHolder)
@@ -308,7 +322,7 @@ class Background extends Component {
                         .attr('stroke-width', (d)=> d.sizeStroke)
                         .attr('opacity', '0.3')
                 } else if (d.data.method == 'scale'){
-                        var offsetHeight = that.BBox.height/3
+
                         var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
                         var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
                         var lines = JSON.parse(JSON.stringify(d.lines))
