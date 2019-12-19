@@ -69,6 +69,8 @@ class Background extends Component {
                     else rectangle = unionRectangles(rectangle, BB);
     
             }
+
+           
             // GET apres le drag en compte sur les BBox
             //
             // // console.log(transform)
@@ -77,6 +79,10 @@ class Background extends Component {
         }
         // showBboxBB(rectangle, 'red');
         
+        var transformPan = {'translateX': 0, 'translateY': 0}
+        transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        rectangle.x = rectangle.x - transformPan.translateX;
+        rectangle.y = rectangle.y - transformPan.translateY;
         // console.log(rectangle)
         return rectangle;
         // resolve(rectangle);
@@ -84,6 +90,9 @@ class Background extends Component {
     }
     addPlaceHolder(){
         
+        
+        // showBboxBB(this.BBox, 'red');
+        // console.log(this.BBox)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
@@ -268,7 +277,7 @@ class Background extends Component {
                         })
                         line.data = simplify(line.data, 2)
                     })
-                    // console.log((that.BBox.x - 100) / d.BBox.x)
+                    // console.log(that.BBox.width ,d.BBox.width)
 
                     d3.select('#placeHolderBG-'+that.props.id).selectAll('path')
                         .data(lines).enter()
@@ -276,7 +285,15 @@ class Background extends Component {
                         .attr('d', (d)=>line(d.data))
                         .attr('fill', 'none')
                         .attr('stroke', (d)=> d.colorStroke )
-                        .attr('stroke-width', (that.BBox.x - 100) / d.BBox.x)
+                        .attr('stroke-width', (e)=>{
+                            // console.log()
+                            return e.sizeStroke + (that.BBox.width / d.BBox.width);
+                        })
+                    
+                        
+                        
+                        
+                        
                 }
             }
             // console.log(d.id)

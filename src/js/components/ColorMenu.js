@@ -205,7 +205,13 @@ class ColorsMenu extends Component {
 
                 <div id="layers">
                     <div id="showGrid" className="buttonMenu"> 
-                        GRID
+                        Grid
+                    </div>
+                    <div id="showExcel" className="buttonMenu"> 
+                        Excel
+                    </div>
+                    <div id="showNormal" className="buttonMenu"> 
+                        Normal
                     </div>
                 </div>
 

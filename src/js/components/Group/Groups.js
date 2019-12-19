@@ -181,7 +181,9 @@ class Groups extends Component {
     addTable = (d) => {
         this.props.addToTable(d);
     }
-
+    setGroupTapped = (d) => {
+        this.props.setGroupTapped(d)
+    }
     render() {
 
         // console.log(this.state.showGrid)
@@ -201,7 +203,9 @@ class Groups extends Component {
                 groupHolded={this.state.groupHolded}
                 iteration={i}
                 showGrid={this.state.showGrid}
+                isGuideHold={this.props.isGuideHold}
 
+                setGroupTapped={this.setGroupTapped}
                 tagHold={this.props.tagHold}
                 holdGuide={this.holdGroup}
                 addToSelection={this.addToSelection}

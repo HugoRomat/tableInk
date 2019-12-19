@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB } from "./../Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise } from "./../Helper";
 import { connect } from 'react-redux';
 
 
@@ -116,8 +116,8 @@ class Guide extends Component {
         // d3.event.sourceEvent.stopPropagation();
         // d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
 
-        // console.log('GO DRAG')
-        that.props.dragItem(true);
+        console.log('GO DRAG', that.props.isGallery)
+        if (that.props.isGallery == false) that.props.dragItem(true);
         // d3.event.preventDefault();
         that.timerPress = setTimeout(function(){
             console.log('PRESS')
@@ -131,7 +131,7 @@ class Guide extends Component {
                 that.props.dragItem(false);
                 that.drag = false;
             }
-        }, 1000)
+        }, 500)
 
     }
 
@@ -214,9 +214,10 @@ class Guide extends Component {
                 // })
             }
         }
-
+        console.log(that.props.isGallery, d3.eventx)
         if (that.props.isGallery){
             if (d3.event.x < 450){
+                console.log('HEY')
                 var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
                 that.props.addGuideToSticky({'guide':that.props.stroke, 'position':[transform.translateX, transform.translateY]});
                 that.goBackInitialposition();
@@ -264,26 +265,30 @@ class Guide extends Component {
      * @param {*} isIt 
      */
     colorForHolding(isIt){
-        
+        var that = this;
         d3.select('#rect-'+this.props.stroke.id)
             .attr('width', 0)
             .attr('height', 0)
         
-       
+        
         if (isIt == true){
-            var BBox = _getBBox('item-'+this.props.stroke.id);
-            var x = this.props.stroke.position[0] - BBox.x;
-            var y = this.props.stroke.position[1] - BBox.y;
-            // console.log(BBox)
+            var transform = getTransformation(d3.select('#item-'+this.props.stroke.id).attr('transform'))
+            // console.log(this.props)
+            // _getBBoxPromise('item-'+this.props.stroke.id).then((BBox)=>{
+                // var x = transform.x - 100;
+                // var y = transform.y - 50;
+                // console.log(transform)
 
-            d3.select('#rect-'+this.props.stroke.id)
-                .attr('x', -x)
-                .attr('y', -y)
-                .attr('width', BBox.width)
-                .attr('height', BBox.height)
+                d3.select('#rect-'+that.props.stroke.id)
+                    .attr('x', - 50)
+                    .attr('y', -25)
+                    .attr('width', that.props.stroke.width + 50)
+                    .attr('height',  that.props.stroke.height + 50)
 
-                // .attr('fill', '#9C9EDEDF')
-                .attr('opacity', '0.2')
+                    // .attr('fill', '#9C9EDEDF')
+                    .attr('opacity', '0.2')
+            // })
+            
         }
     }
     resize(){

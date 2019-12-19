@@ -308,7 +308,7 @@ class Document extends Component {
                 that.pointermove(ev.srcEvent)
             }
             if (ev.pointers[0].pointerType == 'touch'){
-                //that.panCanvas(ev);
+                that.panCanvas(ev);
             }
           })
           this.mc.on("panend", function(ev) {
@@ -340,7 +340,7 @@ class Document extends Component {
             console.log('PRESSUP')
               ev.preventDefault();
                 // console.log(that)
-                if (ev.pointers[0]['pointerType'] == 'touch' && ev.pointers[0]['pointerType'] == 'pen'){
+                if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
                     that.press = false;
                     console.log(that.speech)
                     that.speech.stop();
@@ -544,7 +544,6 @@ class Document extends Component {
             console.log('FLICK')
             this.isFlick = true;
         }
-
     }
     /*duplicateSticky(groupOfLines){
         console.log(groupOfLines)
@@ -987,6 +986,7 @@ class Document extends Component {
     holdGuide = (d) => {
         console.log('Selection '+d)
         this.isGuideHold = d;
+        this.setState({'isGuideHold': d})
     }
     // To know if an item was dragged
     dragItem = (d) => {
@@ -1033,6 +1033,17 @@ class Document extends Component {
         this.gridSizeTemp[1] = d.height;
         // console.log(d)
     }
+    setGroupTapped = (d) => {
+        console.log(d)
+        var sticky = this.props.stickyLines.find(x => x.id == this.isGuideHold);
+        var data = {
+            'idGroups': [d.item], 
+            'model': sticky
+        };   
+        this.props.changeModelGroupLines(data);
+
+        console.log(data)
+    }
     setGuideTapped = (d) => {
 
         // console.log('GO')
@@ -1044,12 +1055,12 @@ class Document extends Component {
             // console.log(this.props.stickyLines);
 
             var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item);
-            console.log(sticky)
+            // console.log(sticky)
             var data = {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky
             };
-            // console.log(data)
+            console.log(data)
 
             this.props.changeModelGroupLines(data);
         }
@@ -1081,9 +1092,11 @@ class Document extends Component {
                         <Lines />
                         <Groups 
                             setSelection={this.setSelection}
+                            setGroupTapped={this.setGroupTapped}
 
                             tagHold={this.state.tagHold}
                             getBBoxEachLine={this.getBBoxEachLine}
+                            isGuideHold={this.isGuideHold}
                             // holdGroup={this.holdGroup}
                         />
                         <Textes />
@@ -1091,7 +1104,7 @@ class Document extends Component {
                     
                         
                     </g>
-                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0} fill={'white'} />
+                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0} fill={'#e3e3e3'} />
                      {/* //fill={'url(#grump_avatar)'}/> */}
 
                     {/* <Menus /> */}

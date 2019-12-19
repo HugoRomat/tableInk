@@ -76,6 +76,42 @@ class Group extends Component {
             .attr('stroke-width', '30')
             .attr('opacity', '0.2')
 
+
+           
+        // var el = document.getElementById("eventReceiver");
+        this.mc = new Hammer.Manager(d3.select('#'+that.props.group.id).node());
+
+        // var press = new Hammer.Press({time: 250});
+        // var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        var tap = new Hammer.Tap({threshold: 0, pointers: 1});
+
+        // this.mc.add(press);
+        // this.mc.add(swipe);
+        this.mc.add(tap);
+        // pan.recognizeWith(press);
+        // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
+
+        // swipe.recognizeWith(pan);
+
+        
+        this.mc.on("tap", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' ){
+               console.log('tap')
+            }
+        })
+        // this.mc.on("pan", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'pen'){
+        //         that.panCanvas(ev);
+        //     }
+        // })
+        // this.mc.on("panend", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'pen'){
+            
+        //     }
+        // })
+          
+
+
         d3.select('#fake-'+that.props.group.id)
             .on('pointerdown', function(d){
                 if (d3.event.pointerType == 'touch'){
@@ -103,12 +139,13 @@ class Group extends Component {
 
 
         // console.log(JSON.parse(JSON.stringify(this.placeHolder)))\
-        console.log('BEGINNING')
+        // console.log('BEGINNING')
         this.getBoundinxBoxEveryone().then(()=> {
             
             // console.log(this.props.showGrid)
             this.computePosition();
-            if (this.props.showGrid) this.computePositionTable();
+            if (this.props.showGrid) this.computePositionGrid();
+            // console.log('YO')
             this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
         })
 
@@ -267,9 +304,20 @@ class Group extends Component {
         // console.log(dist, time)
         if (dist < 10 && time < 200){
             clearTimeout(that.timerPress);
-
-            that.props.addToSelection({'id':env.props.group.id});
-            that.colorForTaping(true);
+            
+            if (that.props.isGuideHold){
+                // console.log(that.props.isGuideHold)
+                that.props.setGroupTapped({'item': env.props.group.id});
+                that.colorForTaping(false);
+            }
+            else {
+                console.log(that.props.isGuideHold)
+                that.colorForTaping(true);
+    
+                that.props.addToSelection({'id':env.props.group.id});
+               
+            }
+            
         }
     }
     colorForTaping(isIt){
@@ -288,6 +336,8 @@ class Group extends Component {
     //SERT A METTRE MES OBJETS EN 0 ABSOLU ++ Update ma BBOX de mon objet PLACEHOLDER
     computeLinesPlaceHOlder = async(placeholder) => {
         var that = this;
+        // d3.select().attr('id');
+        // console.log('GO')
         var itemsGuide = [];
         // console.log(JSON.parse(JSON.stringify(placeholder)))
         // console.log(this.props.showGrid)
@@ -315,7 +365,7 @@ class Group extends Component {
                 // }
                 // var BB = node.getBBox();
 
-                // console.log('GO', transformPan)
+                // console.log('GO', transform)
                 // showBboxBB(BB, 'red');
                 // console.log(transformPan)
                 // console.log(JSON.stringify(BB))
@@ -323,17 +373,18 @@ class Group extends Component {
                 
                 // console.log(translate)
                 // console.log(BB, transformPan)
-                BB.x = BB.x-transform.translateX;
-                BB.y = BB.y-transform.translateY;
+                BB.x = BB.x - transform.translateX;
+                BB.y = BB.y - transform.translateY;
                 // BB.width = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width');
                 // BB.height = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('height')
                 arrayBBox.push(BB);
                 // showBboxBB(BB, 'red');
                 // console.log(BB, d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).select('#rect-'+ element.id).attr('width'))
                 // // console.log(transform)
-                lines.forEach((d)=>{
-                    // d.data = d.data.map((f)=> [f[0] + transformPan.translateX, f[1] + transformPan.translateY])
-                })
+                // lines.forEach((d)=>{
+                //     // d.data = d.data.map((f)=> [f[0] + transformPan.translateX, f[1] + transformPan.translateY])
+                // })
+                // console.log(BB)
                 // SERT A TROUVER LE COIN EN HAUT A GAUCHE
                 var polygon;
                 if (arrayBBox.length > 1){
@@ -357,8 +408,8 @@ class Group extends Component {
             
             // console.log(polygon, element.id)
         };
-        console.log(JSON.parse(JSON.stringify(placeholder)))
-        // console.log('endPlaceHolder')
+        // console.log(JSON.parse(JSON.stringify(placeholder)))
+        console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
@@ -471,7 +522,7 @@ class Group extends Component {
         // console.log(this.offsetY)
     }
     //COMPUTE POSITION FOR TABLES
-    computePositionTable(){
+    computePositionGrid(){
         
 
         var offset = [];
@@ -507,35 +558,32 @@ class Group extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
+        // console.log('GO')
+        if (this.props.sketchLines != prevProps.sketchLines){
         
-        if (this.props.sketchLines != prevProps.sketchLines){
-            console.log('GO')
-            this.getBoundinxBoxEveryone().then(()=> {
-                // this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
-                this.props.computeTables({'id': this.props.group.id});
-            })
         }
-        if (this.props.shouldUnselect != prevProps.shouldUnselect){
+        else if (this.props.shouldUnselect != prevProps.shouldUnselect){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
-        if (this.props.sketchLines != prevProps.sketchLines){
+        else if (this.props.sketchLines != prevProps.sketchLines){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
-        if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
-            
+        else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
+            // console.log('gO')
             // console.log(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
                 if (this.props.showGrid) this.computePositionTable();
 
-                
+                // console.log('YO')
                 this.computeLinesPlaceHOlder(this.placeholder);
                 
             })
             // console.log('placeholder')
         }
-        if (this.props.showGrid != prevProps.showGrid){
+        else if (this.props.showGrid != prevProps.showGrid){
+            // console.log('GO')
             // console.log('HEY', this.props.showGrid)
             if (this.props.showGrid == false){
                 // console.log('HEY')
@@ -547,14 +595,13 @@ class Group extends Component {
             } else {
                 this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
                 // this.getBoundinxBoxEveryone().then(()=> {
-                    this.computePositionTable();
+                    this.computePositionGrid();
                     this.computeLinesPlaceHOlder(this.placeholder);
                 // })
             }
-            this.updateLine()
-            // console.log('placeholder')
+
         }
-        if (this.props.groupHolded != prevProps.groupHolded){
+        else if (this.props.groupHolded != prevProps.groupHolded){
             
             if (this.props.groupHolded == false){
                 d3.select('#rect-'+this.props.group.id).attr('width', 0).attr('height', 0)
@@ -607,7 +654,7 @@ class Group extends Component {
         // showBboxBB(BB, 'red');
         
         if (d.iteration == this.props.group.lines.length-1){
-            this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
+            // this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
             /*this.getBoundinxBoxEveryone().then((d)=> {
                 // console.log()
                 //console.log(JSON.parse(JSON.stringify(d)))

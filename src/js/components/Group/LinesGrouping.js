@@ -42,6 +42,7 @@ class LinesGrouping extends Component {
         //Si j'udpate la BBox
         if (this.props.placeholders != prevProps.placeholders){
             // console.log(this.props.BBs)
+            
             this.BBox = this.props.BBs[this.props.iteration]
             // // // console.log('UPDATE PLACEHOLDER')
             this.addPlaceHolder();
@@ -69,6 +70,7 @@ class LinesGrouping extends Component {
             else this.addContainer();
         }
         if (this.props.offsetX != prevProps.offsetX){
+            // console.log('GO', this.props.iteration)
             if (this.props.showGrid != false) this.movePointTable();
             else this.movePoints();
             // console.log('GOOO')
@@ -128,10 +130,11 @@ class LinesGrouping extends Component {
         var changePositionArraySketchLines = this.props.line.map((d)=>{
             var stroke = this.props.sketchLines.find(x => x.id == d);
             stroke = JSON.parse(JSON.stringify(stroke))
+            drawCircle(stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement, '10', 'green')
             return {'id': d, 'position': [stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement]}
         })
-        // console.log(changePositionArraySketchLines)
-        this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
+        
+        // this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
     }
     /**
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
@@ -232,7 +235,7 @@ class LinesGrouping extends Component {
         // var poly2 = polygone.offset(50);
         // var array = poly2.points;
         // console.log(array)
-        // showOmBB(poly2.points, 'red')
+        // showBboxBB(this.BBox, 'red')
         // drawCircle(array[0]['x'], array[0]['y'], 10, 'blue')
         // drawCircle(array[array.length-1]['x'], array[array.length-1]['y'], 10, 'blue')
 

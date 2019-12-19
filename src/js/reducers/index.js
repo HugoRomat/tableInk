@@ -7,12 +7,19 @@ import { includeAction, excludeAction } from 'redux-undo';
 import alphabetPerso0 from './../usecases/alphabet0.json';
 import alphabetPerso1 from './../usecases/alphabet1.json';
 import strokes from './../usecases/strokes.json';
-import galleryItems from './../usecases/galleryItems.json';
+// import galleryItems from './../usecases/galleryItems.json';
 // import sticky from './../usecases/sticky2.json';
 import group from './../usecases/groupLines.json';
 import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
-import sticky from './../usecases/demo/hello.json';
+import sticky from './../usecases/hello.json';
+
+
+function importAll(r) { return r.keys().map(r); }
+const images = importAll(require.context('./../usecases/demo', false, /\.(json)$/));
+var galleryData = [];
+images.forEach((d)=> {galleryData = galleryData.concat(d) })
+// console.log(galleryData)
 
 
 const initialState = { 
@@ -43,12 +50,12 @@ alphabet.forEach((d)=>{
 })
 
 // initialState.lettres = lettres; 
-initialState.galleryItems = galleryItems;
+initialState.galleryItems = galleryData;
 initialState.tags = tags
 // initialState.tables = tables
 initialState.lettres = alphabetPerso0;
 
-// initialState.groupLines = group
+initialState.groupLines = group
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
@@ -56,7 +63,7 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.stickyLines));
+    // console.log(JSON.stringify(state.groupLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -218,7 +225,7 @@ initialState.sketchLines = strokes
         // console.log(action.data.model)
         idsGroup.forEach((id)=>{
           var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id));
-          // console.log(state.groupLines[index])
+          console.log(index)
           if (index > -1){
             state = update(state, { 
               groupLines: {

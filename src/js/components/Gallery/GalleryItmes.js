@@ -63,18 +63,23 @@ class GalleryItmes extends Component {
     
     }
     render() {
+
+        // console.log(this.props.galleryItems)
         // ORDER GALLERY ITEMS
-        var offsetRight = 800;
-        var offset = 350;
-        var amountLine = (window.innerWidth)/offset;
-        var ceilAmount = Math.ceil(amountLine) - 1
+        var offsetRight = 400;
+        var offset = 200;
+        var amountInLine = (window.innerWidth)/offset;
+        var ceilAmount = Math.floor(amountInLine) - 2
+        // console.log(ceilAmount, amountInLine)
         var items = JSON.parse(JSON.stringify(this.props.galleryItems));
         // console.log(amountLine)
        
         items.forEach((element, i) => {
-            // console.log(i, ceilAmount)
+           
             element.position[0] = ((i%ceilAmount) * offset) + offsetRight;
             element.position[1] = (Math.floor(i/ceilAmount) * offset) + 70;
+
+            // console.log((i%ceilAmount), element.position[1])
         });
 
 
@@ -83,11 +88,12 @@ class GalleryItmes extends Component {
             return <Guide 
                     key={i} 
                     stroke={d}
-                    isGallery={false}
+                    isGallery={true}
 
                     holdGuide={this.props.holdGuide}
                     dragItem={this.props.dragItem}
                     setGuideTapped={this.setGuideTapped}
+                    addGuideToSticky={this.addGuideToSticky}
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
