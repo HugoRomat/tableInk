@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise } from "./Helper";
 import ColorMenu from "./ColorMenu";
 import Polygon from 'polygon'
 
@@ -305,6 +305,7 @@ class Document extends Component {
           })
           this.mc.on("pan", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
+                // console.log(ev)
                 that.pointermove(ev.srcEvent)
             }
             if (ev.pointers[0].pointerType == 'touch'){
@@ -313,7 +314,7 @@ class Document extends Component {
           })
           this.mc.on("panend", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerUp(ev.srcEvent)
+                that.pointerUp(ev.srcEvent, ev)
             }
             if (ev.pointers[0].pointerType == 'touch'){
                 
@@ -458,7 +459,7 @@ class Document extends Component {
         }
         
     }
-    pointerUp(event){
+    pointerUp(event, sourceEvent){
         var that = this;
         // console.log('UP')
         if (event.pointerType == 'pen') that.detectingFlick(event);
@@ -493,9 +494,10 @@ class Document extends Component {
             }
             else if (that.isGuideHold){
                 // that.drawTempStroke();
+                // console.log(that.isGuideHold)
                 var objectsSelected = that.findIntersection('penTemp');
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
-                that.findClosestElements(objectsSelected, 'penTemp').then((elementLines)=> {
+                that.findClosestElements(objectsSelected, 'penTemp', strokeGuide).then((elementLines)=> {
                     // that.showBlockOfLinesElement(elementLines);
                     that.makingGroup(elementLines, that.isGuideHold, strokeGuide);
                 })
@@ -504,8 +506,29 @@ class Document extends Component {
             
             
             else if (that.drawing && that.sticky == false && that.isGuideHold == false){
-                that.addStroke();
-                that.drawing = false;
+                // var objectsSelected = that.findCloseStrokes();
+                var length = d3.select('#penTemp').node().getTotalLength();
+
+
+                console.log(sourceEvent.deltaTime)
+                //It's a guide OR a stroke
+                if (length > 300 && sourceEvent.deltaTime < 500){
+                    var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
+                    that.findCloseStrokes().then((closelements)=>{
+                       
+                        that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+                            that.makingGroup(elementLines, 'initial', strokeGuide);
+                        })
+                    })
+                    
+                } else {
+                    that.addStroke();
+                }
+
+
+
+                // that.addStroke();
+                // that.drawing = false;
             }
             that.removeTempStroke();
         }
@@ -619,17 +642,18 @@ class Document extends Component {
 
         // console.log(selection)
     }
-    findClosestElements(objects, idGuide){
+    findClosestElements(objects, idGuide, tempArrayStroke){
         return new Promise((resolve, reject) => {
-
-            var firstPoint = {'x': this.tempArrayStroke[0][0] , 'y': this.tempArrayStroke[1][1]  };
-            var lastPoint = {'x': this.tempArrayStroke[this.tempArrayStroke.length-1][0], 'y': this.tempArrayStroke[this.tempArrayStroke.length-1][1] };
+            // console.log(tempArrayStroke)
+            var firstPoint = {'x': tempArrayStroke[0][0] , 'y': tempArrayStroke[1][1]  };
+            var lastPoint = {'x': tempArrayStroke[tempArrayStroke.length-1][0], 'y': tempArrayStroke[tempArrayStroke.length-1][1] };
             var pointOnLine = [];
             var centerBox = [0];
             var pointsThroughLine = [];
             var alreadyAdded = [];
 
-            console.log(objects)
+            // console.log(objects)
+
             objects.forEach((objectIntersection, i)=>{
                 pointsThroughLine.push([]);
                 alreadyAdded.push([])
@@ -657,8 +681,7 @@ class Document extends Component {
                 pointsThroughLine[i].push(centerBox[i]);
 
                 this.expandText(pointOnLine[i],  centerBox[i], 3,  pointsThroughLine[i], alreadyAdded[i], -1, JSON.parse(JSON.stringify(this.props.sketchLines)));
-                this.expandText(centerBox[i], pointOnLine[i],  3,  pointsThroughLine[i], alreadyAdded[i], +1, JSON.parse(JSON.stringify(this.props.sketchLines)));
-
+                this.expandText(centerBox[i], pointOnLine[i],  3,  pointsThroughLine[i], alreadyAdded[i], +1, JSON.parse(JSON.stringify(this.props.sketchLines)))
             })
 
 
@@ -732,7 +755,29 @@ class Document extends Component {
         })
      }
 
-        
+    findCloseStrokes = async() => {
+        var offsetBBox = 100;
+
+        var BBTemp = await _getBBoxPromise(d3.select('#penTemp').attr('id'));
+        BBTemp.x -= offsetBBox;
+        BBTemp.width += offsetBBox*2
+        // showBboxBB(BBTemp, 'red')
+        var BBid = [];
+        d3.select('.standAloneLines').selectAll('g').each(function(){
+            BBid.push(d3.select(this).attr('id'))
+        })
+        for (var i in BBid){
+            var BB = await _getBBoxPromise(BBid[i])
+            var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+            if (intersected) this.objectIn.push({'id':BBid[i].split('-')[1]})
+            // console.log(BBid[i])
+        }
+        return JSON.parse(JSON.stringify(this.objectIn))
+        // var BB = await _getBBoxPromise(d3.select(this).attr('id'))
+            
+        //     console.log(BB, BBTemp)
+        // })
+    } 
     
     //Pour les guides
     findIntersection(){

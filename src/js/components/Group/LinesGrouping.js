@@ -130,7 +130,7 @@ class LinesGrouping extends Component {
         var changePositionArraySketchLines = this.props.line.map((d)=>{
             var stroke = this.props.sketchLines.find(x => x.id == d);
             stroke = JSON.parse(JSON.stringify(stroke))
-            drawCircle(stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement, '10', 'green')
+            // drawCircle(stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement, '10', 'green')
             return {'id': d, 'position': [stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement]}
         })
         

@@ -14,6 +14,53 @@
                 85.5
             ]
         ],
+        "id": "initial",
+        "paddingBetweenLines": 50,
+        "width": 100,
+        "height": 100,
+        "placeHolder": [
+            {
+                "id": "outerBackground",
+                "data": {
+                    "method": "scale"
+                },
+                "lines": []
+            },
+            {
+                "id": "background",
+                "data": {
+                    "method": "scale"
+                },
+                "lines": []
+            }
+        ],
+        "position": [
+            0,
+            0
+        ],
+        "textPosition": {
+            "where": "right",
+            "position": [
+                25,
+                20
+            ]
+        }
+    },
+    {
+        "points": [
+            [
+                0,
+                0
+            ],
+            [
+                -5,
+                21
+            ],
+            [
+                -7,
+                85.5
+            ]
+        ],
         "id": "ba4732d61ce7f44a3a63944a8da45db9b",
         "paddingBetweenLines": 50,
         "width": 100,

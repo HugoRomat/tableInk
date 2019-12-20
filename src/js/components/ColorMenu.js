@@ -136,27 +136,6 @@ class ColorsMenu extends Component {
             that.selectThisPen(this);
             that.movePens();
         })
-
-        d3.select('#page1').on("click", function(d, index){
-            that.props.setWorkspace(w1);
-        })
-
-        d3.select('#page2').on("click", function(d, index){
-            that.props.setWorkspace(w2);
-        })
-
-
-        d3.select('#showGrid').attr('selected', 'false');
-        d3.select('#showGrid').on("click", function(d, index){
-            var selected = d3.select(this).attr('selected')
-            if (selected == 'true') {
-                that.props.setGrid(false)
-                d3.select('#showGrid').attr('selected', 'false');
-            } else {
-                that.props.setGrid(true)
-                d3.select('#showGrid').attr('selected', 'true');
-            } 
-        })
     }
     selectThisPen(element){
         d3.selectAll('.pen').each(function (d){
@@ -203,7 +182,7 @@ class ColorsMenu extends Component {
                 <div id="colorsMenu">
                 </div>
 
-                <div id="layers">
+                {/* <div id="layers">
                     <div id="showGrid" className="buttonMenu"> 
                         Grid
                     </div>
@@ -213,12 +192,9 @@ class ColorsMenu extends Component {
                     <div id="showNormal" className="buttonMenu"> 
                         Normal
                     </div>
-                </div>
+                </div> */}
 
-                <div id="pageLoading"> 
-                    <div className="page" id="page1"> Page 1</div>
-                    <div className="page" id="page2"> Page 2 </div>
-                </div>
+               
 
 
 

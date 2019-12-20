@@ -78,11 +78,13 @@ class Background extends Component {
             // rectangle.y -= transform.translateY;
         }
         // showBboxBB(rectangle, 'red');
-        
-        var transformPan = {'translateX': 0, 'translateY': 0}
-        transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-        rectangle.x = rectangle.x - transformPan.translateX;
-        rectangle.y = rectangle.y - transformPan.translateY;
+        if (rectangle != null){
+            var transformPan = {'translateX': 0, 'translateY': 0}
+            transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+            rectangle.x = rectangle.x - transformPan.translateX;
+            rectangle.y = rectangle.y - transformPan.translateY;
+        }
+       
         // console.log(rectangle)
         return rectangle;
         // resolve(rectangle);
@@ -275,7 +277,7 @@ class Background extends Component {
                         line.data = line.data.map((e)=> {
                             return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
                         })
-                        line.data = simplify(line.data, 2)
+                        // line.data = simplify(line.data, 2)
                     })
                     // console.log(that.BBox.width ,d.BBox.width)
 
@@ -347,7 +349,7 @@ class Background extends Component {
                             line.data = line.data.map((e)=> {
                                 return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
                             })
-                            line.data = simplify(line.data, 2)
+                            // line.data = simplify(line.data, 2)
                         })
 
                         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path')

@@ -68,92 +68,19 @@ class Groups extends Component {
             // this.computeTables();
         }
     }
-    orderTables = async () => {
-        var indexElement = {};
-        for (var i in this.props.tables){
-
-            var myTableElement = this.props.tables[i]['data']; 
-            //GET ALL BBOX
-            for (var j in myTableElement){
-                var element = myTableElement[j];
-                var bb = await _getBBoxPromise('group-'+element['id']);
-                indexElement[element['id']] = {'bb':bb, 'offsetX': 0, 'offsetY': 0, 'offsetXTable':0, 'offsetYTable': 0}
-                // showBboxBB(bb, 'red');
-            }
-            for (var j in myTableElement){
-                var element = myTableElement[j];
-
-                var offsetX = 0;
-                for (var k in element['children']){
-                    
-                    var child = element['children'][k];
-                    
-                    // console.log(child)
-                    if (child['direction'] == 'left') {
-                        var position = indexElement[child['id']]['bb'];
-                        var positionParent = indexElement[element['id']]['bb'];
-                        var offsetX = position['x'] - (positionParent['x'] - positionParent['width']) + indexElement[element['id']]['offsetXTable'];
-                        var offsetY = position['y'] - (positionParent['y']) //- indexElement[element['id']]['offsetYTable']
-
-                        // console.log(indexElement[element['id']]['offsetXTable'])
-                        indexElement[element['id']]['offsetXTable'] += position['width'];
-                        // indexElement[element['id']]['offsetYTable'] -= - offsetY;
-
-                        indexElement[child['id']]['offsetX'] = - offsetX;
-                        indexElement[child['id']]['offsetY'] = - offsetY;
-                    }
-
-                    // console.log(indexElement)
-                }
-            }
-        }
-        return indexElement;
-    }
-    computeTables = (d) => {
-        if (this.props.tables.length > 0){
-            var length = this.props.tables[this.props.tables.length - 1]['data'];
-            var lastId = length[length.length - 1]['id'];
-            // console.log(lastId)
-            if (d == undefined || lastId == d.id){
-                console.log('UPDATE TABLES', this.props.tables)
-                this.orderTables().then((d)=>{
-                    // console.log(d)
-                    for (var i in d){
-                        var group = this.props.groupLines.find(x => x.id == i);
-                        var position = JSON.parse(JSON.stringify(group.position));
-                        position[0] += d[i]['offsetX'];
-                        position[1] += d[i]['offsetY'];
-    
-                        this.props.updateGroupPosition({'id':i, 'position': position})
-    
-                        var changePositionArraySketchLines = [];
-                        for (var j in group['lines']){
-                            for (var k in group['lines'][j]){
-                                var idLine = group['lines'][j][k]
-                                var stroke = JSON.parse(JSON.stringify(this.props.sketchLines.find(x => x.id == idLine)));
-                                changePositionArraySketchLines.push({'id': stroke.id,'position': [stroke.position[0]+d[i]['offsetX'], stroke.position[1] + d[i]['offsetY']]})
-                            }
-                        }
-                        this.props.moveSketchLines(changePositionArraySketchLines);
-                    }
-                })
-            }
-        }
-        
-    }
     getBBoxEachLine = (d) => {
         // console.log(d)
-        d.bb.forEach(element => {
-            if (element.width > this.sizeBBox.width)  this.sizeBBox.width = element.width;
-            if (element.height > this.sizeBBox.height)  this.sizeBBox.height = element.height;
-        });
-        // 
+        // d.bb.forEach(element => {
+        //     if (element.width > this.sizeBBox.width)  this.sizeBBox.width = element.width;
+        //     if (element.height > this.sizeBBox.height)  this.sizeBBox.height = element.height;
+        // });
+        // // 
 
-        this.bufferLinesBBox++;
-        if (this.bufferLinesBBox == this.props.groupLines.length) {
-            this.props.getBBoxEachLine( this.sizeBBox);
-            this.bufferLinesBBox = 0;
-        }
+        // this.bufferLinesBBox++;
+        // if (this.bufferLinesBBox == this.props.groupLines.length) {
+        //     this.props.getBBoxEachLine( this.sizeBBox);
+        //     this.bufferLinesBBox = 0;
+        // }
         // console.log(this.sizeBBox)
     }
     addToSelection = (d) => {
@@ -198,21 +125,21 @@ class Groups extends Component {
                 key={i} 
                 group={d}
                 allGroups={JSON.parse(JSON.stringify(this.props.groupLines))}
-                tables = {JSON.parse(JSON.stringify(this.props.tables))}
+                // tables = {JSON.parse(JSON.stringify(this.props.tables))}
                 shouldUnselect={this.state.shouldUnselect}
                 groupHolded={this.state.groupHolded}
                 iteration={i}
-                showGrid={this.state.showGrid}
+                // showGrid={this.state.showGrid}
                 isGuideHold={this.props.isGuideHold}
 
                 setGroupTapped={this.setGroupTapped}
                 tagHold={this.props.tagHold}
                 holdGuide={this.holdGroup}
                 addToSelection={this.addToSelection}
-                createTable={this.createTable}
-                addToTable={this.addTable}
-                computeTables={this.computeTables}
-                getBBoxEachLine={this.getBBoxEachLine}
+                // createTable={this.createTable}
+                // addToTable={this.addTable}
+                // computeTables={this.computeTables}
+                // getBBoxEachLine={this.getBBoxEachLine}
             />
         });
         // console.log(this.props.groupLines)
