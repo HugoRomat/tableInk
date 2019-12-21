@@ -116,7 +116,7 @@ class Guide extends Component {
         // d3.event.sourceEvent.stopPropagation();
         // d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
 
-        console.log('GO DRAG', that.props.isGallery)
+        // console.log('GO DRAG', that.props.isGallery)
         if (that.props.isGallery == false) that.props.dragItem(true);
         // d3.event.preventDefault();
         that.timerPress = setTimeout(function(){
@@ -198,7 +198,7 @@ class Guide extends Component {
 
             // console.log(dist, time)
             if (dist < 10 && time < 100){
-                console.log('GO')
+                console.log('GO',this.props.stroke.id)
                 clearTimeout(that.timerPress);
 
                 that.props.setGuideTapped({'item': this.props.stroke.id});
@@ -214,7 +214,7 @@ class Guide extends Component {
                 // })
             }
         }
-        console.log(that.props.isGallery, d3.eventx)
+        // console.log(that.props.isGallery, d3.eventx)
         if (that.props.isGallery){
             if (d3.event.x < 450){
                 console.log('HEY')

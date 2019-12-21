@@ -7,7 +7,7 @@ import './../../css/main.css';
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
 import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise } from "./Helper";
-import ColorMenu from "./ColorMenu";
+import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 
 import CalcConvexHull from './../../../customModules/convexhull';
@@ -60,7 +60,8 @@ function mapStateToProps(state, ownProps) {
         sketchLines: state.rootReducer.present.sketchLines,
         stickyLines: state.rootReducer.present.stickyLines,
         lettres: state.rootReducer.present.lettres,
-        UIid: state.rootReducer.present.UIid
+        UIid: state.rootReducer.present.UIid,
+        groupLines: state.rootReducer.present.groupLines,
     };
 }
 
@@ -112,7 +113,11 @@ class Document extends Component {
         this.showGrid = false;  
 
         this.gridSizeTemp = [10 ,10]      
-        this.gridSize = [10 ,10]      
+        this.gridSize = [10 ,10]    ;
+        
+        this.isPatternPen = false;
+        this.patternPen = [];
+        this.patternBBOX = null;
        
         this.init();
         // this.shouldOpenAlphabet = false;
@@ -326,7 +331,7 @@ class Document extends Component {
         this.mc.on("press", function(ev) {
             ev.preventDefault();
             // console.log('PRESS', )
-            if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
+            if (ev.pointers[0]['pointerType'] == 'touch'){ //|| ev.pointers[0]['pointerType'] == 'pen'){
                 console.log('PRESS')
                 ev.srcEvent.preventDefault();
                 that.press = true;
@@ -341,7 +346,7 @@ class Document extends Component {
             console.log('PRESSUP')
               ev.preventDefault();
                 // console.log(that)
-                if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
+                if (ev.pointers[0]['pointerType'] == 'touch' ){//|| ev.pointers[0]['pointerType'] == 'pen'){
                     that.press = false;
                     console.log(that.speech)
                     that.speech.stop();
@@ -394,6 +399,7 @@ class Document extends Component {
         // if (d3.event.pointerType == 'pen'){
         that.pointerDownPoperties = {'time': Date.now(), 'position':[event.x, event.y]}
         // that.selecting =false;
+        that.lastMovePosition = {'x':0, 'y':0};
         that.drawing = false;
         that.erasing = false;
         // that.hasMoved = false;
@@ -411,6 +417,9 @@ class Document extends Component {
             // }
             if (event.x < 300){
                 that.sticky = true;
+            }
+            else if (that.isPatternPen){
+
             }
             else if(event.buttons == 1 && that.selecting != true){
                 that.drawing = true;
@@ -430,7 +439,7 @@ class Document extends Component {
         var that = this;
         if (that.down == true  && that.isItemDragged == false){
 
-
+           
             var transform = getTransformation(d3.select('#panItems').attr('transform'))
             // var X = offsetX + transform.translateX;
             // var Y = offsetY + transform.translateY;
@@ -445,6 +454,9 @@ class Document extends Component {
             }
             else if (that.drawing){
                 that.drawTempStroke();
+            }
+            else if (that.isPatternPen){
+                that.drawPattern(event);
             }
             else if (that.sticky){
                 that.drawTempStroke();
@@ -510,13 +522,15 @@ class Document extends Component {
                 var length = d3.select('#penTemp').node().getTotalLength();
 
 
-                console.log(sourceEvent.deltaTime)
+                // console.log(sourceEvent.deltaTime, length)
                 //It's a guide OR a stroke
-                if (length > 300 && sourceEvent.deltaTime < 500){
+                if (length > 150 && sourceEvent.deltaTime < 500){
                     var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
                     that.findCloseStrokes().then((closelements)=>{
-                       
+                        // console.log(closelements)
                         that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+
+                            console.log(elementLines)
                             that.makingGroup(elementLines, 'initial', strokeGuide);
                         })
                     })
@@ -620,7 +634,12 @@ class Document extends Component {
         })
 
 
-        var modelData = this.props.stickyLines.find(x => x.id == model)
+        var modelData = this.props.stickyLines.find(x => x.id == model);
+
+        
+        
+
+
         // console.log(modelData)
         var id = guid();
         var group = {
@@ -643,6 +662,8 @@ class Document extends Component {
         // console.log(selection)
     }
     findClosestElements(objects, idGuide, tempArrayStroke){
+
+        // console.log(objects)
         return new Promise((resolve, reject) => {
             // console.log(tempArrayStroke)
             var firstPoint = {'x': tempArrayStroke[0][0] , 'y': tempArrayStroke[1][1]  };
@@ -652,8 +673,7 @@ class Document extends Component {
             var pointsThroughLine = [];
             var alreadyAdded = [];
 
-            // console.log(objects)
-
+            
             objects.forEach((objectIntersection, i)=>{
                 pointsThroughLine.push([]);
                 alreadyAdded.push([])
@@ -684,6 +704,7 @@ class Document extends Component {
                 this.expandText(centerBox[i], pointOnLine[i],  3,  pointsThroughLine[i], alreadyAdded[i], +1, JSON.parse(JSON.stringify(this.props.sketchLines)))
             })
 
+            // console.log(alreadyAdded)
 
             /**
              * REMOVE DOUBLONS
@@ -725,7 +746,13 @@ class Document extends Component {
 
         d3.select('.standAloneLines').selectAll('g').each(function(){
             var id = d3.select(this).attr('id').split('-')[1];
-            if (alreadyAdded.indexOf(id) == -1){
+           
+            var insideandWhichGroup = that.props.groupLines.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(id) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
+         
+            // console.log(insideandWhichGroup)
+
+            
+            if (alreadyAdded.indexOf(id) == -1 && insideandWhichGroup == undefined){
                 
                 var BB = _getBBox('item-'+id);
                 BB.x -= 15;
@@ -767,9 +794,12 @@ class Document extends Component {
             BBid.push(d3.select(this).attr('id'))
         })
         for (var i in BBid){
-            var BB = await _getBBoxPromise(BBid[i])
+            var BB = await _getBBoxPromise(BBid[i]);
+            var idSImple = BBid[i].split('-')[1]
+            var insideandWhichGroup = this.props.groupLines.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
+            // console.log(idSImple, insideandWhichGroup)
             var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
-            if (intersected) this.objectIn.push({'id':BBid[i].split('-')[1]})
+            if (intersected && insideandWhichGroup == undefined) this.objectIn.push({'id':BBid[i].split('-')[1]})
             // console.log(BBid[i])
         }
         return JSON.parse(JSON.stringify(this.objectIn))
@@ -941,6 +971,55 @@ class Document extends Component {
         //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
         // }
     }
+    /**
+     * PATTERN
+     */
+    drawPattern(event){
+        var that = this;
+        var line = d3.line()
+
+
+        var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
+        if (dist > that.patternBBOX.width){
+            that.lastMovePosition = {'x': event['x'],'y': event['y']};
+
+            // console.log(this.patternPen)
+            this.patternPen.forEach((d)=>{
+                var X = event['x']+ d.position[0];
+                var Y = event['y']+ d.position[1];
+                d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
+                .append('path')
+                .attr('d', (f)=>  line(d.points))
+                .attr('fill', 'none')
+                .attr('stroke', d.data.colorStroke)
+                .attr('stroke-width', d.data.sizeStroke)
+                .attr("stroke-dasharray", 'none')
+                .attr('stroke-linejoin', "round")
+            })
+        }
+
+        // console.log(this.patternBBOX, dist)
+        // that.lastMovePosition
+
+        
+
+        // console.log(that.lastMovePosition)
+        // d3.select('#tempGroup').selectAll('g')
+        //     .data(that.patternPen).enter()
+
+        //     .append('g').attr("transform", (d) => 'translate('+event['x']+','+event['y']+')')
+        //     .append('path')
+        //     .attr('d', (d)=>  line(d.points))
+        // //     .attr("d", line(that.tempArrayStroke))
+        //     .attr('fill', 'red')
+        //     .attr('stroke', that.colorPen)
+        //     .attr('stroke-width', that.sizePen)
+        //     .attr("stroke-dasharray", 'none')
+        //     .attr('stroke-linejoin', "round")
+    }
+/**
+     * STROKE
+     */
     drawTempStroke(){
         var that = this;
         var line = d3.line()
@@ -951,9 +1030,6 @@ class Document extends Component {
             .attr('stroke-width', that.sizePen)
             .attr("stroke-dasharray", 'none')
             .attr('stroke-linejoin', "round")
-
-
-        // if (this.sticky) d3.select('#penTemp').attr('stroke', '#9C9EDEDF')
     }
     drawTempSelectingStroke(){
         var that = this;
@@ -1047,9 +1123,51 @@ class Document extends Component {
         this.setState({shouldOpenAlphabet:d});
     }
     selectPen = (d) => {
-        // console.log('HEY')
-        this.sizePen = d
-        this.setState({'sizeStroke': d})
+        // console.log(d)
+        if (d.type == "pattern"){
+            this.isPatternPen = true;
+        }
+        else {
+            this.isPatternPen = false;
+
+            var sizePen = 2;
+            if (d.type == "highlighter") sizePen = 15
+            if (d.type == "ink") sizePen = 2
+            this.sizePen = sizePen
+            this.setState({'sizeStroke': sizePen})
+        }
+        
+    }
+    setPatternPen = (old) => {
+
+        var d = JSON.parse(JSON.stringify(old))
+        
+        _getBBoxPromise('linesPattern').then((e)=> {
+            this.patternBBOX = e
+
+            // console.log(e)
+            /**
+             * JUST REMOVE EXTRA SPACE
+             */
+            var position = [d[0].position[0], d[0].position[1]];
+            var distance1 = distance(0, position[0], 0, position[1]);
+            d.forEach((f)=>{
+                var dist = distance(0, f.position[0], 0, f.position[1]);
+                if (dist < distance1){
+                    position =  [f.position[0], f.position[1]];
+                    distance1 = dist
+                }
+            })
+            d.forEach((f)=>{
+                f.position[0] -= position[0] //+ (e.width/2);
+                f.position[1] -= position[1] //+ (e.height/2);
+            })
+            this.patternPen = d;
+            console.log(d, old, position)
+        })
+        
+        
+        // patternBBOX
     }
     setGrid = (d) => {
         console.log(d)
@@ -1134,6 +1252,7 @@ class Document extends Component {
                         <g id="grid" />
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
                         <g id="tempLines"><path id="penTemp"></path></g>
+                        <g id="tempGroup"></g>
                         <Lines />
                         <Groups 
                             setSelection={this.setSelection}
@@ -1194,7 +1313,10 @@ class Document extends Component {
                     openAlphabet={this.openAlphabet}
                     selectPen={this.selectPen}
                     selectThisColor={this.selectColor}
-                    setGrid={this.setGrid}
+                    colorStroke = {this.state.colorStroke}
+                    sizeStroke = {this.state.sizeStroke}
+
+                    setPatternPen = {this.setPatternPen}
 
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 

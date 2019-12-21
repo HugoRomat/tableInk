@@ -30,7 +30,7 @@ class Background extends Component {
         //Si j'udpate la BBox
         
         if (this.props.placeholders != prevProps.placeholders){
-            // console.log('UPDATE')
+            console.log('UPDATE')
             this.getBoundinxBoxEveryone().then((d)=>{
                 
                 this.BBox = d;

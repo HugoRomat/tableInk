@@ -225,7 +225,7 @@ initialState.sketchLines = strokes
         // console.log(action.data.model)
         idsGroup.forEach((id)=>{
           var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id));
-          console.log(index)
+          // console.log(index)
           if (index > -1){
             state = update(state, { 
               groupLines: {

@@ -49,6 +49,8 @@ class Group extends Component {
         this.press = false;
 
         this.strokePath = JSON.parse(JSON.stringify(this.props.group.stroke['points']))
+
+        this.BBOxPathMain = null;
         // setTimeout(()=> {
         
         // }, 3000)
@@ -88,7 +90,8 @@ class Group extends Component {
         var el = document.getElementById('fake-'+that.props.group.id);
         this.mc = new Hammer.Manager(el);
         var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':2, threshold: 1});
+        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
+        // var pan2fingers = new Hammer.Pan({'pointers':1, threshold: 1});
         var tap = new Hammer.Tap();
 
         this.mc.add(press);
@@ -115,15 +118,23 @@ class Group extends Component {
             }
         })
         this.mc.on("panstart", function(event) {
-           
+        //    console.log('GO')
             if (event.pointers[0].pointerType == 'touch' ){
                 that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
                 that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
                 that.dragstarted(event);
 
-                that.getAllBoundingBox().then((BB)=> {
-                    // console.log('HEY', BB);
-                    that.allBoundingBox = BB
+
+                // if (this.props.group.lines.length > 0){
+                    that.getAllBoundingBox().then((BB)=> {
+                        // console.log('HEY', BB);
+                        that.allBoundingBox = BB
+                    })
+
+                // }
+                
+                _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
+                    that.BBOxPathMain  = d;
                 })
             }
         })
@@ -131,11 +142,13 @@ class Group extends Component {
             if (ev.pointers[0].pointerType == 'touch' ){
                 
                 // console.log('PAN', ev.pointers[0])
-                if (that.press){
+                if (ev.pointers.length > 1){
                     
-                    var transform = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'));
-                    var X = ev.pointers[1].x - transform.translateX;
-                    var Y = ev.pointers[1].y - transform.translateY;
+                    // var transform = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'));
+                    // var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
+                    // console.log(that.BBOxPathMain)
+                    var X = ev.pointers[1].x - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
+                    var Y = ev.pointers[1].y - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
                     that.strokePath.push([X,Y])
                     that.createStroke();
                     // console.log(that.strokePath)
@@ -152,15 +165,15 @@ class Group extends Component {
             }
         })
         this.mc.on("press", function(ev) {
-            console.log('press')
+            // console.log('press')
             if (ev.pointers[0].pointerType == 'touch' ){
-                that.press = true;
+                // that.press = true;
                 that.props.holdGuide(that.props.group.id);
             }
         })
         this.mc.on("pressup", function(ev) {
             if (ev.pointers[0].pointerType == 'touch' ){
-                that.press = false;
+                // that.press = false;
                 that.props.holdGuide(false);
             }
         })
@@ -229,14 +242,30 @@ class Group extends Component {
         //     }
         // }) 
     }
-    getAllBoundingBox(){
+    getAllBoundingBox = async() => {
         var that = this;
+
+        //ADD BBOX LINE FOR having at least one when pushing
+        // var transformPan = {'translateX': 0, 'translateY': 0}
+        // console.log(that.props.group.id)
+        var BBLine = await _getBBoxPromise('item-'+that.props.group.id);
+        // transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        BBLine.x = BBLine.x// + transformPan.translateX;
+        BBLine.y = BBLine.y// - transformPan.translateY;
+        // console.log(transformPan)
         return new Promise(resolve => {
             that.getBoundinxBoxEveryone().then((BBox)=>{
-                var BBox1 = BBox[0];
-                for (var i = 1; i< BBox.length; i++){
-                    BBox1 = unionRectangles(BBox1, BBox[i]);
+                // console.log(BBox)
+               
+                var BBox1 = BBLine;
+                if (BBox.length != 0){
+                    // var BBox1 = BBox[0];
+                    for (var i = 0; i< BBox.length; i++){
+                        BBox1 = unionRectangles(BBox1, BBox[i]);
+                    }
                 }
+
+
                 // showBboxBB(BBox1, 'red');
                 resolve(BBox1);
             })
@@ -244,40 +273,66 @@ class Group extends Component {
         })
     }
     findIntersection = async(BBTemp, ev) => {
-        // console.log(ev, this.lastPosition)
-        var offsetX = ev.srcEvent.x - this.lastPosition.x;
-        var offsetY = ev.srcEvent.y - this.lastPosition.y;
-        BBTemp.x += offsetX;
-        BBTemp.y += offsetY;
-
-
+        // console.log(BBTemp)
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        var offsetX = ev.pointers[0].x - this.lastPosition.x;
+        var offsetY = ev.pointers[0].y - this.lastPosition.y;
+        BBTemp.x += offsetX; //+ transformPan.translateX;
+        BBTemp.y += offsetY; //+ transformPan.translateY;
+        // console.log(BBTemp)
+        // showBboxBB(BBTemp, 'blue');
         var BBid = [];
         var arrayLineAttached = this.props.group.lines.join().split(',')
         // showBboxBB(BBTemp, 'red');
+
+        //Put my lines in an array
         d3.select('.standAloneLines').selectAll('g').each(function(){
             var idSImple = d3.select(this).attr('id').split('-')[1]
             // console.log(d3.select(this).attr('id'))
             if (arrayLineAttached.indexOf(idSImple) == -1) BBid.push(d3.select(this).attr('id'))
         })
+        // Check for all these lines
         for (var i in BBid){
             var BB = await _getBBoxPromise(BBid[i])
             // showBboxBB(BB, 'red');
+            // showBboxBB(BB, 'blue');
             var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
             if (intersected) {
                 var id = BBid[i];
-                // console.log(id)
-                var transform = getTransformation(d3.select('#'+id).attr('transform'));
-                // console.log(transform)
-                var X = offsetX + transform.translateX;
-                var Y = offsetY + transform.translateY;
-                d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
+                var idSImple = id.split('-')[1];
 
+                var insideandWhichGroup = this.props.allGroups.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
+
+                // if not attached to a group
+                if (insideandWhichGroup == undefined){
+                    var transform = getTransformation(d3.select('#'+id).attr('transform'));
+                    var X = offsetX + transform.translateX;
+                    var Y = offsetY + transform.translateY;
+                    d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
+                } else {
+                    var arrayLineAttached = insideandWhichGroup.lines.join().split(',')
+                    arrayLineAttached.forEach((d)=>{
+                        var transform = getTransformation(d3.select('#item-'+ d).attr('transform'));
+                        var X = offsetX + transform.translateX;
+                        var Y = offsetY + transform.translateY;
+                        d3.select('#item-'+ d).attr('transform', 'translate('+X+','+Y+')')
+                    })
+                    // console.log(insideandWhichGroup)
+                    var transform = getTransformation(d3.select('#group-'+insideandWhichGroup.id).attr('transform'));
+                    var X = offsetX + transform.translateX;
+                    var Y = offsetY + transform.translateY;
+                    d3.select('#group-'+ insideandWhichGroup.id).attr('transform', 'translate('+X+','+Y+')')
+                }
+
+                // console.log(insideandWhichGroup)
+                
                 // console.log('HEY')
             }
             // console.log(BBid[i])
         }
     }
     componentDidMount(){
+        console.log('GOs')
         this.updateLine();   
     }
     dragstarted(env) {
@@ -456,7 +511,7 @@ class Group extends Component {
             var transformDrag = {'translateX': 0, 'translateY': 0}
             var item = d3.select('#panItems').node()
             if (item != null){
-                // transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                transformPan = getTransformation(d3.select('#panItems').attr('transform'));
             } 
             var item = d3.select('#group-'+ that.props.group.id).node()
             if (item != null){
@@ -474,6 +529,9 @@ class Group extends Component {
             showBboxBB(BBox, 'red');
             // console.log('PUSH')
         }
+
+        
+        
         // console.log('GO',BBox)
         // showBboxBB(BBox[0], 'red');
         this.BB = BBox;
@@ -529,7 +587,7 @@ class Group extends Component {
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
         else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
-            // console.log('gO')
+            console.log('gO')
             // console.log(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
@@ -637,14 +695,14 @@ class Group extends Component {
                 />
             });
         }
-       
+    //    console.log(this.props.group.lines)
         
         return (
             <g id={'group-'+this.props.group.id} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
                 {/* <g>{this.state.placeholders.length > 0 ? : <g></g> }</g> */}
                 {listItems} 
 
-                   { (this.props.group.lines > 0) ?
+                   {/* { (this.props.group.lines > 0) ? */}
                     <Background
                         sketchLines={this.state.sketchLines}
                         placeholders={this.state.placeholders}
@@ -656,7 +714,7 @@ class Group extends Component {
 
              
                     />
-                    : null }
+                    {/* : null } */}
                  
                 
                 <g id={'item-'+this.props.group.id} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
