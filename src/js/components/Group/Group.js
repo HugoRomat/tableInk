@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getTransformation, unionRectangles, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox, _getBBoxPromise, _getBBoxPan, guid } from "./../Helper";
+import { getTransformation, unionRectangles, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox, _getBBoxPromise, _getBBoxPan, guid, getBoundinxBoxLines } from "./../Helper";
 import { connect } from 'react-redux';
 // import shallowCompare from 'react-addons-shallow-compare';
 import {
@@ -60,7 +60,7 @@ class Group extends Component {
         // setTimeout(()=>{
             // console.log(JSON.stringify(d3.select('#panItems').node().getBBox()))
         // }, 1000)
-        // this.forLoop()
+        // this.forLoop()3
     }
     createStroke(){
         var line = d3.line()
@@ -78,6 +78,17 @@ class Group extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '50')
             .attr('opacity', '0.2')
+
+        /*
+            getBoundinxBoxLines([that.props.group.id]).then((d)=>{
+                d3.select('#pathBB-' + that.props.group.id)
+                    .attr('width', d.width + 80)
+                    .attr('height', d.height)
+                    .attr('x', d.x)
+                    .attr('y', d.y)
+                    .attr('fill', 'rgba(255,0,0,0.3)')
+            })
+        */
     }
     updateLine(){
         var that = this;
@@ -415,7 +426,8 @@ class Group extends Component {
         else that.selected = false;
     }
     // POUR TOUS LES PLACEHOLDER
-    //SERT A METTRE MES OBJETS EN 0 ABSOLU ++ Update ma BBOX de mon objet PLACEHOLDER
+    // SERT A METTRE MES OBJETS EN 0 ABSOLU ++ 
+    // Update ma BBOX de mon objet PLACEHOLDER
     computeLinesPlaceHOlder = async(placeholder) => {
         var that = this;
         var itemsGuide = [];
@@ -459,7 +471,7 @@ class Group extends Component {
             }
         };
         // console.log(JSON.parse(JSON.stringify(placeholder)))
-        console.log('endPlaceHolder')
+        // console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
@@ -481,7 +493,7 @@ class Group extends Component {
     //     return { feeds: res}
     //   }
      /**
-     * FAIT LA BOUNDING BOX DE TOUT LE MONDE
+     * FAIT LA BOUNDING BOX DE TOUTE LES LIGNES
      */
     getBoundinxBoxEveryone = async () => {
         // var BB = await _getBBoxPromise('item-'+strokeId);
@@ -526,7 +538,7 @@ class Group extends Component {
             BBox.push(rectangle)
 
             
-            showBboxBB(BBox, 'red');
+            // showBboxBB(rectangle, 'red');
             // console.log('PUSH')
         }
 
@@ -550,10 +562,12 @@ class Group extends Component {
         var offset = [];
         
         var padding = this.props.group.model.paddingBetweenLines;
+        // console.log(padding)
         var bb = JSON.parse(JSON.stringify(this.BB));
         // this.BB.forEach((d)=> console.log(d))
         var bbwithIndex = this.BB.map((d, i)=>{ d.index = i; return d })
         bbwithIndex.sort((a, b) => a.y - b.y);
+        //Premiere position ne change pas
         var initialPosition = JSON.parse(JSON.stringify(bbwithIndex[0]['y']));
         
         bbwithIndex.forEach((d, i)=>{
@@ -561,24 +575,43 @@ class Group extends Component {
             initialPosition += d.height  + padding;
             
         })
-
+        // console.log(offset)
         // this.BB.sort((a, b) => );
         this.offset = offset.map((d, i)=>{
             return {'index': d.index, 'value':bbwithIndex[i]['y'] - d.position }
         })
+
         this.offset.sort((a, b) => a.index - b.index);
         this.state.offsetY = this.offset.map((d)=>{
             return d.value;
         })
-        this.state.offsetX = []
+        this.state.offsetX = this.state.offsetY.map((d)=> 0)
+        // this.state.offsetY = []
         // this.setState({'offsetY': this.offsetY})
-        // console.log(this.offsetY)
+        // console.log(this.state.offsetY)
     }
+    // shouldComponentUpdate(nextProps, nextState) {
+        
+          
+    // }
+    
     componentDidUpdate(prevProps, prevState){
         var that = this;
-        // console.log('GO')
+        // console.log('did update')
         if (this.props.sketchLines != prevProps.sketchLines){
-        
+            // this.setState({'sketchLines': this.props.sketchLines})
+            // this.getBoundinxBoxEveryone()
+        }
+        else if (this.props.group.lines.length != prevProps.group.lines.length){
+            console.log('GOOO')
+            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+            this.getBoundinxBoxEveryone().then(()=> {
+                this.computePosition();
+                this.computeLinesPlaceHOlder(this.placeholder);
+            })
+        }
+        else if (this.props.shouldUnselect != prevProps.shouldUnselect){
+            d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
         else if (this.props.shouldUnselect != prevProps.shouldUnselect){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
@@ -592,9 +625,6 @@ class Group extends Component {
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
-                // if (this.props.showGrid) this.computePositionTable();
-
-                // console.log('YO')
                 this.computeLinesPlaceHOlder(this.placeholder);
                 
             })
@@ -660,10 +690,10 @@ class Group extends Component {
     render() {
 
         // console.log(this.state.placeholders)
-        
+        // console.log('render')
         // console.log(BB)
         // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
-
+        // console.log(this.props.group.lines)
         //Pour chaque ligne reconnu dans mon groupe
         var listItems = this.props.group.lines.map((d, i) => { return <g key={i} ></g>})
         if (this.state.placeholders.length > 0){
@@ -720,7 +750,11 @@ class Group extends Component {
                 <g id={'item-'+this.props.group.id} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
                     <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/> 
                     <path id={'fake-'+this.props.group.id}></path>
+
+                    
+
                 </g>
+                <rect className={'bbGroup'} id={'pathBB-'+this.props.group.id} />
                 <rect id={'rect-'+this.props.group.id} />
             </g>
         );

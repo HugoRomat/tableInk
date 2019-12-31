@@ -30,7 +30,7 @@ class Background extends Component {
         //Si j'udpate la BBox
         
         if (this.props.placeholders != prevProps.placeholders){
-            console.log('UPDATE')
+            // console.log('Update placeHolders')
             this.getBoundinxBoxEveryone().then((d)=>{
                 
                 this.BBox = d;
@@ -39,9 +39,9 @@ class Background extends Component {
             
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            // console.log('UPDATE')
-            this.getBoundinxBoxEveryone((d)=>{
-                console.log(JSON.stringify(d))
+            // console.log('Update sketchlines')
+            this.getBoundinxBoxEveryone().then((d)=>{
+                // console.log(JSON.stringify(d))
                 this.BBox = d;
                 this.addPlaceHolder();
             })

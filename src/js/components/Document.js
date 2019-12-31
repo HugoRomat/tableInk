@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 
@@ -14,7 +14,7 @@ import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
 import CalcOmbb from './../../../customModules/ombb';
 
-import {boxBox} from 'intersects';
+import {boxBox, boxPoint} from 'intersects';
 
 import paperTexture from './../../../static/paperTexture.jpg';
 
@@ -27,7 +27,9 @@ import {
     addLinesToSticky,
     changeModelGroupLines,
     addText,
-    setGrid
+    setGrid,
+    addLineToGroup,
+    addLineToExistingGroup
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -49,7 +51,9 @@ const mapDispatchToProps = {
     addLinesToSticky,
     changeModelGroupLines,
     addText,
-    setGrid
+    setGrid,
+    addLineToGroup,
+    addLineToExistingGroup
 };
 
 
@@ -353,6 +357,37 @@ class Document extends Component {
                     
                 }
         })
+
+        d3.select('#eventReceiver')
+        .on('pointerdown', function(){
+            if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+                that.erasing = true;
+                d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
+            }
+            // console.log("HELLO", d3.event)
+        }) 
+        .on('pointermove', function(){
+            if (that.erasing){
+                var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+
+                that.tempArrayStroke = that.tempArrayStroke.slice(-10);
+
+                that.eraseStroke();
+                that.drawEraseStroke();
+            }
+        })
+        .on('pointerup', function(){
+            // console.log()
+            if (that.erasing) {
+                // console.log('GO')
+                that.erasing = false;
+                that.tempArrayStroke = [];
+                that.removeTempStroke();
+                d3.selectAll('.fakeStroke').style('pointer-events', 'none')
+            }
+           
+        })  
     }
     panStartCanvas(ev){
         this.lastPosition = {'x': ev.srcEvent.x, 'y': ev.srcEvent.y}
@@ -404,7 +439,7 @@ class Document extends Component {
         that.erasing = false;
         // that.hasMoved = false;
         // that.press == false && 
-
+        // console.log(event)
         if (that.isItemDragged == false){
             that.down = true;
             // that.createLine();
@@ -415,6 +450,7 @@ class Document extends Component {
             //     // console.log('GO')
             //     // that.duplicateSticky(that.isGuideHold);
             // }
+            
             if (event.x < 300){
                 that.sticky = true;
             }
@@ -426,7 +462,7 @@ class Document extends Component {
                 // that.createDrawing();
             }
             else if (event.buttons == 32){
-                that.erasing = true;
+                // that.erasing = true;
             }
             else if (event.buttons == 2){
                 that.selecting = true;
@@ -455,6 +491,7 @@ class Document extends Component {
             else if (that.drawing){
                 that.drawTempStroke();
             }
+            
             else if (that.isPatternPen){
                 that.drawPattern(event);
             }
@@ -530,13 +567,18 @@ class Document extends Component {
                         // console.log(closelements)
                         that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
 
-                            console.log(elementLines)
+                            // console.log(elementLines)
                             that.makingGroup(elementLines, 'initial', strokeGuide);
                         })
                     })
                     
                 } else {
+                    that.idLine = guid();
+
+                    
                     that.addStroke();
+                    that.isNewLine();
+                    that.isSameLine();
                 }
 
 
@@ -802,6 +844,8 @@ class Document extends Component {
             if (intersected && insideandWhichGroup == undefined) this.objectIn.push({'id':BBid[i].split('-')[1]})
             // console.log(BBid[i])
         }
+
+        // console.log(this.objectIn)
         return JSON.parse(JSON.stringify(this.objectIn))
         // var BB = await _getBBoxPromise(d3.select(this).attr('id'))
             
@@ -977,7 +1021,7 @@ class Document extends Component {
     drawPattern(event){
         var that = this;
         var line = d3.line()
-
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
 
         var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
         if (dist > that.patternBBOX.width){
@@ -985,8 +1029,8 @@ class Document extends Component {
 
             // console.log(this.patternPen)
             this.patternPen.forEach((d)=>{
-                var X = event['x']+ d.position[0];
-                var Y = event['y']+ d.position[1];
+                var X = event['x']+ d.position[0] - transformPan.translateX;
+                var Y = event['y']+ d.position[1] - transformPan.translateY;
                 d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
                 .append('path')
                 .attr('d', (f)=>  line(d.points))
@@ -1049,9 +1093,79 @@ class Document extends Component {
         // console.log(data)
         this.props.addSketchLine(data);
     }
-    addStroke(){
-        var id = guid();
 
+    drawEraseStroke(){
+        // console.log('HEY')
+        var that = this;
+        var line = d3.line()
+        // d3.select('#penTemp')
+        //     .attr("d", line(that.tempArrayStroke))
+        //     .attr('fill', 'none')
+        //     .attr('stroke', 'black')
+        //     .attr('stroke-width', '10')
+        //     .attr('opacity', '0.2')
+        //     .attr("stroke-dasharray", "10");
+    }
+    eraseStroke(){
+
+        var lastPoint = this.tempArrayStroke[this.tempArrayStroke.length-1];
+
+        var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
+
+        if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
+            
+            var id = element.id.split('-')[1];
+            // console.log(id)
+            this.props.removeSketchLines([id]);
+        }
+    }
+    isSameLine= async() => {
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var whichGroup = false;
+        // console.log(this.props.groupLines)
+        for (var i in this.props.groupLines){
+            var item = this.props.groupLines[i];
+            var id = item['id'];
+            var arrayNode = [];
+            // console.log(d3.select('#group-'+id))
+            d3.select('#group-'+id).selectAll('.containerBackground').each(function(d){
+                arrayNode.push(d3.select(this).node());
+            })
+            for (var j in arrayNode){
+                var BB = await _getBBoxPromiseNode(arrayNode[j]);
+                var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
+                if (isIn) {
+                    // console.log('HEY')
+                    var index = d3.select(arrayNode[j]).attr('id').split('-')[1];
+                    // console.log(id)
+                    // console.log(index)
+                    this.props.addLineToExistingGroup({'idLine': [this.idLine], 'idGroup':id, 'iteration':index})
+                }
+            }
+        }
+    }
+    isNewLine= async() => {
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+
+        for (var i in this.props.groupLines){
+            var item = this.props.groupLines[i];
+            var id = item['id'];
+            var BB = await _getBBoxPromise('item-'+id);
+            
+            var offset = 60;
+            BB.x -= offset;
+            BB.width += 2*offset;
+
+            // showBboxBB(BB, 'red')
+
+            var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
+            if (isIn) {
+                this.props.addLineToGroup({'idLine': [[this.idLine]], 'idGroup':id})
+            }
+        }
+    }
+    addStroke(){
+        
         if (this.tempArrayStroke.length > 1){
             // To have everything in 0,0
             var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
@@ -1065,7 +1179,7 @@ class Document extends Component {
             var data = {
                 'points': arrayPoints, 
                 'data': {'class':[], 'sizeStroke': this.sizePen, 'colorStroke': this.colorPen}, 
-                'id': id , 
+                'id': this.idLine , 
                 'device':this.props.UIid,
                 'isAlphabet': false,
                 'position': [firstPoint[0],firstPoint[1]]
@@ -1233,12 +1347,14 @@ class Document extends Component {
             <div>
                 {/* <div className='leftPart'></div> */}
                 
-                <div className='lineRed'></div>
+                {/* <div className='lineRed'></div> */}
                 <svg id="canvasVisualization">
                     
                     <rect id='eventReceiver'  x={0} y={0} fill='red' opacity='0' />
                     
-                    
+                    <g id="toggleSideBar">
+                        <circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" />
+                    </g>
                     <g id="item-feedBackVoice">
                         <circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" />
                     </g>

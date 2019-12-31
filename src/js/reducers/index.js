@@ -197,6 +197,43 @@ initialState.sketchLines = strokes
           };
 
 
+          case 'ADD_LINE_EXISTING_GROUP':
+            var idGroup = action.data.idGroup;
+            var idLine = action.data.idLine;
+            // var idLine = action.data.idLine;
+            var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+            if (index > -1){
+                state = update(state, { 
+                  groupLines: {
+                    [index] : {
+                      lines: {
+                        [action.data.iteration]: {$push: idLine}
+                      }
+                   }
+                  }
+                })
+            }
+            
+            return state;
+
+
+
+      case 'ADD_LINE_TO_GROUP':
+          var id = action.data.idGroup;
+          var data = action.data.idLine;
+          var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
+          if (index > -1){
+              state = update(state, { 
+                groupLines: {
+                  [index] : {
+                    lines: {$push: data}
+                 }
+                }
+              })
+          }
+          
+          return state;
+          
         case 'ADD_LINES_LETTER':
           var idLetter = action.data.id;
           var line = action.data.line;

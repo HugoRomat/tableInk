@@ -28,8 +28,8 @@ class Line extends Component {
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             .attr('stroke', 'black')
-            .attr('stroke-width', '10')
-            .attr('stroke-opacity', '0.1')
+            .attr('stroke-width', '20')
+            .attr('stroke-opacity', '0')
             
            
         // if (this.props.stroke.device != undefined){
@@ -48,10 +48,14 @@ class Line extends Component {
     }
     
     componentDidUpdate(){
-        // console.log(this.props.stroke)
+        // console.log(this.props.stroke.data.class)
         var line = d3.line()
         var that = this;
         d3.select('#'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+
+        d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             // .attr('stroke', 'black')
@@ -59,13 +63,15 @@ class Line extends Component {
         
         d3.select('#item-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
     }
-   
+    componentWillUnmount(){
+        // console.log("BYE BYEs")
+    }
     render() {
         // console.log(this.props.stroke.position[0])
         return (
             <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path style={{'pointerEvents': 'none' }} id={this.props.stroke.id}></path>
-                {/* <path style={{'pointerEvents': 'none' }} id={'fake-'+this.props.stroke.id}></path> */}
+                <path style={{'pointerEvents': 'none' }} className="fakeStroke" id={'fake-'+this.props.stroke.id}></path>
             </g>
         );
         

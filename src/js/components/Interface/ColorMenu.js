@@ -186,9 +186,12 @@ class ColorsMenu extends Component {
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 that.tempArrayStroke = [];
+                // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
                 _getBBoxPromise('patternSVG').then((d)=>{
+                    // d.x += transformPan.translateX;
+                    // d.y += transformPan.translateY;
                     that.positionBox = d;
-                    console.log('GO')
+                    // console.log('GO', transformPan)
                 })
             }
           })

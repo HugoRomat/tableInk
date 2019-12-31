@@ -21,6 +21,15 @@ export const addLinesClass = data => ({
     type: 'ADD_LINES_CLASS',
     data
 })
+
+export const addLineToExistingGroup = data => ({
+    type: 'ADD_LINE_EXISTING_GROUP',
+    data
+})
+export const addLineToGroup = data => ({
+    type: 'ADD_LINE_TO_GROUP',
+    data
+})
 export const addLinesToSticky = data => ({
     type: 'ADD_LINES_TO_STICKY',
     data

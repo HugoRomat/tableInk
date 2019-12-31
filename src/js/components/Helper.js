@@ -32,7 +32,45 @@ export function distance(x1, x2, y1, y2){
     var c = Math.sqrt( a*a + b*b );
     return c;
 }
+export async function getBoundinxBoxLines(lines){
+    // var BB = await _getBBoxPromise('item-'+strokeId);
+    // return new Promise((resolve, reject) => {
+        // console.log('GO')
+    var BBox = [];
+    // d3.selectAll('.BB').remove()
 
+    var rectangle = null;
+    var that = this;
+        
+
+    for (let index = 0; index < lines.length; index++) {
+        // console.log(line[index])
+        var strokeId = lines[index];
+        var BB = await _getBBoxPromise('item-'+strokeId);
+        // console.log(strokeId, BB)
+        // console.log(JSON.stringify(BB))
+
+        if (rectangle == null) rectangle = BB;
+        else rectangle = unionRectangles(rectangle, BB);
+        // showBboxBB(BB, 'red');
+    }
+       
+    var transformPan = {'translateX': 0, 'translateY': 0}
+    var transformDrag = {'translateX': 0, 'translateY': 0}
+    var item = d3.select('#panItems').node()
+    if (item != null){
+        transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+    } 
+  
+    // GET apres le drag en compte sur les BBox
+    // console.log(transform)
+    rectangle.x = rectangle.x - transformPan.translateX - transformDrag.translateX;
+    rectangle.y = rectangle.y - transformPan.translateY - transformDrag.translateY;
+        
+        
+    return rectangle;
+
+}
 // function sqr (x) {
 //     return x * x;
 //   }
@@ -360,6 +398,8 @@ export function getMyBBox(element){
 }
 
 
+
+
  export function _getBBoxPromiseREal(id, offset){
 
     return new Promise(resolve => {
@@ -394,6 +434,25 @@ export function _getBBoxPromise(id, offset){
         if (offset == undefined) offset = 0;
         // console.log('Id', id)
         var BB = d3.select('#'+id).node().getBoundingClientRect();
+
+        var transformPan = {'translateX': 0, 'translateY': 0}
+
+        BB.x = BB.x- offset - transformPan.translateX ;
+        BB.y = BB.y- offset - transformPan.translateY ;
+        BB.width += 2*offset;
+        BB.height += 2*offset;
+
+        resolve(BB); 
+    })
+}
+
+
+export function _getBBoxPromiseNode(node, offset){
+
+    return new Promise(resolve => {
+        if (offset == undefined) offset = 0;
+        // console.log('Id', id)
+        var BB = node.getBoundingClientRect();
 
         var transformPan = {'translateX': 0, 'translateY': 0}
 
