@@ -252,10 +252,19 @@ initialState.sketchLines = strokes
         return state;
 
       case 'ADD_SKETCH_LINE':
-        return { 
-          ...state, 
-          sketchLines: [ ...state.sketchLines, action.data] 
-        };
+        // console.log(action.data.data.sizeStroke)
+        if (action.data.data.sizeStroke > 10){
+          return { 
+            ...state, 
+            sketchLines: [ action.data, ...state.sketchLines] 
+          };
+        } else {
+          return { 
+            ...state, 
+            sketchLines: [ ...state.sketchLines, action.data] 
+          };
+        }
+        
 
       case 'CHANGE_MODEL_GROUP_LINES':
         var idsGroup = action.data.idGroups;
@@ -401,6 +410,7 @@ initialState.sketchLines = strokes
 
 
       case 'REMOVE_SKETCH_LINES':
+        // console.log(state.sketchLines)
           var idsToDelete = action.data;
           idsToDelete.forEach((idToDelete)=>{
             var index = state.sketchLines.indexOf(state.sketchLines.find(x => x.id == idToDelete))
@@ -410,6 +420,7 @@ initialState.sketchLines = strokes
               })
             }
           })
+          // console.log(state.sketchLines)
           return state;
 
         

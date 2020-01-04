@@ -217,7 +217,7 @@ class Guide extends Component {
         // console.log(that.props.isGallery, d3.eventx)
         if (that.props.isGallery){
             if (d3.event.x < 450){
-                console.log('HEY')
+                // console.log('HEY')
                 var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
                 that.props.addGuideToSticky({'guide':that.props.stroke, 'position':[transform.translateX, transform.translateY]});
                 that.goBackInitialposition();
@@ -328,7 +328,7 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 
                 
                 {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}

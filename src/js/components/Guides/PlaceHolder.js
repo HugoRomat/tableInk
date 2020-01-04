@@ -249,6 +249,7 @@ class PlaceHolder extends Component {
                 .attr('x', (-widthTotal/2) + widthContainer - 25)
                 .attr('y',-25)
                 .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .style("filter", "url(#drop-shadow)")
         }
         else if (this.props.data.id == 'background'){
             rect = element

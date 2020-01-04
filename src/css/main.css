@@ -40,8 +40,9 @@ rect{
     border-color: transparent #efe4e4;
     background-image: url("./../../static/reliure.png");
   } 
-/* #leftPart{
-    fill: red;
+#leftPart{
+    stroke-width: 1px;
+    stroke: rgb(0,0,0);
 } 
  
   /* #leftPart {
@@ -202,7 +203,14 @@ rect{
 .pen img{
     height: 100%;
 }
-
+#nameApp{
+    position: absolute;
+    font-family: Roboto;
+    font-size: 38px;
+    text-transform: uppercase;
+    border-bottom: 2px solid black;
+    left: 323px;
+}
 #colorsMenu{
     position: absolute;
     top: 0px;
@@ -211,13 +219,13 @@ rect{
     flex-direction: column;
 }
 .colorPen{
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     position: relative;
     
-    margin-top: 10px;
+    /* margin-top: 10px;
     border-radius: 50%;
-    border: 2px solid grey;
+    border: 2px solid grey; */
 }
 
 #patternSVG{

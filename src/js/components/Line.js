@@ -14,7 +14,7 @@ class Line extends Component {
         var line = d3.line()
         var that = this;
 
-
+        // console.log(that.props.stroke.data.colorStroke)
 
 
         d3.select('#'+that.props.stroke.id)
@@ -54,12 +54,16 @@ class Line extends Component {
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
+            .attr('stroke', that.props.stroke.data.colorStroke)
+            .attr('stroke-width', that.props.stroke.data.sizeStroke)
+            .attr('stroke-linejoin', "round")
 
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
-            // .attr('stroke', 'black')
-            // .attr('stroke-width', '2')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '20')
+            .attr('stroke-opacity', '0')
         
         d3.select('#item-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
     }

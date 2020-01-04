@@ -262,9 +262,9 @@ class ColorsMenu extends Component {
 
                <div id="abcd" className="buttonMenu"> 
 
-                    <div id="downloadSticky" className="buttonMenu" > 
+                    {/* <div id="downloadSticky" className="buttonMenu" > 
                             download sticky
-                    </div>
+                    </div> */}
                     <div id="alphabetButton" > 
                             <img src={alphabet} />
                     </div>

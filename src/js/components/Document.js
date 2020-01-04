@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode } from "./Helper";
+import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 
@@ -122,7 +122,10 @@ class Document extends Component {
         this.isPatternPen = false;
         this.patternPen = [];
         this.patternBBOX = null;
-       
+        this.straightLine = false;
+        this.write = false;
+
+        this.stateLeftBar = 'normal';
         this.init();
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
@@ -165,6 +168,25 @@ class Document extends Component {
             .attr("height", 1000)
             .attr("x", 0)
             .attr("y", 0);
+
+
+            var filter = defs.append("filter")
+                .attr("id", "drop-shadow")
+                .attr("height", "130%");
+            filter.append("feGaussianBlur")
+                .attr("in", "SourceGraphic")
+                .attr("stdDeviation", 5)
+                .attr("result", "blur");
+            filter.append("feOffset")
+                .attr("in", "blur")
+                .attr("dx", 5)
+                .attr("dy", 5)
+                .attr("result", "offsetBlur");
+            var feMerge = filter.append("feMerge");
+            feMerge.append("feMergeNode")
+                .attr("in", "offsetBlur")
+            feMerge.append("feMergeNode")
+                .attr("in", "SourceGraphic");
 
             
         // this.init();
@@ -278,7 +300,7 @@ class Document extends Component {
         })
 
         this.mc.on("swipeleft", function(ev) {
-            console.log(ev)
+            // console.log(ev)
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 // if (ev.srcEvent.x < 300){
                     that.createSwipeLeft(ev);
@@ -292,7 +314,7 @@ class Document extends Component {
         this.mc = new Hammer.Manager(el);
 
         var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
         var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
 
         this.mc.add(press);
@@ -313,24 +335,31 @@ class Document extends Component {
             }
           })
           this.mc.on("pan", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
-                // console.log(ev)
-                that.pointermove(ev.srcEvent)
+            //   console.log(ev.pointers)
+            if (ev.pointers.length == 1 || ev.pointers.length == 2){
+                // console.log('OFOFOF')
+                if (ev.pointers.length == 2){
+                    that.straightLine = ev.pointers[1];
+                }
+                if (ev.pointers[0].pointerType == 'pen'){
+                    that.pointermove(ev.pointers[0]);
+                    // that.write = true;
+                } 
             }
-            if (ev.pointers[0].pointerType == 'touch'){
+            if (ev.pointers.length == 1 && ev.pointers[0].pointerType == 'touch'){
+                // console.log(that.write)
                 that.panCanvas(ev);
             }
           })
           this.mc.on("panend", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 that.pointerUp(ev.srcEvent, ev)
+                // that.write = false;
             }
-            if (ev.pointers[0].pointerType == 'touch'){
-                
-            }
+            
           })
-          
-          
+
+
         
         this.mc.on("press", function(ev) {
             ev.preventDefault();
@@ -409,18 +438,65 @@ class Document extends Component {
         if (this.showGrid) this.panGrid(X, Y, offsetX, offsetY);
     }
     createSwipeRight(){
+        var that = this;
         // console.log('GO', window.innerWidth)
-        d3.select('.lineRed').transition().duration(1000).style('left', window.innerWidth);
-        d3.select('#leftPart').transition().duration(1000).attr('width', window.innerWidth + 'px'); 
-        
-        this.setState({'openGalleryModel': true});
+        if (this.stateLeftBar == 'normal'){
+            d3.select('.lineRed').transition().duration(1000).style('left', window.innerWidth);
+            d3.select('#leftPart').transition().duration(1000).attr('width', window.innerWidth + 'px');
+            d3.select('#nameApp').transition().duration(1000).style('opacity', '0'); 
+            this.setState({'openGalleryModel': true});
+            this.stateLeftBar = 'gallery';
+        }
+        else if (this.stateLeftBar == 'small'){
+            d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
+            d3.select('#leftPart').transition().duration(1000).attr('width', that.marginOffset + 'px');
+            d3.select('#nameApp').transition().duration(1000).style('left', '323px');
+
+            that.arrangeGuideNormal();
+
+            this.setState({'openGalleryModel': false});
+            this.stateLeftBar = 'normal'
+        }
     }
     createSwipeLeft(){
         var that = this;
-        d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
-        d3.select('#leftPart').transition().duration(1000).attr('width', that.marginOffset + 'px');
 
-        this.setState({'openGalleryModel': false});
+        if (this.stateLeftBar == 'gallery'){
+            d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
+            d3.select('#leftPart').transition().duration(1000).attr('width', that.marginOffset + 'px');
+            d3.select('#nameApp').transition().duration(1000).style('opacity', '1');
+            // d3.select('#nameApp').transition().duration(1000).style('left', '323px');
+
+            this.setState({'openGalleryModel': false});
+            this.stateLeftBar = 'normal'
+        }
+        else if (this.stateLeftBar == 'normal'){
+            d3.select('.lineRed').transition().duration(1000).style('left',  '100px');
+            d3.select('#leftPart').transition().duration(1000).attr('width', '100px');
+            d3.select('#nameApp').transition().duration(1000).style('left', '123px');
+
+            that.arrangeGuideSmall();
+    
+            this.setState({'openGalleryModel': false});
+            this.stateLeftBar = 'small'
+        }
+        
+    }
+    arrangeGuideSmall(){
+        d3.select('#guides').selectAll('.guide').each(function(d, i){
+            // var transform = getTransformation(d3.select(this).attr('transform'))
+            var Y = (i*180) + 200;
+            d3.select(this).transition().duration(1000).attr('transform', 'translate(-20,'+ Y +')')
+            
+        })
+    }
+    arrangeGuideNormal(){
+        d3.select('#guides').selectAll('.guide').each(function(d, i){
+            // var transform = getTransformation(d3.select(this).attr('transform'))
+            var Y = (i*180) + 200;
+            d3.select(this).transition().duration(1000).attr('transform', 'translate(120,'+ Y +')')
+            
+        }) 
     }
     panEnd(e){
         console.log('panEnd')
@@ -488,9 +564,14 @@ class Document extends Component {
             if (that.press){
 
             }
+            if (that.straightLine != false){
+                // console.log('GOOO')
+                that.drawTempStrokeStraightLine();
+            }
             else if (that.drawing){
                 that.drawTempStroke();
             }
+     
             
             else if (that.isPatternPen){
                 that.drawPattern(event);
@@ -558,21 +639,36 @@ class Document extends Component {
                 // var objectsSelected = that.findCloseStrokes();
                 var length = d3.select('#penTemp').node().getTotalLength();
 
-
-                // console.log(sourceEvent.deltaTime, length)
+                // _getBBoxPromise('penTemp').then((d)=>{
+                //     console.log(d)
+                // })
                 //It's a guide OR a stroke
                 if (length > 150 && sourceEvent.deltaTime < 500){
                     var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
-                    that.findCloseStrokes().then((closelements)=>{
-                        // console.log(closelements)
-                        that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
 
-                            // console.log(elementLines)
-                            that.makingGroup(elementLines, 'initial', strokeGuide);
+
+                    var BB = findMinMax(strokeGuide);
+                    // showBboxBB(BB, 'red')
+
+                    /** Si c'est grand alors je cherche dedans */
+                    if (BB.height > 30){
+                        // console.log('HEY')
+                        that.findCloseStrokes().then((closelements)=>{
+                            console.log(closelements)
+                            that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+    
+                                // console.log(elementLines)
+                                that.makingGroup(elementLines, 'initial', strokeGuide);
+                            })
                         })
-                    })
-                    
-                } else {
+                    }
+                    /** Si c'est petit alors on s'en fout */ 
+                    else {
+                        that.makingGroup([], 'initial', strokeGuide);
+                    } 
+                } 
+                // Or a stroke
+                else {
                     that.idLine = guid();
 
                     
@@ -588,6 +684,7 @@ class Document extends Component {
             }
             that.removeTempStroke();
         }
+        that.straightLine = false;
         that.tempArrayStroke = [];
         that.down = false;
         that.objectIn = [];
@@ -762,9 +859,16 @@ class Document extends Component {
                 })
                 realArray.push(newArr)
             })
+
+            /**
+             * Delete empty arrays
+             */
+            for (var i = realArray.length - 1; i >= 0; i--) {
+                if (realArray[i].length == 0) realArray.splice(i, 1);
+            }
     
 
-            // console.log(realArray)
+            // console.log(realArray, arrayDoublons)
             resolve(realArray)
 
         })
@@ -1064,6 +1168,28 @@ class Document extends Component {
 /**
      * STROKE
      */
+    drawTempStrokeStraightLine(){
+        var that = this;
+        var line = d3.line()
+        var touchPoint = that.straightLine;
+        var penPoint = {'x': that.tempArrayStroke[that.tempArrayStroke.length-1][0], 'y': that.tempArrayStroke[that.tempArrayStroke.length-1][1]};
+
+        that.tempArrayStroke = [
+            [touchPoint.x, touchPoint.y],
+            [penPoint.x, penPoint.y]
+        ]
+        // var angle = Math.atan2(penPoint.y-touchPoint.y, penPoint.x-touchPoint.x)
+        // var point = createPositionAtLengthAngle(penPoint, angle, 200);
+        // console.log(angle)
+        // drawCircle(point.x, point.y, 30, 'red')
+        d3.select('#penTemp')
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', that.colorPen)
+            .attr('stroke-width', that.sizePen)
+            .attr("stroke-dasharray", 'none')
+            .attr('stroke-linejoin', "round")
+    }
     drawTempStroke(){
         var that = this;
         var line = d3.line()
@@ -1098,18 +1224,22 @@ class Document extends Component {
         // console.log('HEY')
         var that = this;
         var line = d3.line()
-        // d3.select('#penTemp')
-        //     .attr("d", line(that.tempArrayStroke))
-        //     .attr('fill', 'none')
-        //     .attr('stroke', 'black')
-        //     .attr('stroke-width', '10')
-        //     .attr('opacity', '0.2')
-        //     .attr("stroke-dasharray", "10");
+        d3.select('#penTemp')
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '10')
+            .attr('opacity', '0.2')
+            .attr("stroke-dasharray", "10");
     }
     eraseStroke(){
 
-        var lastPoint = this.tempArrayStroke[this.tempArrayStroke.length-1];
+        var lastPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[this.tempArrayStroke.length-1]));
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
 
+        lastPoint[0] += transform.translateX;
+        lastPoint[1] += transform.translateY;
+        // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
         var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
 
         if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
@@ -1119,8 +1249,13 @@ class Document extends Component {
             this.props.removeSketchLines([id]);
         }
     }
-    isSameLine= async() => {
+    isSameLine = async() => {
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+        firstPoint[0] += transform.translateX;
+        firstPoint[1] += transform.translateY;
         var whichGroup = false;
         // console.log(this.props.groupLines)
         for (var i in this.props.groupLines){
@@ -1146,6 +1281,10 @@ class Document extends Component {
     }
     isNewLine= async() => {
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+        firstPoint[0] += transform.translateX;
+        firstPoint[1] += transform.translateY;
 
         for (var i in this.props.groupLines){
             var item = this.props.groupLines[i];
@@ -1345,6 +1484,7 @@ class Document extends Component {
     render() {
         return (
             <div>
+               
                 {/* <div className='leftPart'></div> */}
                 
                 {/* <div className='lineRed'></div> */}
@@ -1384,7 +1524,10 @@ class Document extends Component {
                     
                         
                     </g>
-                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'100%'} x={0} y={0} fill={'#e3e3e3'} />
+
+                   
+                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} />
+                    {/* <image id="imageRect" width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'} href={paperTexture} /> */}
                      {/* //fill={'url(#grump_avatar)'}/> */}
 
                     {/* <Menus /> */}
@@ -1437,6 +1580,7 @@ class Document extends Component {
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 
                 />
+                 <div id="nameApp"> Tablink </div>
                 {this.state.shouldOpenAlphabet ? <Lettres openAlphabet={this.openAlphabet} /> : null}
             </div>
         );

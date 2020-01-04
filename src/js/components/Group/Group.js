@@ -136,10 +136,14 @@ class Group extends Component {
                 that.dragstarted(event);
 
 
+                var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
                 // if (this.props.group.lines.length > 0){
                     that.getAllBoundingBox().then((BB)=> {
                         // console.log('HEY', BB);
-                        that.allBoundingBox = BB
+                        that.allBoundingBox = BB;
+
+                        that.allBoundingBox.x += getPan.translateX;
+                        that.allBoundingBox.y += getPan.translateY;
                     })
 
                 // }
@@ -260,9 +264,9 @@ class Group extends Component {
         // var transformPan = {'translateX': 0, 'translateY': 0}
         // console.log(that.props.group.id)
         var BBLine = await _getBBoxPromise('item-'+that.props.group.id);
-        // transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-        BBLine.x = BBLine.x// + transformPan.translateX;
-        BBLine.y = BBLine.y// - transformPan.translateY;
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        BBLine.x = BBLine.x - transformPan.translateX;
+        BBLine.y = BBLine.y - transformPan.translateY;
         // console.log(transformPan)
         return new Promise(resolve => {
             that.getBoundinxBoxEveryone().then((BBox)=>{
@@ -272,6 +276,7 @@ class Group extends Component {
                 if (BBox.length != 0){
                     // var BBox1 = BBox[0];
                     for (var i = 0; i< BBox.length; i++){
+                        // showBboxBB(BBox[i], 'red');
                         BBox1 = unionRectangles(BBox1, BBox[i]);
                     }
                 }
@@ -285,13 +290,14 @@ class Group extends Component {
     }
     findIntersection = async(BBTemp, ev) => {
         // console.log(BBTemp)
-        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+       
         var offsetX = ev.pointers[0].x - this.lastPosition.x;
         var offsetY = ev.pointers[0].y - this.lastPosition.y;
         BBTemp.x += offsetX; //+ transformPan.translateX;
         BBTemp.y += offsetY; //+ transformPan.translateY;
-        // console.log(BBTemp)
+        
         // showBboxBB(BBTemp, 'blue');
+      
         var BBid = [];
         var arrayLineAttached = this.props.group.lines.join().split(',')
         // showBboxBB(BBTemp, 'red');
@@ -498,7 +504,7 @@ class Group extends Component {
     getBoundinxBoxEveryone = async () => {
         // var BB = await _getBBoxPromise('item-'+strokeId);
         // return new Promise((resolve, reject) => {
-            // console.log('GO')
+            // console.log('GO', this.props.group.lines)
         var BBox = [];
         // d3.selectAll('.BB').remove()
         for (let i = 0; i < this.props.group.lines.length; i++) {
@@ -598,18 +604,27 @@ class Group extends Component {
     componentDidUpdate(prevProps, prevState){
         var that = this;
         // console.log('did update')
+        // console.log('GOOOO', this.props.group.lines.join().split(','))
         if (this.props.sketchLines != prevProps.sketchLines){
             // this.setState({'sketchLines': this.props.sketchLines})
             // this.getBoundinxBoxEveryone()
         }
-        else if (this.props.group.lines.length != prevProps.group.lines.length){
-            console.log('GOOO')
-            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
-            this.getBoundinxBoxEveryone().then(()=> {
-                this.computePosition();
-                this.computeLinesPlaceHOlder(this.placeholder);
-            })
+        /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME*/
+        else if (this.props.group.lines.join().split(',').length != prevProps.group.lines.join().split(',').length){
+            // console.log('GO')
+            //NOUVELLE LIGNE
+            // if (this.props.group.lines.length != prevProps.group.lines.length){
+                // console.log('GOOOO', this.props.group.lines)
+                this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+                this.getBoundinxBoxEveryone().then(()=> {
+                    this.computePosition();
+                    this.computeLinesPlaceHOlder(this.placeholder);
+                })
+            // } else {
+
+            // }
         }
+        
         else if (this.props.shouldUnselect != prevProps.shouldUnselect){
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }

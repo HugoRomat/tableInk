@@ -48,8 +48,6 @@ class LinesGrouping extends Component {
             // console.log(this.props.BBs, prevProps.BBs)
             // console.log(this.props.line)
             this.addContainer();
-
-
             this.addPlaceHolder();
 
             if (this.props.BBs.length != prevProps.BBs.length){

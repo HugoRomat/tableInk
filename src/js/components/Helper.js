@@ -427,7 +427,25 @@ export function getMyBBox(element){
         resolve(BB);
     })
 }
+export function findMinMax(arr) {
+    let minX = arr[0][0];
+    let maxX = arr[0][0];
 
+    let minY = arr[0][1];
+    let maxY = arr[0][1];
+  
+    for (let i = 1, len=arr.length; i < len; i++) {
+      let v = arr[i][0];
+      minX = (v < minX) ? v : minX;
+      maxX = (v > maxX) ? v : maxX;
+
+      let w = arr[i][1];
+      minY = (w < minY) ? w : minY;
+      maxY = (w > maxY) ? w : maxY;
+    }
+  
+    return {'x': minX, 'y':minY, 'width': maxX - minX, 'height': maxY - minY};
+  }
 export function _getBBoxPromise(id, offset){
 
     return new Promise(resolve => {
