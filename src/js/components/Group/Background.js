@@ -22,8 +22,13 @@ class Background extends Component {
     componentDidMount(){
         var that = this;
         this.BBox = this.getBoundinxBoxEveryone();
+
+        // this.getBoundinxBoxEveryone().then((d)=>{  
+        //     this.BBox = d;
+        //     this.addPlaceHolder();
+        // })
         // this.movePoints();
-        console.log('HELLO BG')
+        // console.log('HELLO BG')
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
@@ -32,7 +37,7 @@ class Background extends Component {
         if (this.props.placeholders != prevProps.placeholders){
             // console.log('Update placeHolders')
             this.getBoundinxBoxEveryone().then((d)=>{
-                
+                // console.log(d)
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -53,10 +58,18 @@ class Background extends Component {
      */
     getBoundinxBoxEveryone = async () => {
         var that = this;
-        var rectangle = null;
+        
 
 
-        // this.props.group.lines.forEach((line)=>{
+
+        var BBLine = await _getBBoxPromise('item-'+that.props.group.id);
+        // console.log(BBLine)
+        var rectangle = BBLine;
+        // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        // BBLine.x = BBLine.x - transformPan.translateX;
+        // BBLine.y = BBLine.y - transformPan.translateY;
+
+        /** GET BBOX OF all Lines */
         for (let i = 0; i < this.props.group.lines.length; i++) {
             var line = this.props.group.lines[i];
             // line.forEach(strokeId => {
@@ -92,7 +105,7 @@ class Background extends Component {
     }
     addPlaceHolder(){
         
-        
+        // console.log(this.props.placeholders)
         // showBboxBB(this.BBox, 'red');
         // console.log(this.BBox)
         var line = d3.line().curve(d3.curveBasis)
@@ -267,9 +280,10 @@ class Background extends Component {
                     .attr('stroke', (d)=> d.colorStroke )
                     .attr('stroke-width', (d)=> d.sizeStroke)
             }
-            if (d.id == 'outerBackground' && d.lines.length > 0){
+            if (d.id == 'outerBackground' && d.lines.length >0){
+                
                 if (d.data.method == 'scale'){
-                  
+                    // console.log(that.BBox, d)
                     var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +100]);
                     var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100, that.BBox.y + that.BBox.height + 100]);
                     var lines = JSON.parse(JSON.stringify(d.lines))
@@ -427,6 +441,7 @@ class Background extends Component {
 
     }
     render() {
+        // console.log('GO')
         return (
             <g id={'background-'+this.props.id} transform={`translate(0,0)`}>
 

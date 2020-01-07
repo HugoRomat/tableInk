@@ -314,16 +314,19 @@ class Document extends Component {
         this.mc = new Hammer.Manager(el);
 
         var press = new Hammer.Press({time: 250});
+        var tap = new Hammer.Tap();
         var pan = new Hammer.Pan({'pointers':0, threshold: 1});
         var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
 
         this.mc.add(press);
         this.mc.add(swipe);
         this.mc.add(pan);
+        this.mc.add(tap);
         pan.recognizeWith(press);
+        pan.recognizeWith(tap);
         // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
-        swipe.recognizeWith(pan);
+        // swipe.recognizeWith(pan);
 
         
         this.mc.on("panstart", function(ev) {
@@ -386,37 +389,59 @@ class Document extends Component {
                     
                 }
         })
-
-        d3.select('#eventReceiver')
-        .on('pointerdown', function(){
-            if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
-                that.erasing = true;
-                d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
-            }
-            // console.log("HELLO", d3.event)
-        }) 
-        .on('pointermove', function(){
-            if (that.erasing){
+        this.mc.on("tap", function(ev) {
+            if (ev.pointers[0]['pointerType'] == 'touch' ){
+                that.speech.setAlphabet(that.props.lettres)
                 var transform = getTransformation(d3.select('#panItems').attr('transform'))
-                that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
-
-                that.tempArrayStroke = that.tempArrayStroke.slice(-10);
-
-                that.eraseStroke();
-                that.drawEraseStroke();
+                that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
             }
         })
-        .on('pointerup', function(){
-            // console.log()
-            if (that.erasing) {
-                // console.log('GO')
-                that.erasing = false;
-                that.tempArrayStroke = [];
-                that.removeTempStroke();
-                d3.selectAll('.fakeStroke').style('pointer-events', 'none')
-            }
-           
-        })  
+        /** FOR TEXT ENTRY */
+        d3.select("body")
+            .on("keypress", function() { 
+                var letter = d3.event.key.toLowerCase()
+                
+                that.speech.addTextTyping(letter)
+            })
+
+
+        /** Mainly for erasing strokes */
+        d3.select('#eventReceiver')
+            
+            .on('pointerdown', function(){
+                if (d3.event.pointerType == 'mouse'){
+                    that.speech.setAlphabet(that.props.lettres)
+                    var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                    that.speech.setPositionTyping([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
+                }
+                if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+                    that.erasing = true;
+                    d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
+                }
+                // console.log("HELLO", d3.event)
+            }) 
+            .on('pointermove', function(){
+                if (that.erasing){
+                    var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                    that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+
+                    that.tempArrayStroke = that.tempArrayStroke.slice(-10);
+
+                    that.eraseStroke();
+                    that.drawEraseStroke();
+                }
+            })
+            .on('pointerup', function(){
+                // console.log()
+                if (that.erasing) {
+                    // console.log('GO')
+                    that.erasing = false;
+                    that.tempArrayStroke = [];
+                    that.removeTempStroke();
+                    d3.selectAll('.fakeStroke').style('pointer-events', 'none')
+                }
+            
+            })  
     }
     panStartCanvas(ev){
         this.lastPosition = {'x': ev.srcEvent.x, 'y': ev.srcEvent.y}
@@ -516,7 +541,7 @@ class Document extends Component {
         // that.hasMoved = false;
         // that.press == false && 
         // console.log(event)
-        if (that.isItemDragged == false){
+        // if (that.isItemDragged == false){
             that.down = true;
             // that.createLine();
             // console.log(d3.event)
@@ -529,6 +554,9 @@ class Document extends Component {
             
             if (event.x < 300){
                 that.sticky = true;
+            }
+            else if (that.guideTapped){
+                that.tapGuide = that.guideTapped;
             }
             else if (that.isPatternPen){
 
@@ -544,12 +572,13 @@ class Document extends Component {
                 that.selecting = true;
                 // that.createSelecting();
             }
-        }
+        // }
         
     }
     pointermove(event){
         var that = this;
-        if (that.down == true  && that.isItemDragged == false){
+        // console.log(that.isGuideHold, )
+        if (that.down == true){
 
            
             var transform = getTransformation(d3.select('#panItems').attr('transform'))
@@ -561,8 +590,8 @@ class Document extends Component {
 
             // console.log(that.isGuideHold)
 
-            if (that.press){
-
+            if (that.tapGuide){
+                that.drawTempStroke();
             }
             if (that.straightLine != false){
                 // console.log('GOOO')
@@ -571,8 +600,6 @@ class Document extends Component {
             else if (that.drawing){
                 that.drawTempStroke();
             }
-     
-            
             else if (that.isPatternPen){
                 that.drawPattern(event);
             }
@@ -586,6 +613,12 @@ class Document extends Component {
                 that.drawTempStroke();
                 // console.log('Hello world')
             }
+            
+            /** NEW FUNCTION */
+            if (that.isGuideHold){
+                that.duplicateGuide();
+            } 
+            
         }
         
     }
@@ -607,34 +640,47 @@ class Document extends Component {
             //     // selectionGroup
             //     that.selecting = false;
             // }
+
+            // console.log(that.isGuideHold)
             if (that.press){
 
             }
-            else if (that.sticky && that.isGuideHold == false){
+            /** Instancie un guide vide  */
+            /*else if (that.sticky && that.isGuideHold == false){
                 // console.log(length)
                 // that.findIntersection('penTemp');
                 that.addStrokeGuide(); 
                 that.sticky = false;
-            }
+            }*/
+            /** Copie un guide a gauche //DUPLICATION */
             else if (that.sticky && that.isGuideHold){
-                // console.log(length)
-                // that.findIntersection('penTemp');
+                
                 that.addStrokeGuideCopy(this.isGuideHold, event); 
                 that.sticky = false;
+
+
             }
-            else if (that.isGuideHold){
-                // that.drawTempStroke();
-                // console.log(that.isGuideHold)
+            /** Holding a guide to create a sticky */
+            else if (that.tapGuide){
+               
+                // console.log(that.tapGuide)
+                /*var modelId = that.tapGuide;
                 var objectsSelected = that.findIntersection('penTemp');
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
                 that.findClosestElements(objectsSelected, 'penTemp', strokeGuide).then((elementLines)=> {
-                    // that.showBlockOfLinesElement(elementLines);
-                    that.makingGroup(elementLines, that.isGuideHold, strokeGuide);
+                    that.makingGroup(elementLines, modelId, strokeGuide);
+                })*/
+                var modelId = that.tapGuide;
+                var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
+                that.findCloseStrokes().then((closelements)=>{
+                    that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+                        that.makingGroup(elementLines, modelId, strokeGuide);
+                    })
                 })
                 
             }
-            
-            
+
+            /** Quisk swipe to draw or create a sticky */
             else if (that.drawing && that.sticky == false && that.isGuideHold == false){
                 // var objectsSelected = that.findCloseStrokes();
                 var length = d3.select('#penTemp').node().getTotalLength();
@@ -670,8 +716,6 @@ class Document extends Component {
                 // Or a stroke
                 else {
                     that.idLine = guid();
-
-                    
                     that.addStroke();
                     that.isNewLine();
                     that.isSameLine();
@@ -689,6 +733,7 @@ class Document extends Component {
         that.down = false;
         that.objectIn = [];
         that.sticky = false;
+        that.tapGuide = false;
     }
     listenEvents(){
         var that = this;
@@ -779,7 +824,7 @@ class Document extends Component {
         
 
 
-        // console.log(modelData)
+        // console.log(modelData, model)
         var id = guid();
         var group = {
             'id': id, 
@@ -1119,6 +1164,22 @@ class Document extends Component {
         //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
         // }
     }
+    duplicateGuide(){
+        var that = this;
+        var line = d3.line()
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
+        var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
+        if (dist > (this.guidHoldObject.width*2) + 40){
+            that.lastMovePosition = {'x': event['x'],'y': event['y']};
+            // drawCircle(event['x'], event['y'], 10, 'red');
+            var newGuide = [
+                [event['x'], event['y']],
+                [event['x'], event['y'] + 40]
+            ];
+            that.makingGroup([], this.guidHoldObject.id, newGuide);
+        }
+    }
     /**
      * PATTERN
      */
@@ -1301,6 +1362,7 @@ class Document extends Component {
             if (isIn) {
                 this.props.addLineToGroup({'idLine': [[this.idLine]], 'idGroup':id})
             }
+            // console.log(isIn)
         }
     }
     addStroke(){
@@ -1360,6 +1422,8 @@ class Document extends Component {
     holdGuide = (d) => {
         console.log('Selection '+d)
         this.isGuideHold = d;
+        if (d != false) this.guidHoldObject = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == d)));
+        else this.guidHoldObject = false;
         this.setState({'isGuideHold': d})
     }
     // To know if an item was dragged
@@ -1462,23 +1526,18 @@ class Document extends Component {
     }
     setGuideTapped = (d) => {
 
-        // console.log('GO')
-        // console.log(this.linesInselection, d)
+        console.log('tap', d)
+        // console.log(this.linesInselection)
         this.guideTapped = d;
 
-        if (this.linesInselection.elements.length != 0){
-
-            // console.log(this.props.stickyLines);
-
-            var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item);
-            // console.log(sticky)
+        if (this.linesInselection.length != 0 && this.linesInselection.elements.length != 0 && this.guideTapped != false){
+            var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped);
             var data = {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky
             };
-            console.log(data)
-
             this.props.changeModelGroupLines(data);
+            this.guideTapped = false;
         }
     }
     render() {
@@ -1580,7 +1639,7 @@ class Document extends Component {
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 
                 />
-                 <div id="nameApp"> Tablink </div>
+                 <div id="nameApp"> Nom du project </div>
                 {this.state.shouldOpenAlphabet ? <Lettres openAlphabet={this.openAlphabet} /> : null}
             </div>
         );

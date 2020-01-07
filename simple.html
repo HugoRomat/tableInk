@@ -1,0 +1,56 @@
+
+
+<style>
+    #div{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.0/d3.js"></script>
+<div id='div'></div>
+
+<script>
+   console.log('HELLO');
+   d3.select('#div')
+        .on('pointerdown', function(){
+            // if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+            //     that.erasing = true;
+            //     d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
+            // }
+            // console.log("HELLO", d3.event)
+            
+        }) 
+        .on('pointermove', function(){
+            console.log(d3.event.pointerId)
+            // if (that.erasing){
+            //     var transform = getTransformation(d3.select('#panItems').attr('transform'))
+            //     that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+
+            //     that.tempArrayStroke = that.tempArrayStroke.slice(-10);
+
+            //     that.eraseStroke();
+            //     that.drawEraseStroke();
+            // }
+        })
+        .on('pointerup', function(){
+            // console.log()
+            // if (that.erasing) {
+            //     // console.log('GO')
+            //     that.erasing = false;
+            //     that.tempArrayStroke = [];
+            //     that.removeTempStroke();
+            //     d3.selectAll('.fakeStroke').style('pointer-events', 'none')
+            // }
+           
+        }) 
+</script>
+

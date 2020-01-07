@@ -68,30 +68,88 @@ class Guide extends Component {
             .attr('stroke-opacity', '0.1')
         */
             
+
+
+        var el = document.getElementById('item-'+that.props.stroke.id);
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
+        var press = new Hammer.Press({time: 250});
+        var tap = new Hammer.Tap();
+
+        this.mc.add(press);
+        this.mc.add(pan);
+        this.mc.add(tap);
+        pan.recognizeWith(press);
+        pan.recognizeWith(tap)
+
+       this.mc.add(pan);
+       this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
+                that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+                that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+                that.dragstarted(ev);
+            }
+        })
+        this.mc.on("panmove", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                that.dragged(ev);
+            }
+        })
+        this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' ){
+                that.dragended(ev);
+            }
+        })
+        this.mc.on("press", function(event){
+            that.props.dragItem(false);
+            that.colorForHolding(true);
+            that.props.holdGuide(that.props.stroke.id);
+        })
+        this.mc.on("pressup", function(event){
+            that.props.dragItem(false);
+            that.colorForHolding(false);
+            that.props.holdGuide(false);
+        })
+
+        this.mc.on("tap", function(event){
+            // console.log('GO',that.props.stroke.id)
+            // clearTimeout(that.timerPress);
+            that.props.setGuideTapped(that.props.stroke.id);
+            that.colorForHolding(true);
+            setTimeout(function(){
+                that.props.setGuideTapped(false);
+                that.colorForHolding(false);
+            }, 2000)
+            // console.log('Thats a tap')
+            // var BBox = _getBBox('item-'+env.props.stroke.id)
+            // that.props.shouldOpenMenu({
+            //     'id': guid(),
+            //     'shouldOpen': true,
+            //     'position': [BBox.x, BBox.y],
+            //     'idGuide': env.props.stroke.id,
+            //     'idLines': []//env.props.stroke.data.linesAttached
+            // })
+        })
+
+
             
         d3.select('#item-'+that.props.stroke.id)
-            .on('pointerdown', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-                    that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-                    that.dragstarted(that);
-                }
-            })
-            .on('pointermove', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                    var differenceTime = that.startPosition.time - Date.now();
+            
+        //     .on('pointermove', function(d){
+        //         if (d3.event.pointerType == 'touch'){
+        //             var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+        //             var differenceTime = that.startPosition.time - Date.now();
                     
-                    if (dist > 10 ){
-                        that.dragged(that);
-                    }
-                }
-            })
-            .on('pointerup', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.dragended(that);
-                }
-            })
+        //             if (dist > 10 ){
+        //                 that.dragged(that);
+        //             }
+        //         }
+        //     })
+        //     .on('pointerup', function(d){
+        //         if (d3.event.pointerType == 'touch'){
+        //             that.dragended(that);
+        //         }
+        //     })
             .on('contextmenu', function(){
                 d3.event.preventDefault();
             })
@@ -106,59 +164,31 @@ class Guide extends Component {
     
     }
 
-    dragstarted(env) {
-        // if (d3.event.sourceEvent == tou
-        // console.log(d3.event.sourceEvent)
-        var that = env;
-        // that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
-        that.drag = false;
-        // console.log('HEY', env, this)
-        // d3.event.sourceEvent.stopPropagation();
-        // d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
+    dragstarted(event) {
+     
+        var that = this;
 
-        // console.log('GO DRAG', that.props.isGallery)
-        if (that.props.isGallery == false) that.props.dragItem(true);
-        // d3.event.preventDefault();
-        that.timerPress = setTimeout(function(){
-            console.log('PRESS')
-            if (that.drag == false){
-                // d3.event.preventDefault();
-                // that.expandSelection(that.props.stroke.id);
-                that.colorForHolding(true);
-                that.props.holdGuide(that.props.stroke.id);
-                // console.log(that.props)
-                that.press = true;
-                that.props.dragItem(false);
-                that.drag = false;
-            }
-        }, 500)
+       
+        // if (that.props.isGallery == false) that.props.dragItem(true);
 
     }
 
-    dragged(env) {  
+    dragged(event) {  
         // console.log(d3.event)
-        var that = env;
-        that.drag = true;
-        // console.log('GO')
-        
+        var that = this;
 
-        // var dist = distance(env.startPosition.x, d3.event.x, env.startPosition.y, d3.event.y);
 
-        // console.log(dist)
-        // if (dist > 10){
-        clearTimeout(that.timerPress);
-        d3.event.preventDefault();
-        var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
+        var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
         // console.log(transform)
-        var offsetX = d3.event.x - that.lastPosition.x;
-        var offsetY = d3.event.y - that.lastPosition.y;
+        var offsetX = event.srcEvent.x - that.lastPosition.x;
+        var offsetY = event.srcEvent.y - that.lastPosition.y;
         var X = offsetX + transform.translateX;
         var Y = offsetY + transform.translateY;
-        d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
 
 
             
-            var linesAttached = env.props.stroke.linesAttached;
+            var linesAttached = that.props.stroke.linesAttached;
             for (var i in linesAttached){
                 var line = linesAttached[i];
                 var identifier = 'item-'+line;
@@ -174,49 +204,21 @@ class Guide extends Component {
         //     .attr('cx', X)
         //     .attr('cy', Y)
         //     .attr('r', 10)
-        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+        that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
     }
-    dragended(env) {
-        var that = env;
+    dragended(event) {
+        var that = this;
         that.drag = false;
-        // d3.select('#item-'+env.props.stroke.id).classed("dragging", false);
 
-        // To say nothing is holded anymore and dragged
-        clearTimeout(that.timerPress);
-        
         if (that.props.isGallery == false){
-            that.props.dragItem(false);
-            that.props.holdGuide(false);
+            // that.props.dragItem(false);
             that.colorForHolding(false)
-       
 
-        
-            // TO detect the tap
-            var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-            var time = Date.now() -  that.startPosition['time'];
-
-            // console.log(dist, time)
-            if (dist < 10 && time < 100){
-                console.log('GO',this.props.stroke.id)
-                clearTimeout(that.timerPress);
-
-                that.props.setGuideTapped({'item': this.props.stroke.id});
-                
-                // console.log('Thats a tap')
-                // var BBox = _getBBox('item-'+env.props.stroke.id)
-                // that.props.shouldOpenMenu({
-                //     'id': guid(),
-                //     'shouldOpen': true,
-                //     'position': [BBox.x, BBox.y],
-                //     'idGuide': env.props.stroke.id,
-                //     'idLines': []//env.props.stroke.data.linesAttached
-                // })
-            }
         }
         // console.log(that.props.isGallery, d3.eventx)
         if (that.props.isGallery){
-            if (d3.event.x < 450){
+            if (event.srcEvent.x < 450){
                 // console.log('HEY')
                 var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
                 that.props.addGuideToSticky({'guide':that.props.stroke, 'position':[transform.translateX, transform.translateY]});
@@ -266,6 +268,7 @@ class Guide extends Component {
      */
     colorForHolding(isIt){
         var that = this;
+        // console.log('GO')
         d3.select('#rect-'+this.props.stroke.id)
             .attr('width', 0)
             .attr('height', 0)

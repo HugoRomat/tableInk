@@ -1,5 +1,6 @@
 import { guid, mergeRectangles, calculateBB, getTransformation } from "../Helper";
 import * as d3 from 'd3';
+import textCursor from '../../../../static/cursorText.png'
 
 export class SpeechRecognitionClass { 
     constructor(document) { 
@@ -17,6 +18,8 @@ export class SpeechRecognitionClass {
         this.recognition.interimResults = false;
         this.recognition.maxAlternatives = 10;
         this.isStop = false;
+
+        this.positionTyping = {'x':0, 'y':0}
     } 
     creatingEvent(texte){
         const eventAwesome = new CustomEvent('speech', {
@@ -81,6 +84,56 @@ export class SpeechRecognitionClass {
         d3.select('#circlefeedBackVoice').attr('opacity', 0)
         .attr('cx', 0)
         .attr('cy', 0)
+    }
+    setPositionTyping(position){
+        this.positionTyping.x = position[0]+20;
+        this.positionTyping.y = position[1] -20;
+        this.alphabet.forEach((d)=>{
+            this.computeLinesPlaceHOlder(d)
+        })
+        this.oldValue = 0;
+
+        this.addPointer()
+    }
+    addPointer(){
+        var that = this;
+        d3.select('#textCursor').remove();
+        var image = d3.select('svg').append("svg:image")
+            .attr('x', that.positionTyping.x-40)
+            .attr('y', that.positionTyping.y)
+            .attr('width', 50)
+            .attr('height', 50)
+            .attr('id', 'textCursor')
+            .attr("xlink:href", textCursor)
+
+        setTimeout(function(){
+            d3.select('#textCursor').remove();
+        }, 3000)
+    }
+    addTextTyping(letter){
+        
+        var simplifiedTexte = letter.toLowerCase();
+        var index = this.alphabet.indexOf(this.alphabet.find(x => x.id == simplifiedTexte));
+        if (simplifiedTexte == ' '){
+            this.positionTyping.x += 20;
+        }
+        else if (index > -1 && this.alphabet[index]['BBox'] != undefined){
+            var BBox = this.alphabet[index]['BBox'];
+            this.positionTyping.x += this.oldValue;
+            this.oldValue = BBox.width;
+
+            this.alphabet[index].lines.forEach((d)=>{
+                var data = {
+                    'points': d.points, 
+                    'data': {'class':[], 'sizeStroke': this.document.sizePen, 'colorStroke': this.document.colorPen}, 
+                    'id': guid(), 
+                    'device':this.document.props.UIid,
+                    'isAlphabet': true,
+                    'position': [this.positionTyping.x,this.positionTyping.y],
+                }
+                this.document.addStrokeFilledData(data);
+            })
+        }
     }
     addText(texte, position){
         // console.log(texte)
