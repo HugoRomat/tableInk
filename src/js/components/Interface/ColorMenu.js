@@ -14,6 +14,7 @@ import alphabet from './../../../../static/alphabet.png';
 import highlighter from './../../../../static/higlighter.png';
 import pen from './../../../../static/pen2.png';
 import pattern from './../../../../static/patternPen.png';
+import functionPen from './../../../../static/functionPen.png';
 
 
 import { 
@@ -21,6 +22,7 @@ import {
 } from '../../actions';
 import { guid, _getBBoxPromise } from "../Helper";
 import Lines from "./Lines";
+import { SpeechRecognitionClass } from "../SpeechReognition/Speech";
 
 
 const mapDispatchToProps = { 
@@ -40,8 +42,11 @@ class ColorsMenu extends Component {
         this.state = {
             'patternLines': []
         }
-
+        this.speech = new SpeechRecognitionClass(this);
         this.colors = ['#ffc125', '#ff7f00', '#dc143c', '#8B4513', "#1e90ff", '#00c5cd', "#3cb371", "#BA55D3", "#000000"];
+
+
+        // this.knownCommands = 
     }
     componentDidMount(){
         var that = this;
@@ -147,15 +152,60 @@ class ColorsMenu extends Component {
         })
         d3.select('#pattern').on("pointerdown", function(d, index){
             if (d3.event.pointerType == 'touch'){
-                // d3.event.stopPropagation();
                 that.props.selectPen({'type': "pattern"})
                 that.selectThisPen(this);
                 that.movePens();
-
-                
             }
-            // console.log('LCIK', d3.event)
-            
+        })
+
+
+        var el = document.getElementById('function');
+        this.mc = new Hammer.Manager(el);
+        var press = new Hammer.Press({time: 250});
+        var tap = new Hammer.Tap();
+        this.mc.add(press);
+        this.mc.add(tap);
+        tap.recognizeWith(press);
+        this.mc.on("tap", function(ev) {
+          
+            that.props.selectPen({'type': "function"})
+            that.selectThisPen(ev.target.parentNode);
+            that.movePens();   
+        })
+        this.mc.on("press", function(ev) {
+            // console.log(ev);
+            // console.log('start')c
+            d3.select(ev.target.parentNode).transition().duration(500).style('right', '100px');
+            that.speech.getSpeechReco().then((speech)=>{
+                console.log(speech)
+                let result = speech.match(/highlight/g);
+                if (result != null){
+                    var color = ['red', 'blue', 'green'];
+                    var isColor = color.filter((d)=>  (speech.split(' ').indexOf(d) > -1) ? d : null);
+                    if (isColor.length > 0) that.props.setCommandFunction({'command': 'highlight', 'args': isColor[0]});
+                }
+                (speech.match(/sum/g)) ? that.props.setCommandFunction({'command': 'SUM', 'args': []}) : null
+                (speech.match(/AVG/g)) ? that.props.setCommandFunction({'command': 'AVG', 'args': []}) :null
+                
+
+                d3.select('#containerFunction').html(speech)
+            })
+        })
+        this.mc.on("pressup", function(ev) {
+            d3.select(ev.target.parentNode).transition().duration(500).style('right', '0px');
+            that.speech.stop();
+        })
+        
+
+        // d3.select('#function').on("pointerdown", function(d, index){
+        //     if (d3.event.pointerType == 'touch'){
+        //         that.props.selectPen({'type': "function"})
+        //         that.selectThisPen(this);
+        //         that.movePens();    
+        //     }
+        // })
+        d3.select('#function').on('contextmenu', function(){
+            d3.event.preventDefault();
         })
 
 
@@ -238,6 +288,7 @@ class ColorsMenu extends Component {
             .attr('stroke-linejoin', "round")
     }
     selectThisPen(element){
+        // console.log(element)
         d3.selectAll('.pen').each(function (d){
             d3.select(this).attr('selected', 'false');
         })
@@ -276,6 +327,9 @@ class ColorsMenu extends Component {
 
                <div id="pens" > 
                     <div className="pen" id="inking"><img src={pen} /></div>
+                    <div className="pen" id="function"><img src={functionPen} />
+                        <div id='containerFunction'> AVG </div>
+                    </div>
                     <div className="pen" id="highlighting"><img src={highlighter} /></div>
                     <div className="pen" id="pattern"><img src={pattern} />
                         <svg id="patternSVG">

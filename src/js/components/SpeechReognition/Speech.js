@@ -44,6 +44,23 @@ export class SpeechRecognitionClass {
     setAlphabet(alphabet){
         this.alphabet =  JSON.parse(JSON.stringify(alphabet));
     }
+    getSpeechReco(){
+        var that = this;
+        return new Promise(function(resolve, reject) {
+            that.recognition.start();
+            that.recognition.onresult = function(event) {
+                // console.log(event)
+                var texte = event.results[0][0].transcript;
+                that.stop();
+                resolve(texte)
+                // console.log(texte)
+                
+            }
+            setTimeout(function(){
+                that.stop();
+            }, 10000) 
+        })
+    }
     start(position){
         console.log('START')
         var that = this;
@@ -70,6 +87,7 @@ export class SpeechRecognitionClass {
             console.log(texte)
             // position[0] += 15
             that.addText(texte, position)
+            that.stop();
             // that.document.addText({
             //     'id': guid(),
             //     'content': texte.toLowerCase(),
@@ -93,7 +111,7 @@ export class SpeechRecognitionClass {
         })
         this.oldValue = 0;
 
-        this.addPointer()
+        // this.addPointer()
     }
     addPointer(){
         var that = this;

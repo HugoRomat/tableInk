@@ -32,6 +32,7 @@ export function distance(x1, x2, y1, y2){
     var c = Math.sqrt( a*a + b*b );
     return c;
 }
+
 export async function getBoundinxBoxLines(lines){
     // var BB = await _getBBoxPromise('item-'+strokeId);
     // return new Promise((resolve, reject) => {
@@ -352,6 +353,15 @@ export function drawLine(x1, y1, x2, y2, color){
     .attr('x2', x2)
     .attr('y2', y2)
     .attr('stroke', color)
+
+}
+export function drawRect(x, y, width, height, color){
+    d3.select('svg').append('rect')
+    .attr('x', x)
+    .attr('y', y)
+    .attr('width', width)
+    .attr('height', height)
+    .attr('fill', color)
 
 }
 export function drawCircle(x, y, r, color){

@@ -42,7 +42,7 @@ const initialState = {
 
 
 
-var alphabet = 'abcdefghijklmnopqrstuvwxyz '.split('');
+var alphabet = 'abcdefghijklmnopqrstuvwxyz 1234567890?.!-:)(;'.split('');
 var lettres = [];
 
 alphabet.forEach((d)=>{
@@ -63,7 +63,7 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.groupLines));
+    // console.log(JSON.stringify(state.lettres));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -174,12 +174,12 @@ initialState.sketchLines = strokes
 
 
       case 'SET_UI_ID':
-        state.UIid = action.data;
+        // state.UIid = action.data;
 
-        console.log(action.data, state.lettres)
+        // console.log(action.data, state.lettres)
 
-        if (action.data == 0) state.lettres = alphabetPerso0;
-        else if (action.data == 1) state.lettres = alphabetPerso1;
+        // if (action.data == 0) state.lettres = alphabetPerso0;
+        // else if (action.data == 1) state.lettres = alphabetPerso1;
         return state;
 
 

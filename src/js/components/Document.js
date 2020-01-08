@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax } from "./Helper";
+import { distance, guid, drawRect, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 
@@ -41,6 +41,7 @@ import { SpeechRecognitionClass } from "./SpeechReognition/Speech";
 import Textes from "./Textes/Textes";
 import GalleryItmes from "./Gallery/GalleryItmes";
 import Tags from "./Tags/Tags";
+import { recognizeInk } from "./InkRecognition/InkRecognition";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -120,6 +121,9 @@ class Document extends Component {
         this.gridSize = [10 ,10]    ;
         
         this.isPatternPen = false;
+        this.isFunctionPen = false;
+        this.commandFunction = {'command': 'AVG', 'args': []};
+        
         this.patternPen = [];
         this.patternBBOX = null;
         this.straightLine = false;
@@ -150,7 +154,7 @@ class Document extends Component {
         // d3.select('#panItems').attr("transform", 'translate(0,0)')
 
         this.speech = new SpeechRecognitionClass(this);
-
+        this.speech.setAlphabet(this.props.lettres)
 
 
         
@@ -269,12 +273,16 @@ class Document extends Component {
         var el = document.getElementById("leftPart");
         this.mc = new Hammer.Manager(el);
 
-        // var press = new Hammer.Press({time: 250});
+        var press = new Hammer.Press({time: 250});
         var pan = new Hammer.Pan({'pointers':1, threshold: 1});
         var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
         this.mc.add(pan);
         this.mc.add(swipe);
+        this.mc.add(press);
+
         pan.recognizeWith(swipe);
+        pan.recognizeWith(press);
+
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 that.pointerDown(ev.srcEvent)
@@ -307,9 +315,23 @@ class Document extends Component {
                 // }
             }
         })
+        this.mc.on("press", function(ev) {
+            ev.srcEvent.preventDefault();
+            if (ev.pointers[0]['pointerType'] == 'touch'){
+                that.voiceQuery();
+            }
+        })
+        this.mc.on("pressup", function(ev) {
+            ev.srcEvent.preventDefault();
+        })
+        
+        d3.select('#leftPart').on('contextmenu', function(){
+            d3.event.preventDefault();
+        })
     }
     listenHammer(){
         var that = this;
+       
         var el = document.getElementById("eventReceiver");
         this.mc = new Hammer.Manager(el);
 
@@ -365,29 +387,27 @@ class Document extends Component {
 
         
         this.mc.on("press", function(ev) {
-            ev.preventDefault();
+            ev.srcEvent.preventDefault();
             // console.log('PRESS', )
-            if (ev.pointers[0]['pointerType'] == 'touch'){ //|| ev.pointers[0]['pointerType'] == 'pen'){
-                console.log('PRESS')
-                ev.srcEvent.preventDefault();
+            if (ev.pointers[0]['pointerType'] == 'touch'){
+               
                 that.press = true;
                 // console.log(that.props.lettres)
                 that.speech.setAlphabet(that.props.lettres)
                 that.speech.start({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
-
                 
             }
         })
         this.mc.on("pressup", function(ev) {
-            console.log('PRESSUP')
-              ev.preventDefault();
-                // console.log(that)
-                if (ev.pointers[0]['pointerType'] == 'touch' ){//|| ev.pointers[0]['pointerType'] == 'pen'){
-                    that.press = false;
-                    console.log(that.speech)
-                    that.speech.stop();
-                    
-                }
+            // console.log('PRESSUP')
+            //   ev.preventDefault();
+            // console.log(that)
+            if (ev.pointers[0]['pointerType'] == 'touch' ){//|| ev.pointers[0]['pointerType'] == 'pen'){
+                that.press = false;
+                console.log(that.speech)
+                that.speech.stop();
+                
+            }
         })
         this.mc.on("tap", function(ev) {
             if (ev.pointers[0]['pointerType'] == 'touch' ){
@@ -594,7 +614,6 @@ class Document extends Component {
                 that.drawTempStroke();
             }
             if (that.straightLine != false){
-                // console.log('GOOO')
                 that.drawTempStrokeStraightLine();
             }
             else if (that.drawing){
@@ -652,6 +671,27 @@ class Document extends Component {
                 that.addStrokeGuide(); 
                 that.sticky = false;
             }*/
+            else if (that.isFunctionPen){
+                var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                // console.log(sourceEvent)
+                var penPosition = JSON.parse(JSON.stringify([sourceEvent.srcEvent.x - transform.translateX, sourceEvent.srcEvent.y - transform.translateY]))
+                var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
+                that.findCloseStrokes().then((closelements)=>{
+                    that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+
+                        recognizeInk(this, elementLines).then((ink)=> {
+
+                            that.makeActionsFunctionPen(penPosition, ink, elementLines);
+                            
+                        })
+                        
+
+                        
+                        // console.log(elementLines)
+                        
+                    })
+                })
+            }
             /** Copie un guide a gauche //DUPLICATION */
             else if (that.sticky && that.isGuideHold){
                 
@@ -1280,7 +1320,11 @@ class Document extends Component {
         // console.log(data)
         this.props.addSketchLine(data);
     }
-
+    voiceQuery(){
+        this.speech.getSpeechReco().then((speech)=>{
+            console.log('HEY', speech)
+        })
+    }
     drawEraseStroke(){
         // console.log('HEY')
         var that = this;
@@ -1308,6 +1352,41 @@ class Document extends Component {
             var id = element.id.split('-')[1];
             // console.log(id)
             this.props.removeSketchLines([id]);
+        }
+    }
+    makeActionsFunctionPen(penPosition, ink, elementLines){
+        
+        var that = this;
+        console.log(ink, that.commandFunction)
+        /** For average */
+        if (that.commandFunction.command == 'AVG'){
+            ink = ink.map((d)=> parseFloat(d))
+            var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+            var result = String(average(ink)).split('');
+            that.speech.setPositionTyping([penPosition[0], penPosition[1]])
+            // drawCircle(penPosition[0], penPosition[1], 10, 'red')
+            result.forEach((d)=>{
+                
+                that.speech.addTextTyping(d)
+            })
+        }
+        /** For average */
+        if (that.commandFunction.command == 'SUM'){
+            ink = ink.map((d)=> parseFloat(d))
+            var average = arr => arr.reduce( ( p, c ) => p + c, 0 );
+            var result = String(average(ink)).split('');
+            that.speech.setPositionTyping([penPosition[0], penPosition[1]])
+            // drawCircle(penPosition[0], penPosition[1], 10, 'red')
+            result.forEach((d)=> that.speech.addTextTyping(d))
+        }
+        else if (that.commandFunction.command == 'highlight'){
+            var arrayPromise = elementLines.map((d)=> getBoundinxBoxLines(d));
+            var color = that.commandFunction.args;
+            var c = d3.color(color)
+            c.opacity = 0.2;
+            Promise.all(arrayPromise).then(function(values) {
+                values.forEach((BB)=> drawRect(BB.x, BB.y, BB.width, BB.height, c.toString()))
+            })
         }
     }
     isSameLine = async() => {
@@ -1435,17 +1514,27 @@ class Document extends Component {
         console.log(d)
         this.linesInselection = d;
     }
+    setCommandFunction = (d) => {
+        // console.log(d)
+        this.commandFunction = d;
+    }
     openAlphabet = (d) => {
         // console.log('HEY')
         this.setState({shouldOpenAlphabet:d});
     }
     selectPen = (d) => {
         // console.log(d)
-        if (d.type == "pattern"){
+        if (d.type == "function"){
+            this.isFunctionPen = true;
+            this.isPatternPen = false;
+        }
+        else if (d.type == "pattern"){
             this.isPatternPen = true;
+            this.isFunctionPen = false;
         }
         else {
             this.isPatternPen = false;
+            this.isFunctionPen = false;
 
             var sizePen = 2;
             if (d.type == "highlighter") sizePen = 15
@@ -1635,7 +1724,7 @@ class Document extends Component {
                     sizeStroke = {this.state.sizeStroke}
 
                     setPatternPen = {this.setPatternPen}
-
+                    setCommandFunction = {this.setCommandFunction}
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 
                 />

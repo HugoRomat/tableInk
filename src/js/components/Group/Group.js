@@ -49,8 +49,10 @@ class Group extends Component {
         this.press = false;
 
         this.strokePath = JSON.parse(JSON.stringify(this.props.group.stroke['points']))
-
+        
         this.BBOxPathMain = null;
+
+        // console.log(this.props.group.stroke['points'])
         // setTimeout(()=> {
         
         // }, 3000)
@@ -129,8 +131,7 @@ class Group extends Component {
             }
         })
         this.mc.on("panstart", function(event) {
-           console.log(event.pointers[0].pointerType)
-            if (event.pointers[0].pointerType == 'touch' || event.pointers[0].pointerType == 'pen' ){
+            if (event.pointers[0].pointerType == 'touch'){
                 that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
                 that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
                 that.dragstarted(event);
@@ -147,34 +148,41 @@ class Group extends Component {
                         that.allBoundingBox.width += 100;
                         that.allBoundingBox.height += 100;
                     })
-
-                // }
-                
                 _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
                     that.BBOxPathMain  = d;
-                    console.log('HEY')
+                })
+            }  
+            if (event.pointers[0].pointerType == 'pen' ){
+                that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
+                that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+                _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
+                    that.BBOxPathMain  = d;
                 })
             }
         })
         this.mc.on("panmove", function(ev) {
            
                 
-                /** SI C'EST UNE STOKE QUE JE TIENS */
-                // if (ev.pointers.length > 1){
+            /** Si c'est pen sur stroke */
             if (ev.pointers[0].pointerType == 'pen' ){
-
-                    // console.log(that.BBOxPathMain)
-                    var X = ev.pointers[0].x - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
-                    var Y = ev.pointers[0].y - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
+                var X = ev.pointers[0].x - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
+                var Y = ev.pointers[0].y - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
+               
+                // drawCircle(that.BBOxPathMain.x, that.BBOxPathMain.y + that.BBOxPathMain.height, 10, 'red')
+                // console.log(Y+ that.BBOxPathMain.y, that.BBOxPathMain.y + that.BBOxPathMain.height)
+                if (Y+ that.BBOxPathMain.y > that.BBOxPathMain.y + that.BBOxPathMain.height){
                     that.strokePath.push([X,Y])
                     that.createStroke();
+                } else {
+                    // var lastPoint = 
+                    // that.strokePath.push([X,Y])
+                }
 
+                
             }
-                // } else {
             if (ev.pointers[0].pointerType == 'touch' ){
-                    that.findIntersection(that.allBoundingBox, ev);
-                    that.dragged(ev);
-                // }
+                that.findIntersection(that.allBoundingBox, ev);
+                that.dragged(ev);
             }
         })
         this.mc.on("panend", function(ev) {
