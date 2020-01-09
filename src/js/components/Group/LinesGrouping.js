@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, distToSegment, guid, getBoundinxBoxEveryone, getBoundinxBoxLines } from "./../Helper";
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, distToSegment, guid, getBoundinxBoxEveryone, getBoundinxBoxLines, groupBy } from "./../Helper";
 
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
@@ -114,12 +114,14 @@ class LinesGrouping extends Component {
             transformDrag = getTransformation(d3.select('#group-'+ that.props.id).attr('transform'));
         }
 
+        
         d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id)
             .attr('width', that.BBox.width + 80)
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
             .attr('fill', 'rgba(255,0,0,0.3)')
+            
     }
     removeContainer(){
         var that = this;
@@ -238,7 +240,7 @@ class LinesGrouping extends Component {
             var transformLine = getTransformation(d3.select('#item-'+ stroke.id).attr('transform'));
             // console.log(transformLine, stroke.position)
             // return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]-offsetYAlignement]}
-            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX , transformLine.translateY-offsetYAlignement]}
+            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX + 100, transformLine.translateY-offsetYAlignement]}
         })
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
@@ -273,61 +275,117 @@ class LinesGrouping extends Component {
         
     }
     addPlaceHolder(){
-        // console.log(this.props.placeholders);
+        console.log(this.props.placeholders)
         var line = d3.line()
         var that = this;
 
+        var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
 
-        // console.log(this.BBox)
-        // var polygone = new Polygon(this.organizedCorners);
-        // var poly2 = polygone.offset(50);
-        // var array = poly2.points;
-        // console.log(array)
-        // showBboxBB(this.BBox, 'red')
-        // drawCircle(array[0]['x'], array[0]['y'], 10, 'blue')
-        // drawCircle(array[array.length-1]['x'], array[array.length-1]['y'], 10, 'blue')
+        if (placeHolderLine.lines.length > 0){
+            d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('path')
+                .data(placeHolderLine.lines).enter()
+                .append('path')
+                .attr('d', (d)=>line(d.data))
+                .attr('fill', 'none')
+                .attr('stroke', (d)=>d.colorStroke)
+                .attr('stroke-width', (d)=>d.sizeStroke)
 
-        // console.log('GO  PLACEHOLDER')
-        d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path').remove()
-        this.props.placeholders.forEach((d)=>{
-            // console.log(d)
-            // 
-            if (d.id == 'left' && d.lines.length > 0){
-                // console.log(d)
-                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).selectAll('path')
-                    .data(d.lines).enter()
-                    .append('path')
-                    .attr('d', (d)=>line(d.data))
+            var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+            var X = this.BBox.x - transformDrag.translateX - 50; 
+            var Y = this.BBox.y - transformDrag.translateY;
+            d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+        }
+
+        
+
+        var placeHolderText = this.props.placeholders.find(x => x.id == 'backgroundText');
+        if (placeHolderText != null && placeHolderText.lines.length > 0){
+            var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+            const grouped = groupBy(placeHolderText.lines, line => line.type);
+            var scale = grouped.get("normal");
+            var pattern = grouped.get("pattern");
+            // console.log(pattern, placeHolderText)
+            var myScaleX = d3.scaleLinear().domain([placeHolderText.BBox.x, placeHolderText.BBox.x + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
+            var myScaleY = d3.scaleLinear().domain([placeHolderText.BBox.y, placeHolderText.BBox.y + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
+
+    
+            if (scale.length > 0){
+                // console.log('GOO')
+                var lines = JSON.parse(JSON.stringify(scale))
+                lines.forEach((line)=>{
+                    line.data = line.data.map((e)=> {
+                        return [myScaleX(e[0] + placeHolderText.BBox.x) - transform.translateX, myScaleY(e[1] + placeHolderText.BBox.y) - transform.translateY]
+                    })
+                })
+                // console.log(lines)
+                for (var i = 0; i < lines.length; i += 1){
+                    var myLine = lines[i]
+                    d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('path')
+                    .attr('d', ()=>line(myLine.data))
                     .attr('fill', 'none')
-                    .attr('stroke', (d)=>d.colorStroke)
-                    .attr('stroke-width', (d)=>d.sizeStroke)
-                
-                
-                var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-                var X = this.BBox.x - transformDrag.translateX - d.BBox.width*2;
-                var Y = this.BBox.y - transformDrag.translateY- d.BBox.height/2 + this.BBox.height/2;
-
-                // console.log(X, Y)
-                // var cx = d.BBox.x + d.BBox.width/2;
-                // var cy = d.BBox.y + d.BBox.height/2;
-                
-                // //FOR SCALING
-                // var scale = 0.7;
-                // var x = (-cx * (scale - 1)) ;
-                // var y = (-cy * (scale - 1)) ;
-                // console.log(d)
-                d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
-                // d3.select('#placeHolderLeft-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+x+','+y+')scale(0.7)')
-
+                    .attr('stroke', ()=> myLine.colorStroke )
+                    .attr('stroke-width', (e)=>{return myLine.sizeStroke + (that.BBox.width / placeHolderText.BBox.width);})
+                }
             }
+            if (pattern.length > 0){
+                   
+                pattern.forEach((myPattern, i)=>{
+                    var container = d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id)
+                    var myLine = JSON.parse(JSON.stringify(myPattern['data']))
+                    var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + placeHolderText.BBox.x) - transform.translateX, myScaleY(e[1] + placeHolderText.BBox.y) - transform.translateY]})
+                        
+                        
+                    var pathSelection = d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id)
+                        .append('path')
+                        .attr('id', 'pathLine-'+that.props.id+'-'+i)
+                        .attr('d', (d)=>line(myNewLine))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> myPattern.colorStroke )
+                        .attr('stroke-width', 1)
+                        .attr('opacity', '0')
+    
+                        var step = myPattern.pattern.BBox.width;
+                        var path = pathSelection.node()
+                        var length = path.getTotalLength();
+                        // console.log(length, path)
+                        for (var i = 0; i < length; i += step){
+                            var point = path.getPointAtLength(i);
+                            var X = point['x']// + that.props.parent.position[0];
+                            var Y = point['y']// + that.props.parent.position[1];
+                            
+                            var container = d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).append('g').attr('transform', 'translate('+X+','+Y+')')
+                            for (var j = 0; j < myPattern.pattern.strokes.length; j += 1){
+                                var element = myPattern.pattern.strokes[j];
+                                container.append('g').attr('transform', 'translate('+element.position[0]+','+element.position[1]+')')
+                                .append('path')
+                                .attr('d', (d)=>line(element.points))
+                                .attr('fill', 'none')
+                                .attr('stroke', (d)=> element.data.colorStroke )
+                                .attr('stroke-width', element.data.sizeStroke)
+                            }    
+                        }
+    
+                })
+            }
+        }
 
-        })
-        // if (this.props.placeholders)
+        
+        
+
+
     }
     render() {
         return (
             <g transform={`translate(0,0)`}>
-               <g id={'placeHolderLeft-'+this.props.iteration +'-'+this.props.id} >
+               <g id={'placeHolderBulletLine-'+this.props.iteration +'-'+this.props.id} >
+                   {/* <g></g> */}
+               </g>
+
+               <g id={'placeHolderBackgroundLine-'+this.props.iteration +'-'+this.props.id} >
+                   {/* <g></g> */}
+               </g>
+
+               <g id={'placeHolderBackgroundLinePattern-'+this.props.iteration +'-'+this.props.id} >
                    {/* <g></g> */}
                </g>
                

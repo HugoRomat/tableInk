@@ -12,7 +12,7 @@ import strokes from './../usecases/strokes.json';
 import group from './../usecases/groupLines.json';
 import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
-import sticky from './../usecases/hello.json';
+import sticky from './../usecases/newSticky.json';
 
 
 function importAll(r) { return r.keys().map(r); }
@@ -34,7 +34,8 @@ const initialState = {
     'tags':[],
     'tagsGroup':[],
     'tables': [],
-    'grid': false
+    'grid': false,
+    'voiceQueries': []
   };
 
     // console.log(alphabetPerso)
@@ -63,7 +64,7 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.lettres));
+    // console.log(JSON.stringify(state.stickyLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -126,6 +127,8 @@ initialState.sketchLines = strokes
             
             return state;
     
+      case 'ADD_TAG': return {  ...state, tags: [ ...state.tags, action.data] };
+      case 'ADD_VOICE_QUERIES': return {  ...state, voiceQueries: [ ...state.voiceQueries, action.data] };
     
       case 'CREATE_TABLES':
         return {  ...state, tables: [ ...state.tables, action.data] };

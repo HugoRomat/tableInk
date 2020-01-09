@@ -29,6 +29,9 @@ rect{
     background: white;
    
 }
+path{
+    stroke-linejoin: "round";
+}
 #containerFunction{
     position: absolute;
     top: 40%;

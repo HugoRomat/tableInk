@@ -184,8 +184,8 @@ class ColorsMenu extends Component {
                     var isColor = color.filter((d)=>  (speech.split(' ').indexOf(d) > -1) ? d : null);
                     if (isColor.length > 0) that.props.setCommandFunction({'command': 'highlight', 'args': isColor[0]});
                 }
-                (speech.match(/sum/g)) ? that.props.setCommandFunction({'command': 'SUM', 'args': []}) : null
-                (speech.match(/AVG/g)) ? that.props.setCommandFunction({'command': 'AVG', 'args': []}) :null
+                else if(speech.match(/sum/g)) {that.props.setCommandFunction({'command': 'SUM', 'args': []}) }
+                else if(speech.match(/AVG/g)) {that.props.setCommandFunction({'command': 'AVG', 'args': []})} 
                 
 
                 d3.select('#containerFunction').html(speech)

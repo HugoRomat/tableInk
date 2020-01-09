@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { distance, guid, drawRect, whoIsInside, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
+import {d3sketchy} from './../../../customModules/d3.sketchy'
 
 import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
@@ -29,7 +30,9 @@ import {
     addText,
     setGrid,
     addLineToGroup,
-    addLineToExistingGroup
+    addLineToExistingGroup,
+    addTag,
+    addVoiceQueries
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -42,6 +45,7 @@ import Textes from "./Textes/Textes";
 import GalleryItmes from "./Gallery/GalleryItmes";
 import Tags from "./Tags/Tags";
 import { recognizeInk } from "./InkRecognition/InkRecognition";
+import VoiceQuerys from "./VoiceQuery/VoiceQuerys";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -54,7 +58,9 @@ const mapDispatchToProps = {
     addText,
     setGrid,
     addLineToGroup,
-    addLineToExistingGroup
+    addLineToExistingGroup,
+    addTag,
+    addVoiceQueries
 };
 
 
@@ -103,7 +109,8 @@ class Document extends Component {
             
             colorStroke: 'black',
             sizeStroke: 2,
-            tagHold: false
+            tagHold: false,
+            'penType': 'normal'
         }
 
         this.swipe = false;
@@ -202,6 +209,24 @@ class Document extends Component {
         // this.grid = {'x':0, 'y':0, 'width':window.innerWidth*2, 'height':window.innerHeight*2};
         // this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
         
+        // <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} />
+
+        var sketch = d3sketchy()
+        var rec = sketch.rectStroke({ x:0, y:-100, width:0, height:window.innerWidth+100, density: 1, sketch:10});
+            
+
+        var flattened = [].concat(...rec)
+        d3.select('#leftPart').selectAll('path')
+            .data(flattened).enter()
+            .append('path')
+            .attr('d', (d)=>{ return d })
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '0.3')
+            .style('stroke-linecap', 'round')
+            .style('stroke-linejoin', 'round')
+
+            
     }
     removeGrid(){
         d3.selectAll('.line').remove();
@@ -318,7 +343,7 @@ class Document extends Component {
         this.mc.on("press", function(ev) {
             ev.srcEvent.preventDefault();
             if (ev.pointers[0]['pointerType'] == 'touch'){
-                that.voiceQuery();
+                that.voiceQuery({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
             }
         })
         this.mc.on("pressup", function(ev) {
@@ -487,14 +512,14 @@ class Document extends Component {
         // console.log('GO', window.innerWidth)
         if (this.stateLeftBar == 'normal'){
             d3.select('.lineRed').transition().duration(1000).style('left', window.innerWidth);
-            d3.select('#leftPart').transition().duration(1000).attr('width', window.innerWidth + 'px');
+            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+window.innerWidth +','+0+')');
             d3.select('#nameApp').transition().duration(1000).style('opacity', '0'); 
             this.setState({'openGalleryModel': true});
             this.stateLeftBar = 'gallery';
         }
         else if (this.stateLeftBar == 'small'){
             d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
-            d3.select('#leftPart').transition().duration(1000).attr('width', that.marginOffset + 'px');
+            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
             d3.select('#nameApp').transition().duration(1000).style('left', '323px');
 
             that.arrangeGuideNormal();
@@ -508,7 +533,7 @@ class Document extends Component {
 
         if (this.stateLeftBar == 'gallery'){
             d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
-            d3.select('#leftPart').transition().duration(1000).attr('width', that.marginOffset + 'px');
+            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
             d3.select('#nameApp').transition().duration(1000).style('opacity', '1');
             // d3.select('#nameApp').transition().duration(1000).style('left', '323px');
 
@@ -517,7 +542,7 @@ class Document extends Component {
         }
         else if (this.stateLeftBar == 'normal'){
             d3.select('.lineRed').transition().duration(1000).style('left',  '100px');
-            d3.select('#leftPart').transition().duration(1000).attr('width', '100px');
+            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate(100,'+0+')');
             d3.select('#nameApp').transition().duration(1000).style('left', '123px');
 
             that.arrangeGuideSmall();
@@ -664,6 +689,10 @@ class Document extends Component {
             if (that.press){
 
             }
+            else if (that.sticky && that.isGuideHold == false){
+                // that.addStrokeTag(); 
+                that.addStrokeGuide(); 
+            }
             /** Instancie un guide vide  */
             /*else if (that.sticky && that.isGuideHold == false){
                 // console.log(length)
@@ -696,7 +725,7 @@ class Document extends Component {
             else if (that.sticky && that.isGuideHold){
                 
                 that.addStrokeGuideCopy(this.isGuideHold, event); 
-                that.sticky = false;
+                // that.sticky = false;
 
 
             }
@@ -1139,6 +1168,25 @@ class Document extends Component {
         this.props.addStickyLines(sticky);
         // });
     }
+    /** Instantiate an empty Tag in the margin */
+    addStrokeTag(){
+        var id = guid();
+        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        var data = {
+            'id': id,
+            'width':100,
+            'height':100,
+            'placeHolder': [
+                {'id':'left', 'data': {}, 'lines':[]},
+                {'id':'right', 'data': {}, 'lines':[]}
+            ],
+            'position': [firstPoint[0],firstPoint[1]],
+            'textPosition': {'where': 'right', 'position': [25,20]}
+            
+        }
+        this.props.addTag(data)
+    }
+    /** Instantiate an empty guide in the margin */
     addStrokeGuide(){
         var id = guid();
         var that = this;
@@ -1183,14 +1231,14 @@ class Document extends Component {
             'points': arrayPoints, 
             'id': id,
             'paddingBetweenLines': 50,  
-            'width':100,
-            'height':100,
+            'width':200,
+            'height':150,
             'placeHolder': [
-                {'id':'outerBackground', 'data': {'method': 'scale'}, 'lines':[]},
-                {'id':'background', 'data': {'method': 'scale'}, 'lines':[]}
+                {'id':'outerBackground', 'position':[0,0], 'lines':[]},
+                {'id':'backgroundLine', 'position':[0,0], 'lines':[]},
+                {'id':'backgroundText', 'position':[0,0], 'lines':[]}
             ],
-            'position': [firstPoint[0],firstPoint[1]],
-            'textPosition': {'where': 'right', 'position': [25,20]},
+            'position': [firstPoint[0],firstPoint[1]]
             
         }
 
@@ -1320,9 +1368,32 @@ class Document extends Component {
         // console.log(data)
         this.props.addSketchLine(data);
     }
-    voiceQuery(){
+    /** 
+     * 1 - Get all groups lines
+     * 2 - Apply NLP on them to get the meaning
+    */
+    voiceQuery(position){
+
+        
+        // var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        /** Get all lines */
+        var allLines = [];
+        this.props.groupLines.forEach((d)=>{
+            allLines = allLines.concat(d.lines);
+        })
+       
         this.speech.getSpeechReco().then((speech)=>{
-            console.log('HEY', speech)
+
+            recognizeInk(this, allLines).then((ink)=> {
+                var data = {
+                    'id': guid(),
+                    'content': speech,
+                    'position': [position['x'],position['y']]
+                }
+                this.props.addVoiceQueries(data)
+            })
+            
+            // console.log('HEY', speech)
         })
     }
     drawEraseStroke(){
@@ -1527,15 +1598,17 @@ class Document extends Component {
         if (d.type == "function"){
             this.isFunctionPen = true;
             this.isPatternPen = false;
+            this.setState({'penType': 'function'})
         }
         else if (d.type == "pattern"){
             this.isPatternPen = true;
             this.isFunctionPen = false;
+            this.setState({'penType': 'pattern'})
         }
         else {
             this.isPatternPen = false;
             this.isFunctionPen = false;
-
+            this.setState({'penType': 'normal'})
             var sizePen = 2;
             if (d.type == "highlighter") sizePen = 15
             if (d.type == "ink") sizePen = 2
@@ -1569,6 +1642,7 @@ class Document extends Component {
                 f.position[1] -= position[1] //+ (e.height/2);
             })
             this.patternPen = d;
+
             console.log(d, old, position)
         })
         
@@ -1673,8 +1747,10 @@ class Document extends Component {
                         
                     </g>
 
-                   
-                    <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} />
+                   <g id="leftPart" transform={`translate(300,0)`}>
+                        <rect width={'100%'} height={'110%'} x={'-100%'} y={'-5%'}  fill={'white'} />
+                   </g>
+                    {/* <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} /> */}
                     {/* <image id="imageRect" width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'} href={paperTexture} /> */}
                      {/* //fill={'url(#grump_avatar)'}/> */}
 
@@ -1683,7 +1759,9 @@ class Document extends Component {
                    
 
                     {/* <image href="https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png" height="200" width="200"/> */}
-                    
+                    <VoiceQuerys
+
+                    />
                     <Guides 
                         holdGuide={this.holdGuide} 
                         dragItem={this.dragItem}
@@ -1691,6 +1769,9 @@ class Document extends Component {
 
                         colorStroke = {this.state.colorStroke}
                         sizeStroke = {this.state.sizeStroke}
+                        penType = {this.state.penType}
+
+                        patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
                     />
                     <Tags 
                     

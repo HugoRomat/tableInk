@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getTransformation, unionRectangles, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox, _getBBoxPromise, _getBBoxPan, guid, getBoundinxBoxLines } from "./../Helper";
+import { getTransformation, unionRectangles, showOmBB, showBboxBB, mergeRectangles, drawCircle, distance, _getBBox, _getBBoxPromise, _getBBoxPan, guid, getBoundinxBoxLines, groupBy } from "./../Helper";
 import { connect } from 'react-redux';
 // import shallowCompare from 'react-addons-shallow-compare';
 import {
@@ -458,45 +458,57 @@ class Group extends Component {
             var element = placeholder[j];
             var lines = element.lines;
             // console.log(lines)
-            if (lines.length > 0){
-                var arrayBBox = [];
-
-                var nodeId = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id');
-                var BB = await _getBBoxPromise(nodeId);
-                var transform = {'translateX': 0, 'translateY': 0}
-                transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
-
-
-                BB.x = BB.x - transform.translateX;
-                BB.y = BB.y - transform.translateY;
             
-                arrayBBox.push(BB);
-              
-                // SERT A TROUVER LE COIN EN HAUT A GAUCHE
-                var polygon;
-                if (arrayBBox.length > 1){
-                    polygon = mergeRectangles(arrayBBox[0], arrayBBox[1])
-                    for (var i = 2; i < arrayBBox.length; i++){
-                        polygon = mergeRectangles(polygon, arrayBBox[i])
-                    }
-                } else polygon = arrayBBox[0]
-                // showBboxBB(polygon, 'red');
-                // console.log(polygon);
-                //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
-                lines.forEach((d)=>{
-                    d.data = d.data.map((f)=> [f[0] - polygon.x, f[1] - polygon.y])
-                    // console.log(d.data)
-                })
-                element.BBox = polygon;
 
-                // console.log(lines)
-                // showBboxBB(polygon, 'red');
+            if (lines.length > 0){
+
+                // const grouped = groupBy(lines, line => line.type);
+                await this.computeBBoxInPlaceHolder(element, lines)
+
+                // var pattern = grouped.get("pattern")
+                // var scale = grouped.get("normal");
+                // if (pattern.length > 0){
+                //     var linesId = pattern.map((g)=> g.id)
+                //     // console.log('=================', element)
+                //     element.BBoxPattern = await getBoundinxBoxLines(linesId)
+                // }
+                // if (scale.length > 0){
+                //     var linesId = scale.map((g)=> g.id)
+                //     element.BBoxScale = await getBoundinxBoxLines(linesId)
+                // }
+
+                // console.log(grouped.get("pattern"), grouped.get("normal"));
             }
         };
         // console.log(JSON.parse(JSON.stringify(placeholder)))
         // console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
+    }
+    computeBBoxInPlaceHolder = async(element, lines) => {
+        var that = this;
+        var arrayBBox = [];
+        var nodeId = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id');
+        var BB = await _getBBoxPromise(nodeId);
+        var transform = {'translateX': 0, 'translateY': 0}
+        transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
+        BB.x = BB.x - transform.translateX;
+        BB.y = BB.y - transform.translateY;
+        arrayBBox.push(BB);
+      
+        // SERT A TROUVER LE COIN EN HAUT A GAUCHE
+        var polygon;
+        if (arrayBBox.length > 1){
+            polygon = mergeRectangles(arrayBBox[0], arrayBBox[1])
+            for (var i = 2; i < arrayBBox.length; i++){
+                polygon = mergeRectangles(polygon, arrayBBox[i])
+            }
+        } else polygon = arrayBBox[0]
+        //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
+        lines.forEach((d)=>{
+            d.data = d.data.map((f)=> [f[0] - polygon.x, f[1] - polygon.y])
+        })
+        element.BBox = polygon;
     }
     sleep = () => {
         return new Promise(resolve => setTimeout(resolve, 200))
@@ -523,6 +535,8 @@ class Group extends Component {
         // return new Promise((resolve, reject) => {
             // console.log('GO', this.props.group.lines)
         var BBox = [];
+        // console.log(this.props.group.lines)
+        // const grouped = this.props.group.lines(pets, pet => pet.type);
         // d3.selectAll('.BB').remove()
         for (let i = 0; i < this.props.group.lines.length; i++) {
             var line = this.props.group.lines[i];
@@ -534,8 +548,6 @@ class Group extends Component {
                 // console.log(line[index])
                 var strokeId = line[index];
                 var BB = await _getBBoxPromise('item-'+strokeId);
-                // console.log(strokeId, BB)
-                // console.log(JSON.stringify(BB))
 
                 if (rectangle == null) rectangle = BB;
                 else rectangle = unionRectangles(rectangle, BB);
@@ -549,15 +561,11 @@ class Group extends Component {
                 transformPan = getTransformation(d3.select('#panItems').attr('transform'));
             } 
             var item = d3.select('#group-'+ that.props.group.id).node()
-            if (item != null){
-                // transformDrag = getTransformation(d3.select('#group-'+ that.props.group.id).attr('transform'));
-            } 
             // GET apres le drag en compte sur les BBox
             // console.log(transform)
-            rectangle.x = rectangle.x - transformPan.translateX - transformDrag.translateX;
-            rectangle.y = rectangle.y - transformPan.translateY - transformDrag.translateY;
-            
-            // console.log(BBox)
+            rectangle.x = rectangle.x - transformPan.translateX;
+            rectangle.y = rectangle.y - transformPan.translateY;
+
             BBox.push(rectangle)
 
             

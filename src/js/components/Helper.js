@@ -36,7 +36,7 @@ export function distance(x1, x2, y1, y2){
 export async function getBoundinxBoxLines(lines){
     // var BB = await _getBBoxPromise('item-'+strokeId);
     // return new Promise((resolve, reject) => {
-        // console.log('GO')
+        // console.log(lines)
     var BBox = [];
     // d3.selectAll('.BB').remove()
 
@@ -343,6 +343,19 @@ function distToSegmentSquared (p, v, w) {
   // w - end point of segment
 export function distToSegment (p, v, w) {
     return Math.sqrt(distToSegmentSquared(p, v, w));
+}
+export function groupBy(list, keyGetter) {
+    const map = new Map();
+    list.forEach((item) => {
+         const key = keyGetter(item);
+         const collection = map.get(key);
+         if (!collection) {
+             map.set(key, [item]);
+         } else {
+             collection.push(item);
+         }
+    });
+    return map;
 }
 export function drawLine(x1, y1, x2, y2, color){
     // var BB2 = d3.select('#'+id).node().getBBox();

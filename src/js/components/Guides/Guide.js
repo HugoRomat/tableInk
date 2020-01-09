@@ -311,7 +311,7 @@ class Guide extends Component {
         //     scale = this.resize()
         // }
 
-        // console.log(BB)
+        // console.log(this.props.stroke)
         // var height = 
         
 
@@ -324,8 +324,10 @@ class Guide extends Component {
                     lines={d['lines']}
                     addLine={this.addLine}
 
+                    penType = {this.props.penType}
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
+                    patternPenData = {this.props.patternPenData}
                 />
         });
         // console.log(this.props.stroke)
@@ -341,10 +343,10 @@ class Guide extends Component {
                 <path id={this.props.stroke.id}></path>
                 {/* <path id={'fake-'+this.props.stroke.id}></path> */}
                 {listPlaceHolder}
-                <PlaceHolderText 
+                {/* <PlaceHolderText 
                     data={this.props.stroke.textPosition}
                     dataParent={this.props.stroke} 
-                />
+                /> */}
                 
 
                 

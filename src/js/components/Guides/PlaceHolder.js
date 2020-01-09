@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, _getBBox, getTransformation, guid, simplify } from "../Helper";
+import { getNearestElement, _getBBox, getTransformation, guid, simplify, _getBBoxPromise, distance, drawCircle } from "../Helper";
 import LinePlaceHolder from "./LinePlaceHolder";
 import PlaceHolderText from "./PlaceHolderText";
-
+import {d3sketchy} from './../../../../customModules/d3.sketchy'
 
 class PlaceHolder extends Component {
     constructor(props) {
@@ -21,94 +21,161 @@ class PlaceHolder extends Component {
         this.drawPlaceHolder();
         // console.log(this.props.data)
         var that = this;
-        // console.log('placeHolder-' + this.props.data.id)
-        d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
-            .on('pointerdown', function(d){
 
-                /**
-                * TO FADEOUT
-                */
-               if (d3.event.pointerType == 'pen'){
-                    var idItem = d3.select(this).attr('id').split('-');
-                    if (idItem[1] == 'background' || idItem[1] == 'right' || idItem[1] == 'middle'){
-                        d3.select('#placeHolder-' + 'left' + '-' + that.props.parent.id).style('opacity', 0.1);
-                        d3.select('#placeHolder-' + 'right' + '-' + that.props.parent.id).style('opacity', 0.1)
-                        d3.select('#placeHolder-' + 'middle' + '-' + that.props.parent.id).style('opacity', 0.1);
-                        d3.select('#placeHolderText' + '-' + that.props.parent.id).style('opacity', 0.1);
-                        
-                    }
-                }
-                // console.log(d3.select(this).attr('id'))
-                if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
+        var el = document.getElementById('placeHolder-' + this.props.data.id + '-' + this.props.parent.id);
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        this.mc.add(pan);
 
-                    that.down = true;
-                }
-                
-                // console.log('Hello')
-            })
-            .on('pointermove', function(d){
-                if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
-                    if (that.down){
+        this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                that.pointerDown(ev.srcEvent)
+            }
+        })
+        this.mc.on("pan", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                that.pointerMove(ev.srcEvent)
+            }
+        })
+        this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                that.pointerUp(ev.srcEvent)
+            }
+        })
 
-                        // console.log('#item-' + that.props.parent.id)
-                        var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-                        that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
-                        that.drawLine();
-                    }
-                }
-                // console.log('Hello')
-            })
-            .on('pointerup', function(d){
-                if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
 
-                    /**
-                     * TO FADEOUT
-                     */
-                    var idItem = d3.select(this).attr('id').split('-');
-                    if (idItem[1] == 'background' || idItem[1] == 'right' || idItem[1] == 'middle'){
-                        d3.select('#placeHolder-' + 'left' + '-' + that.props.parent.id).style('opacity', 1)
-                        d3.select('#placeHolder-' + 'right' + '-' + that.props.parent.id).style('opacity', 1)
-                        d3.select('#placeHolder-' + 'middle' + '-' + that.props.parent.id).style('opacity', 1);
-                        d3.select('#placeHolderText' + '-' + that.props.parent.id).style('opacity', 1);
-                    }
+      
+        
+    }
+    pointerDown(event){
+        this.lastMovePosition = {'x':0, 'y':0};
+    }
+    pointerMove(event){
+        var that = this;
+        if (that.props.penType == 'normal'){
+            // console.log('#item-' + that.props.parent.id)
+            var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
+            that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY])
+            that.drawLine();
+        } 
+        else {
+            var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
+            that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY])
+            that.drawLinePattern ();
+            /*var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
 
-                    console.log('ADD')
-                    // var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
-                    // var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke))
-                    // arrayPoints.forEach((d)=>{
-                    //     d[0] = d[0] - firstPoint[0];
-                    //     d[1] = d[1] - firstPoint[1]
-                    // })
-                    // console.log(arrayPoints[0])
+            if (dist > that.props.patternPenData.BBox.width){
+                that.lastMovePosition = {'x': event['x'],'y': event['y']};
+                that.props.patternPenData.strokes.forEach((d)=>{
+                    var X = event['x'] + d.position[0] - this.props.parent.position[0];
+                    var Y = event['y'] + d.position[1] - this.props.parent.position[1];
 
-                    // that.tempArrayStroke = simplify( that.tempArrayStroke, 0)
-
+                    var points = d.points.map((d)=>[d[0]+X, d[1]+Y])
                     var data = {
                         'idGuide':that.props.parent.id,
                         'where':that.props.data.id,
                         'data':[{
                             'id': guid(),
-                            'data': that.tempArrayStroke,
+                            'data': points,
                             'colorStroke': that.props.colorStroke,
-                            'sizeStroke': that.props.sizeStroke
-                            // 'position': [firstPoint[0],firstPoint[1]]
+                            'sizeStroke': that.props.sizeStroke,
+                            'type': 'pattern-' + event.pointerId
+                            // 'pattern': d.points
                         }]
                     }
+                    console.log(event.pointerId)
                     that.props.addLine(data);
-                    that.tempArrayStroke = [];
-                    that.down = false;
-                    that.removeTempLine();
-                    
-                }
+                })
+            }*/
+        }
+    }
+    pointerUp(event){
+        var that = this; 
+        if (this.props.penType == 'normal'){
+            
+            var data = {
+                'idGuide':that.props.parent.id,
+                'where':that.props.data.id,
+                'data':[{
+                    'id': guid(),
+                    'data': that.tempArrayStroke,
+                    'colorStroke': that.props.colorStroke,
+                    'sizeStroke': that.props.sizeStroke,
+                    'type': 'normal'
+                    // 'position': [firstPoint[0],firstPoint[1]]
+                }]
+            }
+            that.props.addLine(data);
+            that.tempArrayStroke = [];
+            that.down = false;
+            that.removeTempLine();
+        } else {
 
-                // console.log('Hello')
-            })
-        
+            var data = {
+                'idGuide':that.props.parent.id,
+                'where':that.props.data.id,
+                'data':[{
+                    'id': guid(),
+                    'data': that.tempArrayStroke,
+                    'colorStroke': that.props.colorStroke,
+                    'sizeStroke': that.props.sizeStroke,
+                    'type': 'pattern',
+                    'pattern': that.props.patternPenData
+                    // 'position': [firstPoint[0],firstPoint[1]]
+                }]
+            }
+            that.props.addLine(data);
+            that.tempArrayStroke = [];
+            that.down = false;
+            that.removeTempLine();
+
+        }
     }
     removeTempLine(){
         var that = this;
         var line = d3.line()
         d3.select('#tempStroke-' + that.props.data.id + '-' + this.props.parent.id).attr("d", null)
+        d3.select('#tempPattern-' + that.props.data.id + '-' + this.props.parent.id).selectAll('*').remove();
+        
+    }
+    drawLinePattern(){
+        
+        var that = this;
+        var line = d3.line()
+        d3.select('#tempPattern-' + that.props.data.id + '-' + that.props.parent.id).selectAll('*').remove();
+
+
+        d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id)
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', that.props.colorStroke)
+            .attr('stroke-width', that.props.sizeStroke)
+            .attr("stroke-dasharray", 'none')
+            .attr("opacity", '0');
+
+        var step = that.props.patternPenData.BBox.width;
+        var path = d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id).node()
+        var length = path.getTotalLength();
+
+        // console.log(that.props.patternPenData.strokes)
+        for (var i = 0; i < length; i += step){
+            var point = path.getPointAtLength(i);
+            var X = point['x']// + that.props.parent.position[0];
+            var Y = point['y']// + that.props.parent.position[1];
+
+            var container = d3.select('#tempPattern-' + this.props.data.id  + '-' + this.props.parent.id).append('g').attr('transform', 'translate('+X+','+Y+')')
+            for (var j = 0; j < that.props.patternPenData.strokes.length; j += 1){
+                var element = that.props.patternPenData.strokes[j];
+                container.append('g').attr('transform', 'translate('+element.position[0]+','+element.position[1]+')')
+                    .append('path')
+                    .attr('d', (d)=>line(element.points))
+                    .attr('fill', 'none')
+                    .attr('stroke', (d)=> element.data.colorStroke )
+                    .attr('stroke-width', element.data.sizeStroke)
+            }    
+        }
+
+
     }
     drawLine(){
         var that = this;
@@ -125,6 +192,8 @@ class PlaceHolder extends Component {
     componentDidUpdate(prevProps, prevState){
     }
     drawPlaceHolder(){
+        
+        // console.log(sketch, rec)
 
         var widthTotal = this.props.parent.width;
         var heightTotal = this.props.parent.height;
@@ -140,151 +209,129 @@ class PlaceHolder extends Component {
         // var width = 5//this.props.BBoxParent.width;
         var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
         var rect = null;
-        var opacity = 0.2;
-        if (this.props.data.id == 'left'){
-            rect = element
-                .attr('width', 30)
-                .attr('height', 30)
-                .attr('x', -25)
-                .attr('y', heightTotal/2 -25)
-                .attr('fill', 'rgba(166, 166, 166, 1)')
-        }
-        else if (this.props.data.id == 'right'){
-            rect = element
-                .attr('width', 50)
-                .attr('height', 50)
-                .attr('x', 15)
-                .attr('y',heightTotal/2 - 35)
-                .attr('fill', 'rgba(166, 166, 166, 1)')
-        }
-        else if (this.props.data.id == 'middle'){
-            // rect = element
-            //     .attr('width', width*2)
-            //     .attr('height', height)
-            //     .attr('x', -width)
-            //     .attr('y',0)
-            //     .attr('fill', 'rgba(166, 166, 166, 1)')
-        }
+        var sketch = d3sketchy()
 
+        if (this.props.data.id == 'backgroundLine'){
+            var rec = sketch.rectStroke({ x:35, y:35, width:130, height:80, density: 3, sketch:2});
+            var flattened = [].concat(...rec)
 
+            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+                .data(flattened).enter()
+                .append('path')
+                .attr('d', (d)=>{ return d })
+                .attr('fill', 'none')
+                .attr('stroke', 'black')
+                .attr('stroke-width', '0.3')
+                .style('stroke-linecap', 'round')
+                .style('stroke-linejoin', 'round')
 
-        // {'id':'topLeftCorner', 'data': {}, 'lines':[]}, 
-        // {'id':'topRightCorner', 'data': {}, 'lines':[]}, 
-        // {'id':'bottomLeftCorner', 'data': {}, 'lines':[]}, 
-        // {'id':'bottomRightCorner', 'data': {}, 'lines':[]}, 
-
-
-       else if (this.props.data.id == 'topLeftCorner'){
             rect = element
-                .attr('width', 25)
-                .attr('height', 25)
-                .attr('x', -widthTotal/2)
-                .attr('y',-25)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'topRightCorner'){
-            rect = element
-                .attr('width', 25)
-                .attr('height', 25)
-                .attr('x',  widthTotal/2 + widthContainer)
-                .attr('y',-25)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'bottomLeftCorner'){
-            rect = element
-                .attr('width', 25)
-                .attr('height', 25)
-                .attr('x', -widthTotal/2)
-                .attr('y',heightTotal)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'bottomRightCorner'){
-            rect = element
-                .attr('width', 25)
-                .attr('height', 25)
-                .attr('x', (widthTotal/2) + widthContainer)
-                .attr('y',heightTotal)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-
-
-        else if (this.props.data.id == 'topbackground'){
-            rect = element
-                .attr('width',widthTotal  )
-                .attr('height', 25)
-                .attr('x', (-widthTotal/2) + widthContainer)
-                .attr('y',-25)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'bottombackground'){
-            rect = element
-            .attr('width',widthTotal )
-                .attr('height', 25)
-                .attr('x', (-widthTotal/2) + widthContainer)
-                .attr('y', heightTotal)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'leftbackground'){
-            rect = element
-                .attr('width', 25)
-                .attr('height', heightTotal)
-                .attr('x', -widthTotal/2)
-                .attr('y',0)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        else if (this.props.data.id == 'rightbackground'){
-            rect = element
-                .attr('width', 25)
-                .attr('height', heightTotal)
-                .attr('x', widthTotal/2 + widthContainer)
-                .attr('y',0)
-                .attr('fill', 'rgba(166, 166, 166, 0.2)')
-        }
-        
-        
-        else if (this.props.data.id == 'outerBackground'){
-            rect = element
-                .attr('width', widthTotal + 50)
-                .attr('height', heightTotal + 50)
-                .attr('x', (-widthTotal/2) + widthContainer - 25)
-                .attr('y',-25)
+                .attr('width', 130)
+                .attr('height', 80)
+                .attr('x', 35)
+                .attr('y',35)
                 .attr('fill', 'rgba(94, 130, 237, 0.4)')
                 .style("filter", "url(#drop-shadow)")
+
+            // rect = element
+            //     .attr('width', 130)
+            //     .attr('height', 80)
+            //     .attr('x',35)
+            //     .attr('y', 35 )
+            //     .attr('fill', 'rgba(166, 166, 166, 1)')
         }
-        else if (this.props.data.id == 'background'){
+        else if (this.props.data.id == 'backgroundText'){
+            var rec = sketch.rectStroke({ x:80, y:55, width:75, height:40, density: 3, sketch:2});
+            var flattened = [].concat(...rec)
+            
+            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+                .data(flattened).enter()
+                .append('path')
+                .attr('d', (d)=>{ return d })
+                .attr('fill', 'none')
+                .attr('stroke', 'black')
+                .attr('stroke-width', '0.3')
+                .style('stroke-linecap', 'round')
+                .style('stroke-linejoin', 'round')
+
+            rect = element
+                .attr('width', 75)
+                .attr('height', 40)
+                .attr('x', 80)
+                .attr('y',55)
+                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .style("filter", "url(#drop-shadow)")
+
+            // rect = element
+            //     .attr('width', 75)
+            //     .attr('height', 40)
+            //     .attr('x', 80)
+            //     .attr('y', 55 )
+            //     .attr('fill', 'rgba(166, 166, 166, 1)')
+        }
+        else if (this.props.data.id == 'outerBackground'){
+            
+            var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
+            var line = d3.line();
+
+            var flattened = [].concat(...rec)
+
+            // console.log(flattened)
+
+            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+                .data(flattened).enter()
+                .append('path')
+                .attr('d', (d)=>{ return d })
+                .attr('fill', 'none')
+                .attr('stroke', 'black')
+                .attr('stroke-width', '0.3')
+                .style('stroke-linecap', 'round')
+                .style('stroke-linejoin', 'round')
+
             rect = element
                 .attr('width', widthTotal)
                 .attr('height', heightTotal)
-                .attr('x', (-widthTotal/2) + widthContainer)
+                .attr('x', 0)
                 .attr('y',0)
                 .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .style("filter", "url(#drop-shadow)")
+
+            
+			// var svg = d3.select("#svg");
+			// var sketchy = d3sketchy();
+			// sketchy.rectStroke({svg:svg, x:50, y:50, width:100, height:100, density:3, sketch:2});
+
+        
+            
+
+            /*for (var i in rec){
+                var path = rec[i];
+                console.log(path)
+            }
+            rect = element
+                .attr('width', widthTotal)
+                .attr('height', heightTotal)
+                .attr('x', 0)
+                .attr('y',0)
+                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .style("filter", "url(#drop-shadow)")*/
         }
         
         if (rect != null){
             rect.attr('stroke', 'grey')
-            //     // .attr('fill', 'rgba(0,0,0,0)')
-                // .attr('stroke-dasharray', 80)
             rect.attr('opacity', 1.0)
                 .attr('stroke-width', '1')
 
-            // if (this.props.data.id == 'bottomRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")//.attr('stroke-dashoffset', "16")
-            // if (this.props.data.id == 'bottomLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
-            // if (this.props.data.id == 'topRightCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
-            // if (this.props.data.id == 'topLeftCorner') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 19 6 19 6 19 6 19 6")
-            
-            // if (this.props.data.id == 'left') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 24 6 24 6 24 6 24 6")
-            // if (this.props.data.id == 'right') rect.attr('opacity', 0.4).attr('fill', 'rgba(0,0,0,0)').attr('stroke-dasharray', "3 44 6 44 6 44 6 44 6")
-        }
+          }
         // }
     }
    
     render() {
-        // console.log('placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
+
         const listItems = this.props.lines.map((d, i) => {
             return <LinePlaceHolder 
                 key={i} 
                 stroke={d}
-
                 colorStroke = {this.props.colorStroke}
                 sizeStroke = {this.props.sizeStroke}
             />
@@ -294,7 +341,12 @@ class PlaceHolder extends Component {
         return (
             <g id={'placeHolder-' + this.props.data.id + '-' + this.props.parent.id}>
                 <rect id={'rect-' + this.props.data.id} />
+                <g id={'background-' + this.props.data.id + '-' + this.props.parent.id}>
+                </g>
+
                 <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
+
+                <g id={'tempPattern-'+this.props.data.id  + '-' + this.props.parent.id} ></g>
 
                 <g className='paths'>
                     {listItems}

@@ -79,7 +79,14 @@ export const addLineToStickyGroup = data => ({
     type: 'ADD_LINE_TO_STICKY_GROUP',
     data
 })
-
+export const addTag = data => ({
+    type: 'ADD_TAG',
+    data
+})
+export const addVoiceQueries = data => ({
+    type: 'ADD_VOICE_QUERIES',
+    data
+})
 export const addLineToTagGroup = data => ({
 
     type: 'ADD_LINE_TO_STICKY_TAG',

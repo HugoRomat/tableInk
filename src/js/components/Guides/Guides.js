@@ -42,6 +42,8 @@ class Guides extends Component {
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
+                    penType = {this.props.penType}
+                    patternPenData = {this.props.patternPenData}
             />
         });
         // console.log(listItems);
