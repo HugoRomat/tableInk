@@ -49,6 +49,23 @@ class PlaceHolder extends Component {
     }
     pointerDown(event){
         this.lastMovePosition = {'x':0, 'y':0};
+
+        // var that = this;
+        // if (this.props.data.id == 'outerBackground'){
+        //     d3.select('#background-outerBackground-' + that.props.parent.id).attr('opacity', 1)
+        //     d3.select('#background-backgroundLine-' + that.props.parent.id).attr('opacity', 0)
+        //     d3.select('#background-backgroundText-' + that.props.parent.id).attr('opacity', 0)
+        // }
+        // if (this.props.data.id == 'backgroundLine'){
+        //     d3.select('#background-outerBackground-' + that.props.parent.id).attr('opacity', 0)
+        //     d3.select('#background-backgroundLine-' + that.props.parent.id).attr('opacity', 1)
+        //     d3.select('#background-backgroundText-' + that.props.parent.id).attr('opacity', 0)
+        // }
+        // if (this.props.data.id == 'backgroundText'){
+        //     d3.select('#background-outerBackground-' + that.props.parent.id).attr('opacity', 0)
+        //     d3.select('#background-backgroundLine-' + that.props.parent.id).attr('opacity', 0)
+        //     d3.select('#background-backgroundText-' + that.props.parent.id).attr('opacity', 1)
+        // } 
     }
     pointerMove(event){
         var that = this;
@@ -90,7 +107,8 @@ class PlaceHolder extends Component {
         }
     }
     pointerUp(event){
-        var that = this; 
+        var that = this;
+        console.log('GOOO') 
         if (this.props.penType == 'normal'){
             
             var data = {
@@ -144,6 +162,7 @@ class PlaceHolder extends Component {
         var line = d3.line()
         d3.select('#tempPattern-' + that.props.data.id + '-' + that.props.parent.id).selectAll('*').remove();
 
+        // console.log('DRAWPATTERN')
 
         d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id)
             .attr("d", line(that.tempArrayStroke))
@@ -151,7 +170,7 @@ class PlaceHolder extends Component {
             .attr('stroke', that.props.colorStroke)
             .attr('stroke-width', that.props.sizeStroke)
             .attr("stroke-dasharray", 'none')
-            .attr("opacity", '0');
+            .attr("opacity", '1');
 
         var step = that.props.patternPenData.BBox.width;
         var path = d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id).node()
@@ -162,11 +181,12 @@ class PlaceHolder extends Component {
             var point = path.getPointAtLength(i);
             var X = point['x']// + that.props.parent.position[0];
             var Y = point['y']// + that.props.parent.position[1];
-
+            // console.log('GO')
             var container = d3.select('#tempPattern-' + this.props.data.id  + '-' + this.props.parent.id).append('g').attr('transform', 'translate('+X+','+Y+')')
             for (var j = 0; j < that.props.patternPenData.strokes.length; j += 1){
                 var element = that.props.patternPenData.strokes[j];
-                container.append('g').attr('transform', 'translate('+element.position[0]+','+element.position[1]+')')
+                // container.append('g').attr('transform', 'translate('+(element.position[0]) +','+(element.position[1] -that.props.patternPenData.BBox.height/2)+')')
+                container.append('g').attr('transform', 'translate('+(element.position[0]) +','+(element.position[1])+')')
                     .append('path')
                     .attr('d', (d)=>line(element.points))
                     .attr('fill', 'none')
@@ -180,13 +200,14 @@ class PlaceHolder extends Component {
     drawLine(){
         var that = this;
         var line = d3.line()
+        // console.log('DRAW')
         d3.select('#tempStroke-' + this.props.data.id  + '-' + this.props.parent.id)
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
             .attr('stroke', that.props.colorStroke)
             .attr('stroke-width', that.props.sizeStroke)
-            .attr("stroke-dasharray", 'none');
-
+            .attr("stroke-dasharray", 'none')
+            .attr("opacity", '1');
         
     }
     componentDidUpdate(prevProps, prevState){
@@ -339,14 +360,14 @@ class PlaceHolder extends Component {
 
 
         return (
-            <g id={'placeHolder-' + this.props.data.id + '-' + this.props.parent.id}>
+            <g id={'placeHolder-' + this.props.data.id + '-' + this.props.parent.id} >
                 <rect id={'rect-' + this.props.data.id} />
-                <g id={'background-' + this.props.data.id + '-' + this.props.parent.id}>
+                <g id={'background-' + this.props.data.id + '-' + this.props.parent.id} >
                 </g>
 
-                <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
+                <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}/>
 
-                <g id={'tempPattern-'+this.props.data.id  + '-' + this.props.parent.id} ></g>
+                <g id={'tempPattern-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}></g>
 
                 <g className='paths'>
                     {listItems}

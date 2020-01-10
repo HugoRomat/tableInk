@@ -2,7 +2,8 @@
 import paper from 'paper';
 paper.setup([640, 480]);
 
-export function recognizeInk(document, linesArray){
+export function recognizeInk(document, linesArray, getLines){
+    if (getLines == undefined) getLines = false;
 
     return new Promise(function(resolve, reject) {
 
@@ -42,17 +43,37 @@ export function recognizeInk(document, linesArray){
             })
             return data
         })
-
-        var promised = mappedData.map((data)=> sendRequest(data))
-        Promise.all(promised).then(function(values) {
-            var data = values.map((ink)=>{
-                console.log(ink)
-                var line = ink.recognitionUnits.filter((l)=> l.category == 'line');
-                if (line[0] == undefined) reject();
-                else return line[0].recognizedText;
-            })
-            resolve(data);
-        });
+        // var flattenInk = [].concat(...linesArray)
+        // console.log(flattenInk)
+        if (getLines == false){
+            var promised = mappedData.map((data)=> sendRequest(data))
+            Promise.all(promised).then(function(values) {
+                var data = values.map((ink)=>{
+                    console.log(ink)
+                    var line = ink.recognitionUnits.filter((l)=> l.category == 'line');
+                    if (line[0] == undefined) reject();
+                    else return line[0].recognizedText;
+                })
+                resolve(data);
+            });
+        } else {
+            var promised = mappedData.map((data)=> sendRequest(data))
+            Promise.all(promised).then(function(values) {
+                var data = values.map((ink, i)=>{
+                    // console.log(linesArray[i])
+                    var line = ink.recognitionUnits.filter((l)=> l.category == 'inkWord');
+                    // console.log(line)
+                    var result = line.map((d)=> { return {'text': d.recognizedText, 'idLine': d['strokeIds'].split(',').map((g) => linesArray[i][g])} } )
+                    // console.log(result)
+                    return result
+                    // if (line[0] == undefined) reject();
+                    // else return {'text': line[0].recognizedText, 'idLine': linesArray[line[0]];
+                })
+                // console.log(data)
+                resolve(data);
+            });
+        }
+        
     })
 }
 

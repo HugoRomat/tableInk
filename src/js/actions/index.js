@@ -74,6 +74,18 @@ export const SetUIId = data => ({
     type: 'SET_UI_ID',
     data
 })
+export const addTagSnapped = data => ({
+    type: 'ADD_TAG_SNAPPED',
+    data
+})
+export const removeTag = data => ({
+    type: 'REMOVE_TAG',
+    data
+})
+export const addTagCanvas = data => ({
+    type: 'ADD_TAG_CANVAS',
+    data
+})
 
 export const addLineToStickyGroup = data => ({
     type: 'ADD_LINE_TO_STICKY_GROUP',

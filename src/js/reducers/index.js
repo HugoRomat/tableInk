@@ -13,6 +13,7 @@ import group from './../usecases/groupLines.json';
 import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
 import sticky from './../usecases/newSticky.json';
+import voice from './../usecases/voiceQuery.json';
 
 
 function importAll(r) { return r.keys().map(r); }
@@ -35,7 +36,8 @@ const initialState = {
     'tagsGroup':[],
     'tables': [],
     'grid': false,
-    'voiceQueries': []
+    'voiceQueries': [],
+    'tagsInterface': []
   };
 
     // console.log(alphabetPerso)
@@ -55,8 +57,8 @@ initialState.galleryItems = galleryData;
 initialState.tags = tags
 // initialState.tables = tables
 initialState.lettres = alphabetPerso0;
-
-// initialState.groupLines = group
+voice
+initialState.voiceQueries = voice
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
@@ -64,12 +66,15 @@ initialState.sketchLines = strokes
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.stickyLines));
+    // console.log(JSON.stringify(state.voiceQueries));
     switch (action.type) {
       
       case 'SET_GRID':
         state.grid = action.data.data;
         return state;
+
+      case 'ADD_TAG_CANVAS':return {  ...state, tagsInterface: [ ...state.tagsInterface, action.data] };
+        
       //Add line to placeholder
       case 'ADD_LINE_TO_STICKY_GROUP':
         var id = action.data.idGuide;
@@ -96,10 +101,39 @@ initialState.sketchLines = strokes
             })
           }
         }
-        
         return state;
 
 
+        case 'ADD_TAG_SNAPPED':
+          var receiver = action.data.idReceiver;
+          var sender = action.data.idSender;
+          var index = state.tags.indexOf(state.tags.find(x => x.id == sender));
+          var indexReceiver = state.tags.indexOf(state.tags.find(x => x.id == receiver));
+          var data = JSON.parse(JSON.stringify(state['tags'][index]))
+          // console.log(state['tags'][index], state['tags'][indexReceiver])
+          if (indexReceiver > -1){
+            state = update(state, { 
+              tags: {
+                [indexReceiver] : {
+                  tagSnapped: {$push: [data]}
+                }
+              }
+            })
+          }
+          
+        return state;
+
+
+        case 'REMOVE_TAG':
+          var index = state.tags.indexOf(state.tags.find(x => x.id == action.data))
+          if (index > -1){
+            // console.log(JSON.parse(JSON.stringify(state.tags)))
+            state = update(state, { 
+              tags: {$splice: [[index, 1]]}
+            })
+          }
+          // console.log(JSON.parse(JSON.stringify(state.tags)))
+          return state;
         
         case 'ADD_LINE_TO_STICKY_TAG':
             var id = action.data.idTag;
@@ -251,7 +285,7 @@ initialState.sketchLines = strokes
               }
             })
           }
-          console.log(state.lettres)
+          // console.log(state.lettres)
         return state;
 
       case 'ADD_SKETCH_LINE':

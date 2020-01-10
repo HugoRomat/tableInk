@@ -141,9 +141,9 @@ class Background extends Component {
                 var scale = grouped.get("normal");
                 var pattern = grouped.get("pattern");
 
-                // console.log(d)
+                // console.log(pattern)
                 /** For scale data */
-                if (scale.length > 0){
+                if (scale != undefined && scale.length > 0){
                     // console.log('GOO')
                     var lines = JSON.parse(JSON.stringify(scale))
                     lines.forEach((line)=>{
@@ -163,7 +163,7 @@ class Background extends Component {
                 }
 
                 /** for pattern data */
-                if (pattern.length > 0){
+                if (pattern != undefined && pattern.length > 0){
                    
                     pattern.forEach((myPattern, i)=>{
                         var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id)

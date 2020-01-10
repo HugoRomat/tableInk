@@ -50,10 +50,7 @@ class LinePlaceHolder extends Component {
                         .attr('stroke', (d)=> element.data.colorStroke )
                         .attr('stroke-width', element.data.sizeStroke)
                     }    
-                }
-        
-               
-            
+                }    
         } else {
             d3.select('#item-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke.data))

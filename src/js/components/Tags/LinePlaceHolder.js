@@ -23,14 +23,17 @@ class LinePlaceHolder extends Component {
             // .attr('stroke-width', that.props.sizeStroke)
             .attr('fill', 'none')
     }
-    // componentDidUpdate(){
-    //     var that = this;
-    //     d3.select('#stroke-'+that.props.stroke.id)
-    //         .attr("d", line(that.props.stroke.data))
-    //         .attr('stroke', that.props.stroke.colorStroke)
-    //         .attr('stroke-width', that.props.stroke.sizeStroke)
-    //         .attr('fill', 'none') 
-    // }
+    componentDidUpdate(){
+        var line = d3.line().curve(d3.curveBasis)
+        var that = this;
+        d3.select('#stroke-'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke.data))
+            .attr('stroke', that.props.stroke.colorStroke)
+            .attr('stroke-width', that.props.stroke.sizeStroke)
+            // .attr('stroke', that.props.colorStroke)
+            // .attr('stroke-width', that.props.sizeStroke)
+            .attr('fill', 'none')
+    }
    
     render() {
         return (

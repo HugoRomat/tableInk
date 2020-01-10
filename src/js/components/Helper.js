@@ -33,10 +33,11 @@ export function distance(x1, x2, y1, y2){
     return c;
 }
 
-export async function getBoundinxBoxLines(lines){
+export async function getBoundinxBoxLines(lines, prefix){
     // var BB = await _getBBoxPromise('item-'+strokeId);
     // return new Promise((resolve, reject) => {
         // console.log(lines)
+    if (prefix == undefined) prefix ='item-'
     var BBox = [];
     // d3.selectAll('.BB').remove()
 
@@ -47,7 +48,7 @@ export async function getBoundinxBoxLines(lines){
     for (let index = 0; index < lines.length; index++) {
         // console.log(line[index])
         var strokeId = lines[index];
-        var BB = await _getBBoxPromise('item-'+strokeId);
+        var BB = await _getBBoxPromise(prefix+strokeId);
         // console.log(strokeId, BB)
         // console.log(JSON.stringify(BB))
 

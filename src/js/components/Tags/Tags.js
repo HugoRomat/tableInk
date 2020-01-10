@@ -27,29 +27,27 @@ class Tags extends Component {
     setGuideTapped = (d) => {
         this.props.setGuideTapped(d)
     }
-    holdTagF = (d) => {
+    // holdTagF = (d) => {
 
-        if (d != false){
-            var myTag = this.props.tags.find(x => x.id == d);
+    //     if (d != false){
+    //         var myTag = this.props.tags.find(x => x.id == d);
 
-            // console.log()
-            this.props.holdTag(JSON.parse(JSON.stringify(myTag)))
-            // console.log(myTag, d)
-        }
-        else this.props.holdTag(false)
+    //         // console.log()
+    //         this.props.holdTag(JSON.parse(JSON.stringify(myTag)))
+    //         // console.log(myTag, d)
+    //     }
+    //     else this.props.holdTag(false)
         
-    }
+    // }
     render() {
-
-        // console.log( this.props.sketchLines)
+        console.log(this.props.tags)
         const listItems = this.props.tags.map((d, i) => {
-            // console.log(d)
                 return <Tag 
                     key={i} 
                     stroke={d}
                     isGallery={false}
 
-                    holdGuide={this.holdTagF}
+                    holdTag={this.props.holdTag}
                     // dragItem={this.props.dragItem}
                     // setGuideTapped={this.setGuideTapped}
 

@@ -32,7 +32,8 @@ import {
     addLineToGroup,
     addLineToExistingGroup,
     addTag,
-    addVoiceQueries
+    addVoiceQueries,
+    addTagCanvas
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -46,6 +47,7 @@ import GalleryItmes from "./Gallery/GalleryItmes";
 import Tags from "./Tags/Tags";
 import { recognizeInk } from "./InkRecognition/InkRecognition";
 import VoiceQuerys from "./VoiceQuery/VoiceQuerys";
+import TagsInterface from "./TagsInterface/TagsInterface";
 
 const mapDispatchToProps = {  
     addSketchLine,
@@ -60,7 +62,8 @@ const mapDispatchToProps = {
     addLineToGroup,
     addLineToExistingGroup,
     addTag,
-    addVoiceQueries
+    addVoiceQueries,
+    addTagCanvas
 };
 
 
@@ -135,7 +138,7 @@ class Document extends Component {
         this.patternBBOX = null;
         this.straightLine = false;
         this.write = false;
-
+        this.lastStepTagPattern = 0;
         this.stateLeftBar = 'normal';
         this.init();
         // this.shouldOpenAlphabet = false;
@@ -343,6 +346,7 @@ class Document extends Component {
         this.mc.on("press", function(ev) {
             ev.srcEvent.preventDefault();
             if (ev.pointers[0]['pointerType'] == 'touch'){
+                console.log('listen')
                 that.voiceQuery({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
             }
         })
@@ -633,7 +637,7 @@ class Document extends Component {
 
             that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY]);
 
-            // console.log(that.isGuideHold)
+            // console.log(that.state.tagHold)
 
             if (that.tapGuide){
                 that.drawTempStroke();
@@ -641,12 +645,17 @@ class Document extends Component {
             if (that.straightLine != false){
                 that.drawTempStrokeStraightLine();
             }
+            else if (that.state.tagHold){
+                that.drawTag(event);
+            }
             else if (that.drawing){
                 that.drawTempStroke();
             }
+            
             else if (that.isPatternPen){
                 that.drawPattern(event);
             }
+            
             else if (that.sticky){
                 that.drawTempStroke();
             }
@@ -658,7 +667,7 @@ class Document extends Component {
                 // console.log('Hello world')
             }
             
-            /** NEW FUNCTION */
+            /** New function */
             if (that.isGuideHold){
                 that.duplicateGuide();
             } 
@@ -689,9 +698,12 @@ class Document extends Component {
             if (that.press){
 
             }
+            else if (that.state.tagHold){
+                that.addTagOnCanvas();
+            }
             else if (that.sticky && that.isGuideHold == false){
-                // that.addStrokeTag(); 
-                that.addStrokeGuide(); 
+                that.addStrokeTag(); 
+                // that.addStrokeGuide(); 
             }
             /** Instancie un guide vide  */
             /*else if (that.sticky && that.isGuideHold == false){
@@ -723,11 +735,7 @@ class Document extends Component {
             }
             /** Copie un guide a gauche //DUPLICATION */
             else if (that.sticky && that.isGuideHold){
-                
                 that.addStrokeGuideCopy(this.isGuideHold, event); 
-                // that.sticky = false;
-
-
             }
             /** Holding a guide to create a sticky */
             else if (that.tapGuide){
@@ -1174,14 +1182,13 @@ class Document extends Component {
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
         var data = {
             'id': id,
-            'width':100,
-            'height':100,
+            'width': 200,
+            'height': 200,
             'placeHolder': [
-                {'id':'left', 'data': {}, 'lines':[]},
-                {'id':'right', 'data': {}, 'lines':[]}
+                {'id':'left', 'data': {}, 'lines':[]}
             ],
-            'position': [firstPoint[0],firstPoint[1]],
-            'textPosition': {'where': 'right', 'position': [25,20]}
+            'tagSnapped': [],
+            'position': [firstPoint[0],firstPoint[1]]
             
         }
         this.props.addTag(data)
@@ -1285,34 +1292,63 @@ class Document extends Component {
                 var X = event['x']+ d.position[0] - transformPan.translateX;
                 var Y = event['y']+ d.position[1] - transformPan.translateY;
                 d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
-                .append('path')
-                .attr('d', (f)=>  line(d.points))
-                .attr('fill', 'none')
-                .attr('stroke', d.data.colorStroke)
-                .attr('stroke-width', d.data.sizeStroke)
-                .attr("stroke-dasharray", 'none')
-                .attr('stroke-linejoin', "round")
+                    .append('path')
+                    .attr('d', (f)=>  line(d.points))
+                    .attr('fill', 'none')
+                    .attr('stroke', d.data.colorStroke)
+                    .attr('stroke-width', d.data.sizeStroke)
+                    .attr("stroke-dasharray", 'none')
+                    .attr('stroke-linejoin', "round")
             })
         }
-
-        // console.log(this.patternBBOX, dist)
-        // that.lastMovePosition
-
+    }
+    drawTag(event){
+        var that = this;
+        var line = d3.line()
         
+        d3.select('#penTemp')
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '10')
+            .attr('opacity', '0.2')
+            .attr("stroke-dasharray", "10");
+      
+        var step = that.state.tagHold.BB.width + 30;
+        var path = d3.select('#penTemp').node()
+        var length = path.getTotalLength();
 
-        // console.log(that.lastMovePosition)
-        // d3.select('#tempGroup').selectAll('g')
-        //     .data(that.patternPen).enter()
-
-        //     .append('g').attr("transform", (d) => 'translate('+event['x']+','+event['y']+')')
-        //     .append('path')
-        //     .attr('d', (d)=>  line(d.points))
-        // //     .attr("d", line(that.tempArrayStroke))
-        //     .attr('fill', 'red')
-        //     .attr('stroke', that.colorPen)
-        //     .attr('stroke-width', that.sizePen)
-        //     .attr("stroke-dasharray", 'none')
-        //     .attr('stroke-linejoin', "round")
+        if (length - this.lastStepTagPattern > step){
+            this.lastStepTagPattern = length;
+            d3.select('#tempTag').selectAll('*').remove()
+            for (var i = 0; i < length; i += step){
+                var point = path.getPointAtLength(i);
+                var X = point['x']// + that.props.parent.position[0];
+                var Y = point['y']// + that.props.parent.position[1];
+    
+                var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
+                for (var j = 0; j < that.state.tagHold.placeHolder[0]['lines'].length; j += 1){
+                    var element = that.state.tagHold.placeHolder[0]['lines'][j];
+                    container.append('g').attr('transform', 'translate('+(- that.state.tagHold.offsetX)+','+(- that.state.tagHold.offsetY )+')')
+                        .append('path')
+                        .attr('d', (d)=>line(element.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> element.colorStroke )
+                        .attr('stroke-width', element.sizeStroke)
+                }    
+            }
+        }
+    }
+    addTagOnCanvas(){
+        var that = this;
+        var data = {
+            'id': guid(),
+            'data':  that.tempArrayStroke,
+            'tagHold': that.state.tagHold,
+            'isPattern': (that.state.tagHold) ? true : false
+        }
+        this.props.addTagCanvas(data);
+        // console.log(data)
     }
 /**
      * STROKE
@@ -1342,6 +1378,7 @@ class Document extends Component {
     drawTempStroke(){
         var that = this;
         var line = d3.line()
+        // console.log(that.colorPen)
         d3.select('#penTemp')
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
@@ -1363,6 +1400,8 @@ class Document extends Component {
     removeTempStroke(){
         var line = d3.line()
         d3.select('#penTemp').attr("d", line([]))
+        d3.select('#tempTag').selectAll('*').remove()
+        this.lastStepTagPattern = 0
     }
     addStrokeFilledData(data){
         // console.log(data)
@@ -1381,13 +1420,15 @@ class Document extends Component {
         this.props.groupLines.forEach((d)=>{
             allLines = allLines.concat(d.lines);
         })
-       
+    //    console.log(allLines)
         this.speech.getSpeechReco().then((speech)=>{
 
-            recognizeInk(this, allLines).then((ink)=> {
+            recognizeInk(this, allLines, true).then((ink)=> {
+                console.log(ink)
                 var data = {
                     'id': guid(),
                     'content': speech,
+                    'inkDetection': ink,
                     'position': [position['x'],position['y']]
                 }
                 this.props.addVoiceQueries(data)
@@ -1566,11 +1607,11 @@ class Document extends Component {
     //     this.pointText = d;
     // }
     holdTag = (d) => {
-        console.log('Selection ',d)
+        console.log('TagHolded ',d)
         this.setState({'tagHold': d})
     }
     holdGuide = (d) => {
-        console.log('Selection '+d)
+        console.log('GuideHolded '+d)
         this.isGuideHold = d;
         if (d != false) this.guidHoldObject = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == d)));
         else this.guidHoldObject = false;
@@ -1610,11 +1651,31 @@ class Document extends Component {
             this.isFunctionPen = false;
             this.setState({'penType': 'normal'})
             var sizePen = 2;
-            if (d.type == "highlighter") sizePen = 15
-            if (d.type == "ink") sizePen = 2
+            if (d.type == "highlighter") {
+                sizePen = 15
+                this.setOpacityColor(0.5);
+                
+            }
+            if (d.type == "ink") {
+                this.setOpacityColor(1);
+                sizePen = 2
+            }
             this.sizePen = sizePen
             this.setState({'sizeStroke': sizePen})
-        }
+        } 
+    }
+    setOpacityColor(op){
+        var c = d3.rgb(this.colorPen)
+        c.opacity = op;
+        // console.log(c.toString());
+        this.colorPen = c.toString();
+        this.setState({'colorStroke': c.toString()})
+    }
+    selectColor = (d) => {
+        this.colorPen = d;
+        if (this.sizePen > 10) this.setOpacityColor(0.5);
+        else  this.setOpacityColor(1);
+        this.setState({'colorStroke':this.colorPen})
         
     }
     setPatternPen = (old) => {
@@ -1664,12 +1725,7 @@ class Document extends Component {
         }
         
     }
-    selectColor = (d) => {
-    
-        this.setState({'colorStroke': d})
-        this.colorPen = d;
-       
-    }
+
     getBBoxEachLine = (d) => {
        
         this.gridSizeTemp[0] = d.width;
@@ -1730,7 +1786,11 @@ class Document extends Component {
                         <g id="grid" />
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
                         <g id="tempLines"><path id="penTemp"></path></g>
-                        <g id="tempGroup"></g>
+                        <g id="tempGroup">
+
+                            
+                        </g>
+                        <g id ="tempTag"> </g>
                         <Lines />
                         <Groups 
                             setSelection={this.setSelection}
@@ -1742,6 +1802,7 @@ class Document extends Component {
                             // holdGroup={this.holdGroup}
                         />
                         <Textes />
+                        <TagsInterface/>
 
                     
                         

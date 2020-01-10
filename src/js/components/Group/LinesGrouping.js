@@ -114,13 +114,15 @@ class LinesGrouping extends Component {
             transformDrag = getTransformation(d3.select('#group-'+ that.props.id).attr('transform'));
         }
 
-        
+        /** RED */
+        /*
         d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id)
             .attr('width', that.BBox.width + 80)
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
             .attr('fill', 'rgba(255,0,0,0.3)')
+        */
             
     }
     removeContainer(){
@@ -309,7 +311,7 @@ class LinesGrouping extends Component {
             var myScaleY = d3.scaleLinear().domain([placeHolderText.BBox.y, placeHolderText.BBox.y + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
 
     
-            if (scale.length > 0){
+            if (scale != undefined && scale.length > 0){
                 // console.log('GOO')
                 var lines = JSON.parse(JSON.stringify(scale))
                 lines.forEach((line)=>{
@@ -327,7 +329,7 @@ class LinesGrouping extends Component {
                     .attr('stroke-width', (e)=>{return myLine.sizeStroke + (that.BBox.width / placeHolderText.BBox.width);})
                 }
             }
-            if (pattern.length > 0){
+            if (pattern != undefined && pattern.length > 0){
                    
                 pattern.forEach((myPattern, i)=>{
                     var container = d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id)

@@ -1,18 +1,24 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB } from "../Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise, showOmBB, showBboxBB, getBoundinxBoxLines } from "../Helper";
 import { connect } from 'react-redux';
+import {d3sketchy} from './../../../../customModules/d3.sketchy'
 
 
 import { 
-    addLineToTagGroup
+    addLineToTagGroup,
+    addTagSnapped,
+    removeTag
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
-import PlaceHolderText from "./PlaceHolderText";
+// import PlaceHolderText from "./PlaceHolderText";
+import { boxBox } from "intersects";
 
 const mapDispatchToProps = { 
-    addLineToTagGroup
+    addLineToTagGroup,
+    addTagSnapped,
+    removeTag
 };
 const mapStateToProps = (state, ownProps) => {  
   
@@ -41,38 +47,118 @@ class Tag extends Component {
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
+
+        var el = document.getElementById('item-'+that.props.stroke.id);
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 50});
+        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
+        var press = new Hammer.Press({time: 250});
+        var tap = new Hammer.Tap();
         
-        var drag = d3.drag()
-            // .subject(function (d) { return d; })
-            .on("start", function(e){ that.dragstarted(that)})
-            .on("drag", function(e){ that.dragged(that)})
-            .on("end", function(e){ that.dragended(that)})
-            .clickDistance(40)
+       
+        this.mc.add(pan);
+        this.mc.add(tap);
+        this.mc.add(swipe);
+        this.mc.add(press);
+        pan.recognizeWith(swipe);
+        pan.recognizeWith(press);
+
+       this.mc.add(pan);
+       this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
+                
+                    that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+                    that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+                    that.dragstarted(ev);
+                    var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
+                    _getBBoxPromise('item-' + that.props.stroke.id).then(( BB)=>{
+                        that.allBoundingBox = BB;
+                        that.allBoundingBox.x += getPan.translateX;
+                        that.allBoundingBox.y += getPan.translateY;
+                    })
+                    that.down = true
+               
+            }
+        })
+        this.mc.on("panmove", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                if (that.down){
+                    that.findIntersection(that.allBoundingBox, ev);
+                    that.dragged(ev);
+                }
+            }
+        })
+        this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' ){
+                that.dragended(ev);
+                that.down = false;
+            }
+        })
+        this.mc.on("swipeleft", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                
+            }
+            
+        });
+        this.mc.on("swipeleft", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                
+            }
+            
+        });
+
+        this.mc.on('press', function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                that.colorForHolding(true);
+
+                /** Calculate the BBox for the Tag */
+                var data = JSON.parse(JSON.stringify(that.props.stroke));
+                var lines = data.placeHolder[0]['lines'].map((d)=> d.id)
+                // console.log(lines)
+                getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
+                    // showBboxBB(d, 'red')
+                    _getBBoxPromise(['item-'+that.props.stroke.id]).then((e)=>{
+                        data.offsetX = d.x - e.x;
+                        data.offsetY = d.y - e.y;
+                        data.BB = d;
+                        that.props.holdTag(data); 
+                    })
+                })
+                
+            }
+        })
+        this.mc.on('pressup', function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                // that.props.dragItem(false);
+                that.props.holdTag(false);
+                that.colorForHolding(false)
+            }
+        })
         
             
         d3.select('#item-'+that.props.stroke.id)
-            .on('pointerdown', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-                    that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-                    that.dragstarted(that);
-                }
-            })
-            .on('pointermove', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                    var differenceTime = that.startPosition.time - Date.now();
+            // .on('pointerdown', function(d){
+            //     if (d3.event.pointerType == 'touch'){
+            //         that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
+            //         that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+            //         that.dragstarted(that);
+            //     }
+            // })
+            // .on('pointermove', function(d){
+            //     if (d3.event.pointerType == 'touch'){
+            //         var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+            //         var differenceTime = that.startPosition.time - Date.now();
                     
-                    if (dist > 10 ){
-                        that.dragged(that);
-                    }
-                }
-            })
-            .on('pointerup', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.dragended(that);
-                }
-            })
+            //         if (dist > 10 ){
+            //             that.dragged(that);
+            //         }
+            //     }
+            // })
+            // .on('pointerup', function(d){
+            //     if (d3.event.pointerType == 'touch'){
+            //         that.dragended(that);
+            //     }
+            // })
             .on('contextmenu', function(){
                 d3.event.preventDefault();
             })
@@ -83,16 +169,66 @@ class Tag extends Component {
         // var BBox = _getBBox(this.props.stroke.id);
         // console.log(BBox)
         // this.setState({'BBox': BBox})
-       
+            this.addBG()
     
     }
+    addBG(){
+        var that = this;
+        if ( this.props.stroke.tagSnapped.length > 0){
+            d3.select('#tagSnapped-'+that.props.stroke.id).selectAll('*').remove()
+            for (var i = this.props.stroke.tagSnapped.length - 1; i >= 0; i--) {
+                this.drawRectangle(this.props.stroke.width,this.props.stroke.height,-10 * (i+1),-10 * (i+1));
+            }
 
+        }
+    }
+    findIntersection = async(BBTemp, ev) => {
+        // console.log(BBTemp)
+        var that = this;
+        var offsetX = ev.pointers[0].x - this.lastPosition.x;
+        var offsetY = ev.pointers[0].y - this.lastPosition.y;
+        BBTemp.x += offsetX; //+ transformPan.translateX;
+        BBTemp.y += offsetY; //+ transformPan.translateY;
+        
+        // showBboxBB(BBTemp, 'blue');
+      
+        var BBid = [];
+        var arrayRectangle = []
+        // showBboxBB(BBTemp, 'red');
+
+        //Put my lines in an array
+        d3.selectAll('.tagEntities').each(function(){
+            var idSImple = d3.select(this).attr('id').split('-')[1]
+            // console.log(d3.select(this).attr('id'))
+            if (arrayRectangle.indexOf(idSImple) == -1 && idSImple != that.props.stroke.id) BBid.push(d3.select(this).attr('id'))
+        })
+        // Check for all these lines
+        for (var i in BBid){
+            var BB = await _getBBoxPromise(BBid[i])
+            // showBboxBB(BB, 'red');
+            // showBboxBB(BBTemp, 'blue');
+            var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+            // console.log(intersected)
+        
+            if (intersected) {
+                var id = BBid[i];
+                var idSImple = id.split('-')[1];
+                this.props.addTagSnapped({
+                    'idReceiver':idSImple, 
+                    'idSender':that.props.stroke.id
+                })
+                this.props.removeTag(this.props.stroke.id)
+                this.down = false;
+            }
+            // console.log(BBid[i])
+        }
+    }
     dragstarted(env) {
         // if (d3.event.sourceEvent == tou
         // console.log(d3.event.sourceEvent)
         var that = env;
         // that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
-        that.drag = false;
+        // that.drag = false;
         // console.log('HEY', env, this)
         // d3.event.sourceEvent.stopPropagation();
         // d3.select('#item-'+env.props.stroke.id).classed("dragging", true);
@@ -100,7 +236,8 @@ class Tag extends Component {
         // console.log('GO DRAG')
         // that.props.dragItem(true);
         // d3.event.preventDefault();
-        that.timerPress = setTimeout(function(){
+        
+        /*that.timerPress = setTimeout(function(){
             console.log('PRESS')
             if (that.drag == false){
                 // d3.event.preventDefault();
@@ -112,14 +249,14 @@ class Tag extends Component {
                 // that.props.dragItem(false);
                 that.drag = false;
             }
-        }, 1000)
+        }, 1000)*/
 
     }
 
-    dragged(env) {  
+    dragged(event) {  
         // console.log(d3.event)
-        var that = env;
-        that.drag = true;
+        var that = this;
+        // that.drag = true;
         // console.log('GO')
         
 
@@ -127,66 +264,75 @@ class Tag extends Component {
 
         // console.log(dist)
         // if (dist > 10){
-        clearTimeout(that.timerPress);
-        d3.event.preventDefault();
-        var transform = getTransformation(d3.select('#item-'+env.props.stroke.id).attr('transform'));
+        // clearTimeout(that.timerPress);
+        // d3.event.preventDefault();
+        var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
         // console.log(transform)
-        var offsetX = d3.event.x - that.lastPosition.x;
-        var offsetY = d3.event.y - that.lastPosition.y;
+        var offsetX = event.srcEvent.x - that.lastPosition.x;
+        var offsetY = event.srcEvent.y - that.lastPosition.y;
         var X = offsetX + transform.translateX;
         var Y = offsetY + transform.translateY;
-        d3.select('#item-'+env.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
 
-
-            
-            var linesAttached = env.props.stroke.linesAttached;
-            for (var i in linesAttached){
-                var line = linesAttached[i];
-                var identifier = 'item-'+line;
-                var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
-                var X = offsetX + transform.translateX;
-                var Y = offsetY + transform.translateY;
-                d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
-            }
-            
-        // }
-        
-        // d3.select('svg').append('circle')
-        //     .attr('cx', X)
-        //     .attr('cy', Y)
-        //     .attr('r', 10)
-        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+        that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
     }
-    dragended(env) {
-        var that = env;
-        that.drag = false;
+    dragended(event) {
+        var that = this;
+        // that.drag = false;
         // d3.select('#item-'+env.props.stroke.id).classed("dragging", false);
 
         // To say nothing is holded anymore and dragged
-        clearTimeout(that.timerPress);
+        // clearTimeout(that.timerPress);
         
         if (that.props.isGallery == false){
             // that.props.dragItem(false);
-            that.props.holdGuide(false);
-            that.colorForHolding(false)
+            // that.props.holdGuide(false);
+            // that.colorForHolding(false)
        
 
         
             // TO detect the tap
-            var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+            /*var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
             var time = Date.now() -  that.startPosition['time'];
 
             // console.log(dist, time)
             if (dist < 10 && time < 100){
                 clearTimeout(that.timerPress);
-            }
+            }*/
         }
 
     }
-    componentDidUpdate(){
-        // console.log('HELLO')
-      
+    componentDidUpdate(prevProps, prevState){
+        // console.log('HELLO', this.props.stroke)
+        this.addBG();
+    }
+    drawRectangle(width, height, x, y){
+        var that = this;
+        var sketch = d3sketchy();
+        var rec = sketch.rectStroke({ x:x, y:y, width:width, height:height, density: 3, sketch:2});
+        var flattened = [].concat(...rec)
+
+        d3.select('#tagSnapped-'+that.props.stroke.id).append('rect')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('x', x)
+            .attr('y',y)
+            .attr('fill', 'rgba(252, 243, 242, 1)')
+
+        for (var i in flattened){
+            var item = flattened[i];
+            d3.select('#tagSnapped-'+that.props.stroke.id)
+            .append('path')
+            .attr('d', (d)=>{ return item })
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '0.3')
+            .style('stroke-linecap', 'round')
+            .style('stroke-linejoin', 'round')
+        }
+        
+       
     }
     addLine = (d) => {
         // console.log('DOOO')
@@ -202,26 +348,13 @@ class Tag extends Component {
      * @param {*} isIt 
      */
     colorForHolding(isIt){
-        
-        d3.select('#rect-'+this.props.stroke.id)
-            .attr('width', 0)
-            .attr('height', 0)
-        
-       
+        var that = this;
+
+        d3.select('#rect-'+that.props.stroke.id).attr('width', 200).attr('height', 200).attr('x', 0).attr('y', 0)
+        d3.select('#rect-'+that.props.stroke.id).attr('fill', 'rgba(252, 243, 242, 0)')
         if (isIt == true){
-            var BBox = _getBBox('item-'+this.props.stroke.id);
-            var x = this.props.stroke.position[0] - BBox.x;
-            var y = this.props.stroke.position[1] - BBox.y;
-            // console.log(BBox)
-
-            d3.select('#rect-'+this.props.stroke.id)
-                .attr('x', -x)
-                .attr('y', -y)
-                .attr('width', BBox.width)
-                .attr('height', BBox.height)
-
-                // .attr('fill', '#9C9EDEDF')
-                .attr('opacity', '0.2')
+            d3.select('#rect-'+that.props.stroke.id).attr('fill', 'grey')
+            
         }
     }
     render() {
@@ -229,40 +362,52 @@ class Tag extends Component {
         var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
 
         var scale = 1;
+
+        // console.log(this.props.stroke.placeHolder)
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
                     key={i}
                     data={d}
                     parent={this.props.stroke}
                    
-                    lines={d['lines']}
+                    lines={d.lines}
                     addLine={this.addLine}
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
                 />
         });
+
+        // const tagSnapped = this.props.stroke.tagSnapped.map((d, i) => {
+        //     return <Tag 
+        //             key={i} 
+        //             stroke={d}
+        //             isGallery={false}
+        //             holdGuide={false}
+        //             colorStroke = {'red'}
+        //             sizeStroke = {'red'}
+        //         />
+        // });
+
+
+
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${translate[0]},${translate[1]})scale(${scale})`}>
-            
+            <g id={'item-'+this.props.stroke.id} className={'tagEntities'} transform={`translate(${translate[0]},${translate[1]})scale(${scale})`}>
+                <g id={'tagSnapped-' + this.props.stroke.id} style={{'pointerEvents': 'none' }} transform={`translate(0,0)`}>
+                    {/* {tagSnapped} */}
+                </g>
 
-                <rect id={'rect-'+this.props.stroke.id} />
+
+                
                 <path id={this.props.stroke.id}></path>
                 {/* <path id={'fake-'+this.props.stroke.id}></path> */}
                 {listPlaceHolder}
-
-            
-
-                {/* <PlaceHolderText 
-                    data={this.props.stroke.textPosition}
-                    dataParent={this.props.stroke} 
-                /> 
-                 */}
+                <rect id={'rect-'+this.props.stroke.id} style={{'pointerEvents': 'none' }}/>
 
                 
-                
+
             </g>
         );
         
