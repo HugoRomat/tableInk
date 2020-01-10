@@ -207,6 +207,12 @@ class ColorsMenu extends Component {
         d3.select('#function').on('contextmenu', function(){
             d3.event.preventDefault();
         })
+        d3.select('#pattern').on('contextmenu', function(){
+            d3.event.preventDefault();
+        })
+        d3.select('#patternSVG').on('contextmenu', function(){
+            d3.event.preventDefault();
+        })
 
 
 

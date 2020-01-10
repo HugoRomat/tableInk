@@ -115,14 +115,14 @@ class LinesGrouping extends Component {
         }
 
         /** RED */
-        /*
+        
         d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id)
             .attr('width', that.BBox.width + 80)
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
             .attr('fill', 'rgba(255,0,0,0.3)')
-        */
+    
             
     }
     removeContainer(){
@@ -277,7 +277,7 @@ class LinesGrouping extends Component {
         
     }
     addPlaceHolder(){
-        console.log(this.props.placeholders)
+        // console.log(this.props.placeholders)
         var line = d3.line()
         var that = this;
 

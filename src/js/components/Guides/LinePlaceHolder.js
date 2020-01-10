@@ -37,8 +37,8 @@ class LinePlaceHolder extends Component {
         
                 for (var i = 0; i < length; i += step){
                     var point = path.getPointAtLength(i);
-                    var X = point['x']// + that.props.parent.position[0];
-                    var Y = point['y']// + that.props.parent.position[1];
+                    var X = point['x']- that.props.stroke.pattern.BBox.width/2
+                    var Y = point['y'] - that.props.stroke.pattern.BBox.height/2
         
                     var container = d3.select('#pattern-' + that.props.stroke.id).append('g').attr('transform', 'translate('+X+','+Y+')')
                     for (var j = 0; j < that.props.stroke.pattern.strokes.length; j += 1){

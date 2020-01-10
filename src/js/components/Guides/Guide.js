@@ -101,25 +101,31 @@ class Guide extends Component {
             }
         })
         this.mc.on("press", function(event){
-            that.props.dragItem(false);
-            that.colorForHolding(true);
-            that.props.holdGuide(that.props.stroke.id);
+            if (event.pointers[0].pointerType == 'touch'){
+                that.props.dragItem(false);
+                that.colorForHolding(true);
+                that.props.holdGuide(that.props.stroke.id);
+            }
         })
         this.mc.on("pressup", function(event){
-            that.props.dragItem(false);
-            that.colorForHolding(false);
-            that.props.holdGuide(false);
+            if (event.pointers[0].pointerType == 'touch'){
+                that.props.dragItem(false);
+                that.colorForHolding(false);
+                that.props.holdGuide(false);
+            }
         })
 
         this.mc.on("tap", function(event){
             // console.log('GO',that.props.stroke.id)
             // clearTimeout(that.timerPress);
-            that.props.setGuideTapped(that.props.stroke.id);
-            that.colorForHolding(true);
-            setTimeout(function(){
-                that.props.setGuideTapped(false);
-                that.colorForHolding(false);
-            }, 2000)
+            if (event.pointers[0].pointerType == 'touch'){
+                that.props.setGuideTapped(that.props.stroke.id);
+                that.colorForHolding(true);
+                setTimeout(function(){
+                    that.props.setGuideTapped(false);
+                    that.colorForHolding(false);
+                }, 2000)
+            }
             // console.log('Thats a tap')
             // var BBox = _getBBox('item-'+env.props.stroke.id)
             // that.props.shouldOpenMenu({
@@ -133,7 +139,7 @@ class Guide extends Component {
 
 
             
-        d3.select('#item-'+that.props.stroke.id)
+       
             
         //     .on('pointermove', function(d){
         //         if (d3.event.pointerType == 'touch'){
@@ -150,6 +156,7 @@ class Guide extends Component {
         //             that.dragended(that);
         //         }
         //     })
+        d3.select('#item-'+that.props.stroke.id)
             .on('contextmenu', function(){
                 d3.event.preventDefault();
             })

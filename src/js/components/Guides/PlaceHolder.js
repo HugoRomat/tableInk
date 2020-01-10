@@ -179,8 +179,8 @@ class PlaceHolder extends Component {
         // console.log(that.props.patternPenData.strokes)
         for (var i = 0; i < length; i += step){
             var point = path.getPointAtLength(i);
-            var X = point['x']// + that.props.parent.position[0];
-            var Y = point['y']// + that.props.parent.position[1];
+            var X = point['x'] - that.props.patternPenData.BBox.width/2; // + that.props.parent.position[0];
+            var Y = point['y'] - that.props.patternPenData.BBox.height/2// + that.props.parent.position[1];
             // console.log('GO')
             var container = d3.select('#tempPattern-' + this.props.data.id  + '-' + this.props.parent.id).append('g').attr('transform', 'translate('+X+','+Y+')')
             for (var j = 0; j < that.props.patternPenData.strokes.length; j += 1){
