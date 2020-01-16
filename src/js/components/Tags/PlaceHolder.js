@@ -25,7 +25,10 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                that.down = true;
+                if (d3.event.pointerType == 'pen' ){
+                    that.down = true;
+                }
+                
                 /**
                 * TO FADEOUT
                 */

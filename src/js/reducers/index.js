@@ -37,7 +37,10 @@ const initialState = {
     'tables': [],
     'grid': false,
     'voiceQueries': [],
-    'tagsInterface': []
+    'tagsInterface': [],
+    'colorPalette':  {'lines':[]},
+    'imagesCanvas': []
+    ,
   };
 
     // console.log(alphabetPerso)
@@ -301,8 +304,19 @@ initialState.sketchLines = strokes
             sketchLines: [ ...state.sketchLines, action.data] 
           };
         }
+      
         
+      case 'ADD_IMAGE': 
+      // console.log(action.data)
+        state = update(state, { imagesCanvas:{$push: [action.data]}})
+        return state;
 
+      case 'ADD_PALETTE_LINE':  
+        // return { ...state, colorPalette[lines]: [ action.data, ...state.sketchLines] };
+         state = update(state, { colorPalette: {lines :  {$push: [action.data]}}})
+         return state;
+
+        
       case 'CHANGE_MODEL_GROUP_LINES':
         var idsGroup = action.data.idGroups;
         // console.log(action.data.model)

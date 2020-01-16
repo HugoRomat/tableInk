@@ -70,6 +70,15 @@ export const updateGroupPosition = data => ({
     data
 })
 
+export const addPaletteLine = data => ({
+    type: 'ADD_PALETTE_LINE',
+    data
+})
+export const addImage = data => ({
+    type: 'ADD_IMAGE',
+    data
+})
+
 export const SetUIId = data => ({
     type: 'SET_UI_ID',
     data

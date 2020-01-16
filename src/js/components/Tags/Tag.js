@@ -70,15 +70,20 @@ class Tag extends Component {
                     that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
                     that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
                     that.dragstarted(ev);
-                    var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
+                    // var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
                     _getBBoxPromise('item-' + that.props.stroke.id).then(( BB)=>{
+                        // console.log(BB)
                         that.allBoundingBox = BB;
-                        that.allBoundingBox.x += getPan.translateX;
-                        that.allBoundingBox.y += getPan.translateY;
+                        // that.allBoundingBox.x += getPan.translateX;
+                        // that.allBoundingBox.y += getPan.translateY;
                     })
                     that.down = true
                
             }
+            if (ev.pointers[0].pointerType == 'pen' ){
+                
+            }
+            
         })
         this.mc.on("panmove", function(ev) {
             if (ev.pointers[0].pointerType == 'touch'){
@@ -117,7 +122,8 @@ class Tag extends Component {
                 // console.log(lines)
                 getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
                     // showBboxBB(d, 'red')
-                    _getBBoxPromise(['item-'+that.props.stroke.id]).then((e)=>{
+                    _getBBoxPromise(['rect-'+that.props.stroke.id]).then((e)=>{
+                        // showBboxBB(e, 'red')
                         data.offsetX = d.x - e.x;
                         data.offsetY = d.y - e.y;
                         data.BB = d;
@@ -190,6 +196,7 @@ class Tag extends Component {
         BBTemp.x += offsetX; //+ transformPan.translateX;
         BBTemp.y += offsetY; //+ transformPan.translateY;
         
+        // console.log(BBTemp)
         // showBboxBB(BBTemp, 'blue');
       
         var BBid = [];

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement } from "./../Helper";
+import { getNearestElement, getTransformation } from "./../Helper";
 
 class TagInterface extends Component {
     constructor(props) {
@@ -26,55 +26,67 @@ class TagInterface extends Component {
         var that = this;
         d3.select('#item-'+this.props.stroke.id).selectAll('.tapItem')
         .on('pointerdown', function(d){
-            var othersTags = that.props.stroke.tagHold.tagSnapped;
-            var iteration = parseInt(d3.select(this).attr('iteration'));
+            if (d3.event.pointerType == 'touch'){
+                // console.log('HEY')
+                var othersTags = that.props.stroke.tagHold.tagSnapped;
+                var iteration = parseInt(d3.select(this).attr('iteration'));
 
-            // console.log(iteration)
-            if (othersTags.length > 0){
+                // console.log(iteration)
+                if (othersTags.length > 0){
 
-                var parent = d3.select(this).node().parentNode;
-                d3.select(parent).selectAll('.placeholderTag').remove();
-                var where = iteration % (othersTags.length + 1);
+                    var parent = d3.select(this).node().parentNode;
+                    d3.select(parent).selectAll('.placeholderTag').remove();
+                    var where = iteration % (othersTags.length + 1);
 
 
-                /* Pour le premier element */
-                if (where == othersTags.length){
-                    var newTag = othersTags[where];
-                    var container = d3.select(parent);
-                    for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
-                        var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
-                        var gElement = container.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
-        
-                        gElement.append('path')
-                            .attr('class', 'placeholderTag')
-                            .attr('d', (d)=>line(element.data))
-                            .attr('fill', 'none')
-                            .attr('stroke', (d)=> element.colorStroke )
-                            .attr('stroke-width', element.sizeStroke)
-                            .style('pointer-events', 'none')
+                    /* Pour le premier element */
+                    if (where == othersTags.length){
+                        var newTag = othersTags[where];
+                        var container = d3.select(parent);
+                        for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
+                            var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
+                            
+                            // var gElement = container.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+
+                            container.append('path')
+                                .attr('class', 'placeholderTag')
+                                .attr('d', (d)=>line(element.data))
+                                .attr('fill', 'none')
+                                .attr('stroke', (d)=> element.colorStroke )
+                                .attr('stroke-width', element.sizeStroke)
+                                .style('pointer-events', 'none')
+                        }
+                    } 
+                    /* Pour les autres elements */
+                    else {
+                        var newTag = othersTags[where];
+                        var container = d3.select(parent);
+                        for (var j = 0; j < newTag.placeHolder[0]['lines'].length; j += 1){
+                            var element = newTag.placeHolder[0]['lines'][j];
+                            var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
+                            // var X = point['x'] - transformPan.translateX - that.props.stroke.tagHold.offsetX - that.props.stroke.tagHold.BB.width/2;
+                            // var Y = point['y'] - transformPan.translateY - that.props.stroke.tagHold.offsetY - that.props.stroke.tagHold.BB.height/2;
+
+                            // var parenGTranslate = container.node().parentNode;
+                            // d3.select(parenGTranslate).attr('transform', 'translate('+X+','+Y+')');
+                            // var gElement = container.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+
+                            container.append('path')
+                                .attr('class', 'placeholderTag')
+                                .attr('d', (d)=>line(element.data))
+                                .attr('fill', 'none')
+                                .attr('stroke', (d)=> element.colorStroke )
+                                .attr('stroke-width', element.sizeStroke)
+                                .style('pointer-events', 'none')
+                        }   
+                        
                     }
-                } 
-                /* Pour les autres elements */
-                else {
-                    var newTag = othersTags[where];
-                    var container = d3.select(parent);
-                    for (var j = 0; j < newTag.placeHolder[0]['lines'].length; j += 1){
-                        var element = newTag.placeHolder[0]['lines'][j];
-                        var gElement = container.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
-        
-                        gElement.append('path')
-                            .attr('class', 'placeholderTag')
-                            .attr('d', (d)=>line(element.data))
-                            .attr('fill', 'none')
-                            .attr('stroke', (d)=> element.colorStroke )
-                            .attr('stroke-width', element.sizeStroke)
-                            .style('pointer-events', 'none')
-                    }   
-                    
+                    iteration += 1
+                    d3.select(this).attr('iteration', String(iteration))
                 }
-                iteration += 1
-                d3.select(this).attr('iteration', String(iteration))
             }
+            
             
             // console.log(that.props.stroke, newTag)
         })
@@ -82,7 +94,7 @@ class TagInterface extends Component {
     drawTag(event){
         var that = this;
         var line = d3.line()
-        
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke.data))
             .attr('fill', 'none')
@@ -97,23 +109,23 @@ class TagInterface extends Component {
 
         for (var i = 0; i < length; i += step){
             var point = path.getPointAtLength(i);
-            var X = point['x']
-            var Y = point['y']
+            var X = point['x'] - transformPan.translateX - that.props.stroke.tagHold.offsetX - that.props.stroke.tagHold.BB.width/2;
+            var Y = point['y'] - transformPan.translateY - that.props.stroke.tagHold.offsetY - that.props.stroke.tagHold.BB.height/2;
 
             var container = d3.select('#item-'+that.props.stroke.id).select('#patternTag').append('g').attr('transform', 'translate('+X+','+Y+')')
 
             container.append('rect')
                     .attr('class', 'tapItem')
                     .attr('iteration', '0')
-                    .attr('x', -10)
-                    .attr('y', -10)
+                    .attr('x', that.props.stroke.tagHold.offsetX + transformPan.translateX)
+                    .attr('y', that.props.stroke.tagHold.offsetY + transformPan.translateY)
                     .attr('width',that.props.stroke.tagHold.BB.width)
                     .attr('height', that.props.stroke.tagHold.BB.height)
-                    .attr('fill', 'rgba(252, 243, 242, 0)')
+                    .attr('fill', 'rgba(252, 243, 242, 0.4)')
 
             for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
                 var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
-                var gElement = container.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+                var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
 
                 gElement.append('path')
                     .attr('class', 'placeholderTag')

@@ -37,6 +37,12 @@ path{
     top: 40%;
     left: 125%;
 }
+#canvasTemp{
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+}
 .lineRed {
     background-size: 79px 360px;
     position: absolute;

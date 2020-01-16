@@ -280,6 +280,11 @@ class LinesGrouping extends Component {
         // console.log(this.props.placeholders)
         var line = d3.line()
         var that = this;
+        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+        d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+        d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+
+
 
         var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
 

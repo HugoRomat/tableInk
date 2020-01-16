@@ -309,59 +309,7 @@ class Group extends Component {
         })
     }
     getAllIntersectsForGroup (){
-        // allGroups
-        var that = this;
-        var allgroups = this.props.allGroups.map((d)=> d.id);
-        that.linesDiscarded = {};
-        var BBid = [];
-        d3.select('.standAloneLines').selectAll('g').each(function(){
-            BBid.push(d3.select(this).attr('id'))
-        })
-        var arrayPromiseLine = [];
-        for (var i in BBid){
-            arrayPromiseLine.push(_getBBoxPromise(BBid[i]))
-        }
-
-        var arrayPromiseGroup = [];
-        for (var i in allgroups){
-            arrayPromiseGroup.push(that.getAllBoundingBox(allgroups[i]))
-        }
-        // console.log(BBid)
-        Promise.all(arrayPromiseLine).then(function(BBLine) {
-        //    console.log(BBLine);
-           Promise.all(arrayPromiseGroup).then(function(BBGroup) {
-            // console.log(BBGroup);
-                for (var i in BBGroup){
-                    var BBoxGroup = BBGroup[i];
-                    showBboxBB(BBoxGroup, 'red')
-                    for (var j in BBLine){
-                        
-                        var BBoxLine= BBLine[j];
-                        
-                        var intersects = boxBox(BBoxGroup.x, BBoxGroup.y, BBoxGroup.width, BBoxGroup.height, BBoxLine.x, BBoxLine.y, BBoxLine.width, BBoxLine.height);
-                        if (intersects) {
-                            // console.log(allgroups[i])
-                            if (that.linesDiscarded[allgroups[i]] == undefined) that.linesDiscarded[allgroups[i]] = [BBid[j]]
-                            else that.linesDiscarded[allgroups[i]].push(BBid[j])
-                        }
-                    }
-                }
-               
- 
-                console.log(that.linesDiscarded)
-            })
-
-        })
        
-        // that.getAllBoundingBox(that.props.group.id).then((BB)=> {
-
-            
-        // })
-        // console.log(arrayPromise)
-        // console.log(allgroups)
-        
-            // console.log(BB)
-        
     }
     findIntersectionRecursive = async(BBTemp, ev) => {
         // console.log(BBTemp)
@@ -374,24 +322,25 @@ class Group extends Component {
 
         var BBid = [];
         var arrayLineAttached = this.props.group.lines.join().split(',')
+
+        /** Push all the lines */
         d3.select('.standAloneLines').selectAll('g').each(function(){
             var idSImple = d3.select(this).attr('id').split('-')[1]
             // console.log(d3.select(this).attr('id'))
             if (arrayLineAttached.indexOf(idSImple) == -1) BBid.push(d3.select(this).attr('id'))
         })
+         /** Push all the groups */
         d3.selectAll('.groupPath').each(function(){
             var idSImple = d3.select(this).attr('id').split('-')[1]
-            // console.log(idSImple)
-            // console.log(d3.select(this).attr('id'))
             if (idSImple != that.props.group.id) BBid.push('group-'+idSImple)
         })
         
         // console.log(BBid, arrayLineAttached)
         // showBboxBB(BBTemp, 'blue');
-        this.findIntersects(BBTemp, offsetX, offsetY, BBid)
+        this.findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp)
         
     }
-    findIntersects = async(BBTemp, offsetX, offsetY, BBid) => {
+    findIntersects = async(BBTemp, offsetX, offsetY, BBid, BBinitial) => {
        
         // showBboxBB(BBTemp, 'red');
         // console.log(BBid)
@@ -403,6 +352,7 @@ class Group extends Component {
             var idSImple = id.split('-')[1];
             var type = id.split('-')[0]
             if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
+            /** Make it bigger if it's a group */
             if (type == 'group') {
                 var BB = await _getBBoxPromise(BBid[i]);
                 BB.x -= 40;
@@ -424,39 +374,48 @@ class Group extends Component {
 
                 /** It's a group */
                 if (isItAGroup != undefined){
-                    // console.log('GOO')
+                    // console.log(BBinitial)
                     // showBboxBB(BB, 'blue');
-                    var transform = getTransformation(d3.select('#'+id).attr('transform'));
-                    var X = (offsetX + transform.translateX) ;
-                    var Y = (offsetY + transform.translateY) ;
-                    d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
-                    var index = BBid.indexOf(BBid.find(x => x == id));
-                    var newBB = JSON.parse(JSON.stringify(BBid))
-                    newBB.splice(index,1)
-                    // showBboxBB(BB, 'red');
-                    this.findIntersects(BB, offsetX, offsetY, newBB); 
+                    /* Cas horizontal vertial JE BOUGE VERTICAL */
+                    if ((BB.x < BBinitial.x && BB.x + BB.width > BBinitial.x + BBinitial.width) && (BB.y > BBinitial.y && BB.y + BB.height < BBinitial.y + BBinitial.height)){
+                        // console.log('CAS 1')
+                    }
+                    /* Cas horizontal vertial JE BOUGE HORIZONTAL */
+                    else if ((BB.x > BBinitial.x && BB.x + BB.width < BBinitial.x + BBinitial.width) && (BB.y < BBinitial.y && BB.y + BB.height > BBinitial.y + BBinitial.height)){
+                        // console.log('CAS 1')
+                    }
+                    else {
+                        var transform = getTransformation(d3.select('#'+id).attr('transform'));
+                        var X = (offsetX + transform.translateX) ;
+                        var Y = (offsetY + transform.translateY) ;
+                        d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
+                        var index = BBid.indexOf(BBid.find(x => x == id));
+                        var newBB = JSON.parse(JSON.stringify(BBid))
+                        newBB.splice(index,1)
+                        // showBboxBB(BB, 'red');
+                        this.findIntersects(BB, offsetX, offsetY, newBB, BBinitial); 
+                    }
+
+                    
                   
                 }
                 /** Not stroke inside a group */
                 else if (insideandWhichGroup == undefined){
+                   
                     var transform = getTransformation(d3.select('#'+id).attr('transform'));
                     var X = offsetX + transform.translateX;
                     var Y = offsetY + transform.translateY;
                     d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
 
                     var index = BBid.indexOf(BBid.find(x => x == id));
-                    // console.log(BBid)
-                    // console.log(id)
                     var newBB = JSON.parse(JSON.stringify(BBid))
                     newBB.splice(index,1)
-                    // alreadyAdded.push(id)
-                    // console.log(BBid)
-                    this.findIntersects(BB, offsetX, offsetY, newBB);
+                    this.findIntersects(BB, offsetX, offsetY, newBB, BBinitial);
                    
                 } 
                 /*** If already in a group */
                 else {
-                    console.log('GO')
+                    // console.log('GO')
                     // console.log(insideandWhichGroup)
                     var arrayLineAttached = insideandWhichGroup.lines.join().split(',')
                     arrayLineAttached.forEach((d)=>{
@@ -473,17 +432,16 @@ class Group extends Component {
 
                     // var BB =  await _getBBoxPromise(BBid[i])//this.getAllBoundingBox(insideandWhichGroup.id);
 
+                    /** Erase from array */
                     var arraywihoutItem = arrayLineAttached.map((k)=>'item-'+k)
                     var newBB = JSON.parse(JSON.stringify(BBid))
                     for (var i = arraywihoutItem.length - 1; i >= 0; i--) {
                         var index = BBid.indexOf(BBid.find(x => x == arraywihoutItem[i]));
-                        // console.log(index)
-
                         newBB.splice(index,1)
                     }
                     
 
-                    this.findIntersects(BB, offsetX, offsetY, newBB);
+                    this.findIntersects(BB, offsetX, offsetY, newBB, BBinitial);
                 }
 
                 // console.log(insideandWhichGroup)

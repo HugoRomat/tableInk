@@ -5,7 +5,7 @@ import CalcOmbb from './../../../customModules/ombb';
 import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
 
-import {polygonPolygon} from 'intersects';
+import {polygonPolygon, boxCircle} from 'intersects';
 import Polygon from 'polygon'
 
 
@@ -421,7 +421,38 @@ export function getMyBBox(element){
     })
 }
 
+export async function retrieveStyle(idLine){
+    // console.log(d3.select('#'+ idLine))
+    var element = d3.select('#'+ idLine).select('.realStroke')
+    var strokeSize = element.attr('stroke-width')
+    var color = element.attr('stroke')
 
+    return {'color': color, 'size': strokeSize}
+}
+
+export async function checkIfSomething(x, y){
+    
+    var BBid = [];
+    var whichElement = null
+    d3.select('.standAloneLines').selectAll('g').each(function(){
+        BBid.push(d3.select(this).attr('id'))
+    })
+    d3.select('.standAloneImages').selectAll('g').each(function(){
+        BBid.push(d3.select(this).attr('id'))
+    })
+    d3.select('.linesPalette').selectAll('g').each(function(){
+        BBid.push(d3.select(this).attr('id'))
+    })
+
+    // console.log(BBid)
+    for (var i in BBid){
+        var BB = await _getBBoxPromise(BBid[i]);
+        // showBboxBB(BB, 'red')
+        var isInside = boxCircle(BB.x, BB.y, BB.width, BB.height, x, y, 30);
+        if (isInside) whichElement = BBid[i]
+    }
+    return whichElement
+}
 
 
  export function _getBBoxPromiseREal(id, offset){
@@ -650,7 +681,6 @@ export function FgetBBox(id, offset){
     BB.width += 2*offset;
     BB.height += 3*offset;
 
-    // showBboxBB(BB, 'red')
     return BB;
 
 }

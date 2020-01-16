@@ -11,6 +11,7 @@ class PlaceHolder extends Component {
         super(props);
         this.down = false;
         this.tempArrayStroke = [];
+        this.lastStepTagPattern = 0;
     }
     // componentDidMount(){
     //     console.log(this.props.data)
@@ -160,7 +161,7 @@ class PlaceHolder extends Component {
         
         var that = this;
         var line = d3.line()
-        d3.select('#tempPattern-' + that.props.data.id + '-' + that.props.parent.id).selectAll('*').remove();
+       
 
         // console.log('DRAWPATTERN')
 
@@ -177,22 +178,38 @@ class PlaceHolder extends Component {
         var length = path.getTotalLength();
 
         // console.log(that.props.patternPenData.strokes)
-        for (var i = 0; i < length; i += step){
-            var point = path.getPointAtLength(i);
-            var X = point['x'] - that.props.patternPenData.BBox.width/2; // + that.props.parent.position[0];
-            var Y = point['y'] - that.props.patternPenData.BBox.height/2// + that.props.parent.position[1];
-            // console.log('GO')
-            var container = d3.select('#tempPattern-' + this.props.data.id  + '-' + this.props.parent.id).append('g').attr('transform', 'translate('+X+','+Y+')')
-            for (var j = 0; j < that.props.patternPenData.strokes.length; j += 1){
-                var element = that.props.patternPenData.strokes[j];
-                // container.append('g').attr('transform', 'translate('+(element.position[0]) +','+(element.position[1] -that.props.patternPenData.BBox.height/2)+')')
-                container.append('g').attr('transform', 'translate('+(element.position[0]) +','+(element.position[1])+')')
-                    .append('path')
-                    .attr('d', (d)=>line(element.points))
-                    .attr('fill', 'none')
-                    .attr('stroke', (d)=> element.data.colorStroke )
-                    .attr('stroke-width', element.data.sizeStroke)
-            }    
+        
+        if (length - this.lastStepTagPattern > step){
+            d3.select('#tempPattern-' + that.props.data.id + '-' + that.props.parent.id).selectAll('*').remove();
+            this.lastStepTagPattern = length;
+            for (var i = 0; i < length; i += step){
+                var point = path.getPointAtLength(i);
+                // console.log(that.props.patternPenData.BBox.width)
+                var X = point['x']- that.props.patternPenData.BBox.width/2; // + that.props.parent.position[0];
+                var Y = point['y']- that.props.patternPenData.BBox.height/2// + that.props.parent.position[1];
+                // console.log('GO')
+                var container = d3.select('#tempPattern-' + this.props.data.id  + '-' + this.props.parent.id).append('g').attr('transform', 'translate('+X+','+Y+')')
+
+                // container.append('rect')
+                //     .attr('x', 0)
+                //     .attr('y', 0)
+                //     .attr('width', that.props.patternPenData.BBox.width)
+                //     .attr('height', that.props.patternPenData.BBox.height)
+                //     .attr('fill', 'none')
+                //     .attr('stroke', 'red')
+                // console.log('GO')
+
+                for (var j = 0; j < that.props.patternPenData.strokes.length; j += 1){
+                    var element = that.props.patternPenData.strokes[j];
+                    // console.log(element)
+                    container.append('g').attr('transform', 'translate('+(element.position[0]) +','+(element.position[1])+')')
+                        .append('path')
+                        .attr('d', (d)=>line(element.points))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> element.data.colorStroke )
+                        .attr('stroke-width', element.data.sizeStroke)
+                }    
+            }
         }
 
 
@@ -216,8 +233,8 @@ class PlaceHolder extends Component {
         
         // console.log(sketch, rec)
 
-        var widthTotal = this.props.parent.width;
-        var heightTotal = this.props.parent.height;
+        var widthTotal = 200//this.props.parent.width;
+        var heightTotal = 200//this.props.parent.height;
         // console.log(this.props.parent.width)
         var that = this;
 
@@ -245,13 +262,14 @@ class PlaceHolder extends Component {
                 .attr('stroke-width', '0.3')
                 .style('stroke-linecap', 'round')
                 .style('stroke-linejoin', 'round')
+                .style('opacity', 0.1)
 
             rect = element
                 .attr('width', 130)
                 .attr('height', 80)
                 .attr('x', 35)
                 .attr('y',35)
-                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .attr('fill', 'rgba(252, 243, 242,  0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             // rect = element
@@ -274,13 +292,14 @@ class PlaceHolder extends Component {
                 .attr('stroke-width', '0.3')
                 .style('stroke-linecap', 'round')
                 .style('stroke-linejoin', 'round')
+                .style('opacity', 0.1)
 
             rect = element
                 .attr('width', 75)
                 .attr('height', 40)
                 .attr('x', 80)
                 .attr('y',55)
-                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .attr('fill', 'rgba(252, 243, 242,  0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             // rect = element
@@ -314,7 +333,7 @@ class PlaceHolder extends Component {
                 .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('fill', 'rgba(94, 130, 237, 0.4)')
+                .attr('fill', 'rgba(252, 243, 242, 0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             
