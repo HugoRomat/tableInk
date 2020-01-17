@@ -219,7 +219,10 @@ class ColorsMenu extends Component {
         this.drawSVGPattern();
 
 
-
+        $('#myRange').on('change', function(event) {
+            var value = parseFloat(document.getElementById('myRange').value);
+            that.props.setOpacity(value);
+        })
     }
     drawSVGPattern = async() => {
         var that = this;
@@ -347,7 +350,7 @@ class ColorsMenu extends Component {
                             </svg>
                         </div>
                </div>
-
+               <div id='range'><input type="range" orient="vertical" min="0" max="1" defaultValue="1" step='0.1' className="slider" id="myRange"/></div>
                 <div id="colorsMenu">
                 </div>
 

@@ -121,7 +121,7 @@ class LinesGrouping extends Component {
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
-            .attr('fill', 'rgba(255,0,0,0.3)')
+            .attr('fill', 'rgba(255,0,0,0.1)')
     
             
     }
@@ -283,8 +283,9 @@ class LinesGrouping extends Component {
         d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
         d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
         d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+        d3.select('#placeHolderTagLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
 
-
+        // console.log(placeHolder)
 
         var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
 
@@ -301,6 +302,9 @@ class LinesGrouping extends Component {
             var X = this.BBox.x - transformDrag.translateX - 50; 
             var Y = this.BBox.y - transformDrag.translateY;
             d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+
+           
+
         }
 
         
@@ -385,6 +389,9 @@ class LinesGrouping extends Component {
         return (
             <g transform={`translate(0,0)`}>
                <g id={'placeHolderBulletLine-'+this.props.iteration +'-'+this.props.id} >
+                   {/* <g></g> */}
+               </g>
+               <g id={'placeHolderTagLine-'+this.props.iteration +'-'+this.props.id} >
                    {/* <g></g> */}
                </g>
 

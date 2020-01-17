@@ -3,12 +3,13 @@ import * as d3 from 'd3';
 import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise, showOmBB, showBboxBB, getBoundinxBoxLines } from "../Helper";
 import { connect } from 'react-redux';
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
-
+import html2canvas from 'html2canvas';
 
 import { 
     addLineToTagGroup,
     addTagSnapped,
-    removeTag
+    removeTag,
+    addTagToGuide
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
@@ -18,7 +19,8 @@ import { boxBox } from "intersects";
 const mapDispatchToProps = { 
     addLineToTagGroup,
     addTagSnapped,
-    removeTag
+    removeTag,
+    addTagToGuide
 };
 const mapStateToProps = (state, ownProps) => {  
   
@@ -41,6 +43,7 @@ class Tag extends Component {
         this.state = {
             'BBox':{}
         };
+
     }
     componentDidMount(){
         
@@ -88,6 +91,7 @@ class Tag extends Component {
         this.mc.on("panmove", function(ev) {
             if (ev.pointers[0].pointerType == 'touch'){
                 if (that.down){
+                    // console.log(that.down)
                     that.findIntersection(that.allBoundingBox, ev);
                     that.dragged(ev);
                 }
@@ -203,12 +207,18 @@ class Tag extends Component {
         var arrayRectangle = []
         // showBboxBB(BBTemp, 'red');
 
-        //Put my lines in an array
+        //Put my lines in an array FOR TAGS
         d3.selectAll('.tagEntities').each(function(){
             var idSImple = d3.select(this).attr('id').split('-')[1]
-            // console.log(d3.select(this).attr('id'))
             if (arrayRectangle.indexOf(idSImple) == -1 && idSImple != that.props.stroke.id) BBid.push(d3.select(this).attr('id'))
         })
+        //Put my lines in an array FOR GUIDES
+        // d3.selectAll('.guide').each(function(){
+        //     var idSImple = d3.select(this).attr('id').split('-')[1]
+        //     if (arrayRectangle.indexOf(idSImple) == -1 && idSImple != that.props.stroke.id) BBid.push(d3.select(this).attr('id'))
+        // })
+
+        
         // Check for all these lines
         for (var i in BBid){
             var BB = await _getBBoxPromise(BBid[i])
@@ -216,19 +226,80 @@ class Tag extends Component {
             // showBboxBB(BBTemp, 'blue');
             var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
             // console.log(intersected)
-        
             if (intersected) {
-                var id = BBid[i];
-                var idSImple = id.split('-')[1];
-                this.props.addTagSnapped({
-                    'idReceiver':idSImple, 
-                    'idSender':that.props.stroke.id
-                })
-                this.props.removeTag(this.props.stroke.id)
-                this.down = false;
+                var tagName = BBid[i].split('-')[0];
+
+                // console.log(tagName)
+                // if (tagName == 'item'){
+/*
+                    var id = BBid[i];
+                    var idSImple = id.split('-')[1];
+                    // showBboxBB(BBTemp, 'red')
+                    // console.log(JSON.stringify(BBTemp))
+                    html2canvas(document.body, { 'useCORS': true, 'x':BBTemp.x, 'y':BBTemp.y,'taintTest': false,'allowTaint': false}).then((canvas) =>{
+                    
+                        // 'height': BBTemp.height, 'width': BBTemp.width, 'x':BBTemp.x, 'y':BBTemp.y,
+                    // this.getScreenshotOfElement(document.body,BBTemp.x, BBTemp.y,  BBTemp.width,  BBTemp.height).then((image)=>{
+
+                        var outputCanvas = document.createElement('canvas');
+                        var outputContext = outputCanvas.getContext('2d');
+                        outputCanvas.width = BBTemp.width;
+                        outputCanvas.height = BBTemp.height;
+                        outputContext.drawImage(canvas,0,0,window.innerWidth,window.innerHeight);
+                        // console.log(image)
+                        var image = outputCanvas.toDataURL()
+                        var dataTagToGuide = JSON.parse(JSON.stringify(that.props.stroke));
+                        dataTagToGuide.image = image
+                        this.props.addTagToGuide({
+                            'idGuide':idSImple, 
+                            'tag':dataTagToGuide,
+                            
+                        })
+                    })
+                        // var ctx = canvas.getContext("2d");
+                        // var imageData = ctx.getImageData(BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+                        // console.log(canvas.toDataURL())
+                       
+                        this.props.removeTag(this.props.stroke.id)
+                    // });*/
+                    
+                //     this.down = false;
+                // }
+                // else {
+                    var id = BBid[i];
+                    var idSImple = id.split('-')[1];
+                    this.props.addTagSnapped({
+                        'idReceiver':idSImple, 
+                        'idSender':that.props.stroke.id
+                    })
+                    this.props.removeTag(this.props.stroke.id)
+                    this.down = false;
+                // }
+                
             }
-            // console.log(BBid[i])
         }
+    }
+    getScreenshotOfElement(element, posX, posY, width, height, callback) {
+        
+        return new Promise(resolve => {
+            html2canvas(element, {width: width, height: height,useCORS: true, taintTest: false,allowTaint: false}).then(function(canvas) {
+               
+                    var context = canvas.getContext('2d');
+                    var imageData = context.getImageData(posX, posY, width, height).data;
+                    var outputCanvas = document.createElement('canvas');
+                    var outputContext = outputCanvas.getContext('2d');
+                    outputCanvas.width = width;
+                    outputCanvas.height = height;
+        
+                    var idata = outputContext.createImageData(width, height);
+                    idata.data.set(imageData);
+                    outputContext.putImageData(idata, 0, 0);
+                   
+                    resolve(outputCanvas.toDataURL().replace("data:image/png;base64,", ""));
+                
+            });
+
+        })
     }
     dragstarted(env) {
         // if (d3.event.sourceEvent == tou

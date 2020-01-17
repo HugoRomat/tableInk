@@ -450,8 +450,21 @@ initialState.sketchLines = strokes
 
 
 
-
-        
+        case 'ADD_TAG_GUIDE':
+            var id = action.data.idGuide;
+            var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+            console.log(index)
+            if (index > -1){
+              
+              state = update(state, { 
+                stickyLines: {
+                  [index] : {
+                    tag: {$set: action.data.tag},
+                  }
+                }
+              })
+            }
+            return state;
         // console.log(action.data)
       case 'ADD_GUIDE_TO_STICKY':
           state = update(state, { 

@@ -132,6 +132,20 @@ class PlaceHolder extends Component {
                 .attr('fill', 'rgba(252, 243, 242, 1)')
                 .style("filter", "url(#drop-shadow)")
         }
+
+        // console.log('HEY', that.props.data.id + '-' + this.props.parent.id)
+        d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
+            .attr('x1', 0).attr('y1', 75)
+            .attr('x2', 150).attr('y2', 75)
+            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+
+        d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
+            .attr('x1', 75).attr('y1', 0)
+            .attr('x2', 75).attr('y2', 150)
+            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+
+        // <rect id={'horizontal-' + this.props.data.id} />
+        // <rect id={'vertical-' + this.props.data.id} />
     }
     componentWillUnmount(){
         var that = this;
@@ -154,12 +168,17 @@ class PlaceHolder extends Component {
                 <g id={'background-' + this.props.data.id + '-' + this.props.parent.id} >
                 </g>
 
+                
                 <rect id={'rect-' + this.props.data.id} />
                 <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
 
                 <g className='paths'>
                     {listItems}
                 </g>
+
+                
+                <line id={'horizontal-'  + this.props.data.id + '-' + this.props.parent.id}/>
+                <line id={'vertical-' + this.props.data.id + '-' + this.props.parent.id}/>
             </g>
         );
         

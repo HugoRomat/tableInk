@@ -103,38 +103,82 @@ class TagInterface extends Component {
             .attr('opacity', '0')
             .attr("stroke-dasharray", "10");
       
-        var step = that.props.stroke.tagHold.BB.width + 30;
+        // var step = that.props.stroke.tagHold.BB.width + 30;
+        var step = 150;
         var path = d3.select('#'+that.props.stroke.id).node()
         var length = path.getTotalLength();
+        var f = 0
 
         for (var i = 0; i < length; i += step){
             var point = path.getPointAtLength(i);
-            var X = point['x'] - transformPan.translateX - that.props.stroke.tagHold.offsetX - that.props.stroke.tagHold.BB.width/2;
-            var Y = point['y'] - transformPan.translateY - that.props.stroke.tagHold.offsetY - that.props.stroke.tagHold.BB.height/2;
+            // var X = point['x'] - transformPan.translateX - that.props.stroke.tagHold.offsetX - that.props.stroke.tagHold.BB.width/2;
+            // var Y = point['y'] - transformPan.translateY - that.props.stroke.tagHold.offsetY - that.props.stroke.tagHold.BB.height/2;
+            var X = point['x'] - 75;
+            var Y = point['y'] - 75;
+
 
             var container = d3.select('#item-'+that.props.stroke.id).select('#patternTag').append('g').attr('transform', 'translate('+X+','+Y+')')
 
             container.append('rect')
                     .attr('class', 'tapItem')
                     .attr('iteration', '0')
-                    .attr('x', that.props.stroke.tagHold.offsetX + transformPan.translateX)
-                    .attr('y', that.props.stroke.tagHold.offsetY + transformPan.translateY)
-                    .attr('width',that.props.stroke.tagHold.BB.width)
-                    .attr('height', that.props.stroke.tagHold.BB.height)
+                    .attr('x', 0)//that.props.stroke.tagHold.offsetX + transformPan.translateX)
+                    .attr('y', 0)//that.props.stroke.tagHold.offsetY + transformPan.translateY)
+                    .attr('width', 150)//that.props.stroke.tagHold.BB.width)
+                    .attr('height', 150)//that.props.stroke.tagHold.BB.height)
                     .attr('fill', 'rgba(252, 243, 242, 0.4)')
 
-            for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
-                var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
-                var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+            if (that.props.stroke.tagHold.tagSnapped.length == 0){
 
-                gElement.append('path')
-                    .attr('class', 'placeholderTag')
-                    .attr('d', (d)=>line(element.data))
-                    .attr('fill', 'none')
-                    .attr('stroke', (d)=> element.colorStroke )
-                    .attr('stroke-width', element.sizeStroke)
-                    .style('pointer-events', 'none')
-            }    
+                for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
+                    var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
+                    var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+
+                    gElement.append('path')
+                        .attr('class', 'placeholderTag')
+                        .attr('d', (d)=>line(element.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> element.colorStroke )
+                        .attr('stroke-width', element.sizeStroke)
+                        .style('pointer-events', 'none')
+                }  
+            }
+            /** IN CASE OF MANY TAG SNAPPED **/
+            else {
+                var where = f % (that.props.stroke.tagHold.tagSnapped.length + 1);
+                // var container = d3.select('#item-'+that.props.stroke.id).select('#patternTag').append('g').attr('transform', 'translate('+X+','+Y+')')
+
+                if (where != 0){
+                    for (var j = 0; j < that.props.stroke.tagHold.tagSnapped[where-1].placeHolder[0]['lines'].length; j += 1){
+                        var element = that.props.stroke.tagHold.tagSnapped[where-1].placeHolder[0]['lines'][j];
+                        var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+
+                        gElement.append('path')
+                        .attr('class', 'placeholderTag')
+                        .attr('d', (d)=>line(element.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> element.colorStroke )
+                        .attr('stroke-width', element.sizeStroke)
+                        .style('pointer-events', 'none')
+                    } 
+                } else {
+                    // console.log(that.props.stroke.tagHold)
+                    for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
+                        var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
+                        var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
+
+                        gElement.append('path')
+                        .attr('class', 'placeholderTag')
+                        .attr('d', (d)=>line(element.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=> element.colorStroke )
+                        .attr('stroke-width', element.sizeStroke)
+                        .style('pointer-events', 'none')
+                    } 
+                }
+                f++;
+            }
+                  
         }
         
     }

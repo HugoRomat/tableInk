@@ -79,6 +79,11 @@ export const addImage = data => ({
     data
 })
 
+export const addTagToGuide = data => ({
+    type: 'ADD_TAG_GUIDE',
+    data
+})
+
 export const SetUIId = data => ({
     type: 'SET_UI_ID',
     data

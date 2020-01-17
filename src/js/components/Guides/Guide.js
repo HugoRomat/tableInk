@@ -258,7 +258,7 @@ class Guide extends Component {
             // .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "7");
-        // console.log(this.props.stroke)
+           
     }
     addLine = (d) => {
         // console.log('DOOO')
@@ -308,6 +308,7 @@ class Guide extends Component {
 
     }
     render() {
+        console.log(this.props.stroke);
         var BB = calculateBB(this.props.stroke.points);
         // console.log(this.props.stroke);
         // var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]

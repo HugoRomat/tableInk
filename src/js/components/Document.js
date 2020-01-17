@@ -1282,8 +1282,8 @@ class Document extends Component {
         var firstPoint = [ev['x'], ev['y']];
         var data = {
             'id': id,
-            'width': 200,
-            'height': 200,
+            'width': 150,
+            'height': 150,
             'placeHolder': [
                 {'id':'left', 'data': {}, 'lines':[]}
             ],
@@ -1369,8 +1369,8 @@ class Document extends Component {
             that.lastMovePosition = {'x': event['x'],'y': event['y']};
             // drawCircle(event['x'], event['y'], 10, 'red');
             var newGuide = [
-                [event['x'], event['y']],
-                [event['x'], event['y'] + 80]
+                [event['x'] - transformPan.translateX, event['y'] - transformPan.translateY],
+                [event['x'] - transformPan.translateX, event['y'] + 80 - transformPan.translateY]
             ];
             that.makingGroup([], this.guidHoldObject.id, newGuide);
         }
@@ -1415,9 +1415,14 @@ class Document extends Component {
             .attr('opacity', '0.2')
             .attr("stroke-dasharray", "10");
       
-        var step = that.state.tagHold.BB.width + 30;
+        // var step = that.state.tagHold.BB.width + 30;
+
+        // console.log(that.state.tagHold.tagSnapped.length)
+        var step = 150;
+        var f = 0;
         var path = d3.select('#penTemp').node()
         var length = path.getTotalLength();
+        // console.log('==========')
 
         if (length - this.lastStepTagPattern > step){
             this.lastStepTagPattern = length;
@@ -1425,19 +1430,54 @@ class Document extends Component {
             d3.select('#tempTag').selectAll('*').remove()
             for (var i = 0; i < length; i += step){
                 var point = path.getPointAtLength(i);
-                var X = point['x'] - transformPan.translateX - that.state.tagHold.offsetX - that.state.tagHold.BB.width/2;
-                var Y = point['y'] - transformPan.translateY - that.state.tagHold.offsetY - that.state.tagHold.BB.height/2;
+                // var X = point['x'] - transformPan.translateX - that.state.tagHold.offsetX - that.state.tagHold.BB.width/2;
+                // var Y = point['y'] - transformPan.translateY - that.state.tagHold.offsetY - that.state.tagHold.BB.height/2;
+                var X = point['x'] - 75;
+                var Y = point['y']  - 75;
     
-                var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
-                for (var j = 0; j < that.state.tagHold.placeHolder[0]['lines'].length; j += 1){
-                    var element = that.state.tagHold.placeHolder[0]['lines'][j];
-                    container//.append('g').attr('transform', 'translate('+(- that.state.tagHold.offsetX)+','+(- that.state.tagHold.offsetY )+')')
-                        .append('path')
-                        .attr('d', (d)=>line(element.data))
-                        .attr('fill', 'none')
-                        .attr('stroke', (d)=> element.colorStroke )
-                        .attr('stroke-width', element.sizeStroke)
-                }    
+
+                if (that.state.tagHold.tagSnapped.length == 0){
+                    var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
+                    for (var j = 0; j < that.state.tagHold.placeHolder[0]['lines'].length; j += 1){
+                        var element = that.state.tagHold.placeHolder[0]['lines'][j];
+                        container//.append('g').attr('transform', 'translate('+(- that.state.tagHold.offsetX)+','+(- that.state.tagHold.offsetY )+')')
+                            .append('path')
+                            .attr('d', (d)=>line(element.data))
+                            .attr('fill', 'none')
+                            .attr('stroke', (d)=> element.colorStroke )
+                            .attr('stroke-width', element.sizeStroke)
+                    } 
+                } 
+                /** IN CASE OF MANY TAG SNAPPED **/
+                else {
+                    var where = f % (that.state.tagHold.tagSnapped.length + 1);
+                    // console.log(where)
+                    if (where != 0){
+                        var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
+                        for (var j = 0; j < that.state.tagHold.tagSnapped[where-1].placeHolder[0]['lines'].length; j += 1){
+                            var element = that.state.tagHold.tagSnapped[where-1].placeHolder[0]['lines'][j];
+                            container//.append('g').attr('transform', 'translate('+(- that.state.tagHold.offsetX)+','+(- that.state.tagHold.offsetY )+')')
+                                .append('path')
+                                .attr('d', (d)=>line(element.data))
+                                .attr('fill', 'none')
+                                .attr('stroke', (d)=> element.colorStroke )
+                                .attr('stroke-width', element.sizeStroke)
+                        } 
+                    } else {
+                        var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
+                        for (var j = 0; j < that.state.tagHold.placeHolder[0]['lines'].length; j += 1){
+                            var element = that.state.tagHold.placeHolder[0]['lines'][j];
+                            container//.append('g').attr('transform', 'translate('+(- that.state.tagHold.offsetX)+','+(- that.state.tagHold.offsetY )+')')
+                                .append('path')
+                                .attr('d', (d)=>line(element.data))
+                                .attr('fill', 'none')
+                                .attr('stroke', (d)=> element.colorStroke )
+                                .attr('stroke-width', element.sizeStroke)
+                        } 
+                    }
+                    f++;
+                }
+                
             }
         }
     }
@@ -1812,6 +1852,9 @@ class Document extends Component {
         // console.log(c.toString())
         this.setState({'colorStroke': c.toString()})
     }
+    setOpacity = (d) => {
+        this.setOpacityColor(d);
+    }
     selectColor = (d) => {
         this.colorPen = d;
         if (this.sizePen > 10) this.setOpacityColor(0.5);
@@ -2033,6 +2076,7 @@ class Document extends Component {
                 <ColorMenu 
                     openAlphabet={this.openAlphabet}
                     selectPen={this.selectPen}
+                    setOpacity={this.setOpacity}
                     selectThisColor={this.selectColor}
                     colorStroke = {this.state.colorStroke}
                     sizeStroke = {this.state.sizeStroke}

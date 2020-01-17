@@ -228,6 +228,29 @@ class PlaceHolder extends Component {
         
     }
     componentDidUpdate(prevProps, prevState){
+        var that = this;
+        if (this.props.data.id == 'backgroundLine'){
+            if (this.props.parent.tag){
+                // d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
+                //     .attr('width', 45)
+                //     .attr('height', 45)
+                //     .attr('x', 35)
+                //     .attr('y',50)
+                //     .attr('fill', 'rgba(252, 0,0,  0.4)')
+
+                //     console.log(that.props.parent.tag)
+                d3.select('#imageTag-' + that.props.data.id + '-' + that.props.parent.id)
+                    .attr('viewBox', '0 0 30 20')
+                    .attr('xlink:href', that.props.parent.tag.image)
+                    .attr('height', 50)
+                    .attr('width', 50)
+                    .attr('x', 35)
+                    .attr('y',50)
+              
+
+                    
+            } 
+        }
     }
     drawPlaceHolder(){
         
@@ -272,12 +295,15 @@ class PlaceHolder extends Component {
                 .attr('fill', 'rgba(252, 243, 242,  0.4)')
                 .style("filter", "url(#drop-shadow)")
 
-            // rect = element
-            //     .attr('width', 130)
-            //     .attr('height', 80)
-            //     .attr('x',35)
-            //     .attr('y', 35 )
-            //     .attr('fill', 'rgba(166, 166, 166, 1)')
+            if (this.props.parent.tag){
+                d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
+                    .attr('width', 50)
+                    .attr('height', 50)
+                    .attr('x', 0)
+                    .attr('y',0)
+                    .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            } 
+
         }
         else if (this.props.data.id == 'backgroundText'){
             var rec = sketch.rectStroke({ x:80, y:55, width:75, height:40, density: 3, sketch:2});
@@ -329,8 +355,10 @@ class PlaceHolder extends Component {
                 .style('stroke-linejoin', 'round')
 
             rect = element
-                .attr('width', widthTotal)
-                .attr('height', heightTotal)
+                // .attr('width', widthTotal)
+                // .attr('height', heightTotal)
+                .attr('width', 800)
+                .attr('height', 800)
                 .attr('x', 0)
                 .attr('y',0)
                 .attr('fill', 'rgba(252, 243, 242, 0.4)')
@@ -368,6 +396,7 @@ class PlaceHolder extends Component {
    
     render() {
 
+        
         const listItems = this.props.lines.map((d, i) => {
             return <LinePlaceHolder 
                 key={i} 
@@ -383,6 +412,10 @@ class PlaceHolder extends Component {
                 <rect id={'rect-' + this.props.data.id} />
                 <g id={'background-' + this.props.data.id + '-' + this.props.parent.id} >
                 </g>
+
+                <rect id={'tag-' + this.props.data.id + '-' + this.props.parent.id} />
+                <image id={'imageTag-' + this.props.data.id + '-' + this.props.parent.id} />
+
 
                 <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}/>
 

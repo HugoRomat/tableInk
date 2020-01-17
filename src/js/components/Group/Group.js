@@ -878,7 +878,7 @@ class Group extends Component {
     }
     render() {
 
-        // console.log(this.state.placeholders)
+        // console.log(this.props.group.lines)
         // console.log('render')
         // console.log(BB)
         // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
