@@ -33,9 +33,12 @@ class Guide extends Component {
         this.startPosition = {};
         this.lastPosition = {};
         this.drag = false;
+        this.isExpand = false;
 
         this.state = {
-            'BBox':{}
+            'BBox':{},
+            // 'scale': 0.3
+            // 'shouldExpand': false
         };
     }
     componentDidMount(){
@@ -73,14 +76,18 @@ class Guide extends Component {
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
         var pan = new Hammer.Pan({'pointers':0, threshold: 1});
-        var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
+        var press = new Hammer.Press({time: 250});
+        var pinch = new Hammer.Pinch({});
 
         this.mc.add(press);
         this.mc.add(pan);
+        this.mc.add(pinch);
         this.mc.add(tap);
+
+
         pan.recognizeWith(press);
-        pan.recognizeWith(tap)
+
 
        this.mc.add(pan);
        this.mc.on("panstart", function(ev) {
@@ -116,9 +123,10 @@ class Guide extends Component {
         })
 
         this.mc.on("tap", function(event){
+            // console.log(event)
             // console.log('GO',that.props.stroke.id)
             // clearTimeout(that.timerPress);
-            if (event.pointers[0].pointerType == 'touch'){
+            if (event.changedPointers[0].pointerType == 'touch'){
                 that.props.setGuideTapped(that.props.stroke.id);
                 that.colorForHolding(true);
                 setTimeout(function(){
@@ -135,6 +143,31 @@ class Guide extends Component {
             //     'idGuide': env.props.stroke.id,
             //     'idLines': []//env.props.stroke.data.linesAttached
             // })
+        })
+
+        this.mc.on("pinchstart", function(event){
+            console.log('PINCH')
+            if (event.changedPointers[0].pointerType == 'touch'){
+                // that.expandGuide();
+                
+
+                if (that.isExpand == false) {
+                    d3.select('#panItems').style('opacity', 0.2);
+                    var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+                    d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)')
+
+                    that.isExpand = true;
+                }
+                else {
+                    d3.select('#panItems').style('opacity', 1);
+
+                    var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+                    d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(0.3)')
+
+                  
+                    that.isExpand = false;
+                }
+            }
         })
 
 
@@ -170,7 +203,9 @@ class Guide extends Component {
        
     
     }
+    expandGuide(){
 
+    }
     dragstarted(event) {
      
         var that = this;
@@ -191,7 +226,8 @@ class Guide extends Component {
         var offsetY = event.srcEvent.y - that.lastPosition.y;
         var X = offsetX + transform.translateX;
         var Y = offsetY + transform.translateY;
-        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+        // console.log(transform)
+        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')scale('+transform.scaleX+')')
 
 
             
@@ -308,7 +344,7 @@ class Guide extends Component {
 
     }
     render() {
-        console.log(this.props.stroke);
+        // console.log(this.props.stroke);
         var BB = calculateBB(this.props.stroke.points);
         // console.log(this.props.stroke);
         // var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
@@ -331,6 +367,7 @@ class Guide extends Component {
                     BBoxParent={BB}
                     lines={d['lines']}
                     addLine={this.addLine}
+                    // shouldExpand={this.state.shouldExpand}
 
                     penType = {this.props.penType}
                     colorStroke = {this.props.colorStroke}
@@ -341,7 +378,7 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(0.3)`}>
                 
                 
                 {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}

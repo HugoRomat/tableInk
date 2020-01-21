@@ -242,7 +242,7 @@ class LinesGrouping extends Component {
             var transformLine = getTransformation(d3.select('#item-'+ stroke.id).attr('transform'));
             // console.log(transformLine, stroke.position)
             // return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]-offsetYAlignement]}
-            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX + 100, transformLine.translateY-offsetYAlignement]}
+            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX + 150, transformLine.translateY-offsetYAlignement]}
         })
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
@@ -285,7 +285,6 @@ class LinesGrouping extends Component {
         d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
         d3.select('#placeHolderTagLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
 
-        // console.log(placeHolder)
 
         var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
 
@@ -298,13 +297,15 @@ class LinesGrouping extends Component {
                 .attr('stroke', (d)=>d.colorStroke)
                 .attr('stroke-width', (d)=>d.sizeStroke)
 
+            showBboxBB(placeHolderLine.BBox, 'red')
             var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-            var X = this.BBox.x - transformDrag.translateX - 50; 
-            var Y = this.BBox.y - transformDrag.translateY;
+            var X = this.BBox.x - transformDrag.translateX - 200; 
+            var Y = this.BBox.y - transformDrag.translateY - 260;
             d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
 
            
 
+            console.log(this.props.placeholders)
         }
 
         

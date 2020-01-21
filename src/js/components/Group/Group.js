@@ -640,6 +640,11 @@ class Group extends Component {
         var BB = await _getBBoxPromise(nodeId);
         var transform = {'translateX': 0, 'translateY': 0}
         transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
+
+        /** APPLY THE SCALE OF THE GUIDE */
+        BB.width *= 1/transform.scaleX;
+        BB.height *= 1/transform.scaleX;
+        // console.log(transform)
         BB.x = BB.x - transform.translateX;
         BB.y = BB.y - transform.translateY;
         arrayBBox.push(BB);

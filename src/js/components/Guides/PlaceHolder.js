@@ -229,15 +229,10 @@ class PlaceHolder extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
+        // console.log('UPDATE', this.props.shouldExpand)
+        // this.drawPlaceHolder();
         if (this.props.data.id == 'backgroundLine'){
             if (this.props.parent.tag){
-                // d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
-                //     .attr('width', 45)
-                //     .attr('height', 45)
-                //     .attr('x', 35)
-                //     .attr('y',50)
-                //     .attr('fill', 'rgba(252, 0,0,  0.4)')
-
                 //     console.log(that.props.parent.tag)
                 d3.select('#imageTag-' + that.props.data.id + '-' + that.props.parent.id)
                     .attr('viewBox', '0 0 30 20')
@@ -256,8 +251,8 @@ class PlaceHolder extends Component {
         
         // console.log(sketch, rec)
 
-        var widthTotal = 200//this.props.parent.width;
-        var heightTotal = 200//this.props.parent.height;
+        var widthTotal = this.props.parent.width;
+        var heightTotal = this.props.parent.height;
         // console.log(this.props.parent.width)
         var that = this;
 
@@ -273,26 +268,34 @@ class PlaceHolder extends Component {
         var sketch = d3sketchy()
 
         if (this.props.data.id == 'backgroundLine'){
-            var rec = sketch.rectStroke({ x:35, y:35, width:130, height:80, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:100, y:300, width:widthTotal - 300, height:heightTotal - 600, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
 
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
-                .style('opacity', 0.1)
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
+            //     .style('opacity', 0.1)
 
-            rect = element
-                .attr('width', 130)
-                .attr('height', 80)
-                .attr('x', 35)
-                .attr('y',35)
-                .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            // rect = element
+            //     .attr('width', 130)
+            //     .attr('height', 80)
+            //     .attr('x', 35)
+            //     .attr('y',35)
+            //     .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            //     .style("filter", "url(#drop-shadow)")
+
+                rect = element
+                .attr('width', widthTotal - 300)
+                .attr('height', heightTotal - 600)
+                .attr('x', 100)
+                .attr('y',300)
+                .attr('fill', 'rgba(247, 247, 247, 0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             if (this.props.parent.tag){
@@ -301,31 +304,31 @@ class PlaceHolder extends Component {
                     .attr('height', 50)
                     .attr('x', 0)
                     .attr('y',0)
-                    .attr('fill', 'rgba(252, 243, 242,  0.4)')
+                    .attr('fill', 'rgba(247, 247, 247, 0.4)')
             } 
 
         }
         else if (this.props.data.id == 'backgroundText'){
-            var rec = sketch.rectStroke({ x:80, y:55, width:75, height:40, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:250, y:350, width:widthTotal - 500, height:heightTotal - 700, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
             
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
-                .style('opacity', 0.1)
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
+            //     .style('opacity', 0.1)
 
             rect = element
-                .attr('width', 75)
-                .attr('height', 40)
-                .attr('x', 80)
-                .attr('y',55)
-                .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            .attr('width', widthTotal - 500)
+            .attr('height', heightTotal - 700)
+                .attr('x', 250)
+                .attr('y', 350)
+                .attr('fill', 'rgba(247, 247, 247, 0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             // rect = element
@@ -340,7 +343,10 @@ class PlaceHolder extends Component {
             var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
             var line = d3.line();
 
-            var flattened = [].concat(...rec)
+            var flattened = [].concat(...rec);
+
+            // var width = (this.props.shouldExpand) ? 800 : widthTotal;
+            // var height = (this.props.shouldExpand) ? 800 : heightTotal;
 
             // console.log(flattened)
 
@@ -355,13 +361,11 @@ class PlaceHolder extends Component {
                 .style('stroke-linejoin', 'round')
 
             rect = element
-                // .attr('width', widthTotal)
-                // .attr('height', heightTotal)
-                .attr('width', 800)
-                .attr('height', 800)
+                .attr('width', widthTotal)
+                .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('fill', 'rgba(252, 243, 242, 0.4)')
+                .attr('fill', 'rgba(247, 247, 247, 0.4)')
                 .style("filter", "url(#drop-shadow)")
 
             
@@ -417,13 +421,14 @@ class PlaceHolder extends Component {
                 <image id={'imageTag-' + this.props.data.id + '-' + this.props.parent.id} />
 
 
+               
+                <g className='paths'>
+                    {listItems}
+                </g>
                 <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}/>
 
                 <g id={'tempPattern-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}></g>
 
-                <g className='paths'>
-                    {listItems}
-                </g>
 
                
             </g>

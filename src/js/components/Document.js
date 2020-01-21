@@ -836,7 +836,7 @@ class Document extends Component {
             else if (that.sticky && that.isGuideHold){
                 that.addStrokeGuideCopy(this.isGuideHold, event); 
             }
-            /** Holding a guide to create a sticky */
+            /** Tap a guide to create a sticky */
             else if (that.tapGuide){
                
                 // console.log(that.tapGuide)
@@ -1957,6 +1957,7 @@ class Document extends Component {
 
         if (this.linesInselection.length != 0 && this.linesInselection.elements.length != 0 && this.guideTapped != false){
             var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped);
+            console.log(sticky)
             var data = {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky

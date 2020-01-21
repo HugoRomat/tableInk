@@ -14,7 +14,7 @@ import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
 import sticky from './../usecases/newSticky.json';
 import voice from './../usecases/voiceQuery.json';
-
+import strokesPalette from './../usecases/paletteLine.json';
 
 function importAll(r) { return r.keys().map(r); }
 const images = importAll(require.context('./../usecases/demo', false, /\.(json)$/));
@@ -57,15 +57,16 @@ alphabet.forEach((d)=>{
 
 // initialState.lettres = lettres; 
 initialState.galleryItems = galleryData;
-initialState.tags = tags
+initialState.tags = tags;
 // initialState.tables = tables
 initialState.lettres = alphabetPerso0;
-voice
-initialState.voiceQueries = voice
+
+initialState.voiceQueries = voice;
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
-initialState.sketchLines = strokes
+initialState.sketchLines = strokes;
+initialState.colorPalette.lines = strokesPalette;
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)

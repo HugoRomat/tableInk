@@ -339,7 +339,7 @@ class ColorsMenu extends Component {
                     <div className="pen" id="function"><img src={functionPen} />
                         <div id='containerFunction'> AVG </div>
                     </div>
-                    <div className="pen" id="highlighting"><img src={highlighter} /></div>
+                    {/* <div className="pen" id="highlighting"><img src={highlighter} /></div> */}
                     <div className="pen" id="pattern"><img src={pattern} />
                         <svg id="patternSVG">
                             <g id="options"></g>
@@ -351,8 +351,7 @@ class ColorsMenu extends Component {
                         </div>
                </div>
                <div id='range'><input type="range" orient="vertical" min="0" max="1" defaultValue="1" step='0.1' className="slider" id="myRange"/></div>
-                <div id="colorsMenu">
-                </div>
+                <div id="colorsMenu"></div>
 
                 {/* <div id="layers">
                     <div id="showGrid" className="buttonMenu"> 

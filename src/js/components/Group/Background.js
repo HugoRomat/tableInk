@@ -158,7 +158,7 @@ class Background extends Component {
                         .attr('d', ()=>line(myLine.data))
                         .attr('fill', 'none')
                         .attr('stroke', ()=> myLine.colorStroke )
-                        .attr('stroke-width', (e)=>{return myLine.sizeStroke + (that.BBox.width / d.BBox.width);})
+                        .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width);})
                     }
                 }
 
@@ -177,7 +177,7 @@ class Background extends Component {
                             .attr('d', (d)=>line(myNewLine))
                             .attr('fill', 'none')
                             .attr('stroke', (d)=> myPattern.colorStroke )
-                            .attr('stroke-width', (e)=> myPattern.sizeStroke + (that.BBox.width / d.BBox.width))
+                            .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width))
                             .attr('opacity', '0')
 
                             var step = myPattern.pattern.BBox.width;

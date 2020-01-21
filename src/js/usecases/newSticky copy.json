@@ -15,9 +15,8 @@
     ],
     "id": "initial",
     "paddingBetweenLines": 50,
-    "width": 800,
-    "height": 800,
-    "tag": null,
+    "width": 200,
+    "height": 150,
     "placeHolder": [
         {
             "id": "outerBackground",
