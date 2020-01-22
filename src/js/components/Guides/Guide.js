@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise } from "./../Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise, showBboxBB } from "./../Helper";
 import { connect } from 'react-redux';
 
 
 import { 
     shouldOpenMenu,
-    addLineToStickyGroup
+    addLineToStickyGroup,
+    updatePlaceHolder
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
@@ -14,7 +15,8 @@ import PlaceHolderText from "./PlaceHolderText";
 
 const mapDispatchToProps = { 
     shouldOpenMenu,
-    addLineToStickyGroup
+    addLineToStickyGroup,
+    updatePlaceHolder
 };
 const mapStateToProps = (state, ownProps) => {  
   
@@ -75,7 +77,7 @@ class Guide extends Component {
 
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
+        var pan = new Hammer.Pan({'pointers':1, threshold: 50});
         var tap = new Hammer.Tap();
         var press = new Hammer.Press({time: 250});
         var pinch = new Hammer.Pinch({});
@@ -166,6 +168,8 @@ class Guide extends Component {
 
                   
                     that.isExpand = false;
+
+                    // that.computeLines();
                 }
             }
         })
@@ -203,6 +207,7 @@ class Guide extends Component {
        
     
     }
+    
     expandGuide(){
 
     }

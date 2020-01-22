@@ -34,7 +34,8 @@ import {
     addTag,
     addVoiceQueries,
     addTagCanvas,
-    addImage
+    addImage,
+    tapGroup
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -67,7 +68,8 @@ const mapDispatchToProps = {
     addTag,
     addVoiceQueries,
     addTagCanvas,
-    addImage
+    addImage,
+    tapGroup
 };
 
 
@@ -535,9 +537,28 @@ class Document extends Component {
         })
         this.mc.on("tap", function(ev) {
             if (ev.pointers[0]['pointerType'] == 'touch' ){
-                that.speech.setAlphabet(that.props.lettres)
-                var transform = getTransformation(d3.select('#panItems').attr('transform'))
-                that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
+
+                var x = ev.pointers[0]['x'];
+                var y = ev.pointers[0]['y'];
+                checkIfSomething(x, y).then((element)=>{
+                    // console.log(element)
+                    if (element == null){
+                        that.speech.setAlphabet(that.props.lettres)
+                        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                        that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
+                    } else {
+                        var type = element.split('-')[0];
+                        if (element != null && type == 'item') {
+                            /** FIN PARENT ELEMENT */
+                            var id = element.split('-')[1];
+                            var group = that.props.groupLines.find(x => [].concat(... x['lines']).find(x => x == id))
+                           
+                            console.log(!group.tap)
+                            that.props.tapGroup({'id': group.id, 'tap': !group.tap})
+                        }
+                    }
+                })
+             
             }
         })
         /** FOR TEXT ENTRY */
@@ -1007,6 +1028,7 @@ class Document extends Component {
             'lines':lines, 
             'position': [0,0],
             'model': modelData,
+            'tap': false,
             'stroke': {'points':arrayPoints, 'position': [firstPoint[0],firstPoint[1]]}
         };
         // console.log(group)
@@ -1365,7 +1387,7 @@ class Document extends Component {
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
 
         var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
-        if (dist > (this.guidHoldObject.width)){
+        if (dist > 450){//(this.guidHoldObject.width)){
             that.lastMovePosition = {'x': event['x'],'y': event['y']};
             // drawCircle(event['x'], event['y'], 10, 'red');
             var newGuide = [
@@ -2087,7 +2109,7 @@ class Document extends Component {
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 
                 />
-                 <div id="nameApp"> Nom du project </div>
+                 <div id="nameApp"> Bl(ink) </div>
                 {this.state.shouldOpenAlphabet ? <Lettres openAlphabet={this.openAlphabet} /> : null}
             </div>
         );

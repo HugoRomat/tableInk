@@ -340,25 +340,25 @@ class PlaceHolder extends Component {
         }
         else if (this.props.data.id == 'outerBackground'){
             
-            var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            var line = d3.line();
+            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
+            // var line = d3.line();
 
-            var flattened = [].concat(...rec);
+            // var flattened = [].concat(...rec);
 
             // var width = (this.props.shouldExpand) ? 800 : widthTotal;
             // var height = (this.props.shouldExpand) ? 800 : heightTotal;
 
             // console.log(flattened)
 
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
 
             rect = element
                 .attr('width', widthTotal)

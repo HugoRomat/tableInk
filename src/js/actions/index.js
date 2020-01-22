@@ -43,6 +43,10 @@ export const setWorkspace = data => ({
     data
 })
 
+export const tapGroup = data => ({
+    type: 'TAP_GROUP',
+    data
+})
 
 export const moveSketchLines = data => ({
     type: 'MOVE_SKETCH_LINES',
@@ -58,6 +62,10 @@ export const addText = data => ({
 })
 export const addLinesLetter = data => ({
     type: 'ADD_LINES_LETTER',
+    data
+})
+export const updatePlaceHolder = data => ({
+    type: 'UPDATE_PLACEHOLDER',
     data
 })
 

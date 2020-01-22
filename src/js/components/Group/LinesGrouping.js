@@ -35,6 +35,9 @@ class LinesGrouping extends Component {
         this.addEventsContainer();
         this.addTags()
         if (this.BBox != null) this.movePoints();
+
+        this.addContainer();
+        // this.addGesturesContainer();
         // this.addPlaceHolder();
     }
     componentDidUpdate(prevProps, prevState){
@@ -97,7 +100,7 @@ class LinesGrouping extends Component {
             // else this.movePoints();
             // console.log('GOOO')
         }
-
+        
         // this.addContainer();
         // else if (this.props.offsetY != prevProps.offsetY){
         //     this.BBox = this.props.BBs[this.props.iteration]
@@ -106,6 +109,7 @@ class LinesGrouping extends Component {
         // //     // console.log('UPDATE SKECTHLINES')
         // }
     }
+   
     addContainer(){
         var that = this;
         var transformDrag = {'translateX': 0, 'translateY': 0}
@@ -131,29 +135,31 @@ class LinesGrouping extends Component {
             .attr('width', 0).attr('height', 0).attr('x', 0).attr('y', 0).attr('fill', 'rgba(255,0,0,0.3)')
     }
     addEventsContainer(){
-        var that = this;
-        var el = d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id).node()
-        this.mc = new Hammer.Manager(el);
+        // var that = this;
+        // var el = d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id).node()
+        // this.mc = new Hammer.Manager(el);
 
-        // var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        // // var press = new Hammer.Press({time: 250});
+        // var pan = new Hammer.Pan({'pointers':1, threshold: 1});
         // var tap = new Hammer.Tap({pointers: 1});
-        this.mc.add(pan);
+        // this.mc.add(pan);
+        // this.mc.add(tap);
 
-        this.mc.on("panstart", function(ev) {
-            console.log(ev)
-            if (ev.pointers[0].pointerType == 'pen'){
-                console.log(ev.pointers[0])
-                var data = {
-                    'id': guid(), 
-                    'idGroupline':that.props.iteration +'-'+that.props.id, 
-                    'position': [0,0],
-                    'model': that.props.tagHold
-                };
-                that.props.addTagToGroup(data)
-                // console.log('TAP', that.props.tagHold)
-            }
-        })
+        // this.mc.on("panstart", function(ev) {
+        //     console.log(ev)
+        //     if (ev.pointers[0].pointerType == 'pen'){
+        //         console.log(ev.pointers[0])
+        //         var data = {
+        //             'id': guid(), 
+        //             'idGroupline':that.props.iteration +'-'+that.props.id, 
+        //             'position': [0,0],
+        //             'model': that.props.tagHold
+        //         };
+        //         that.props.addTagToGroup(data)
+        //         // console.log('TAP', that.props.tagHold)
+        //     }
+        // })
+
     }
     movePointTable(){
         // console.log('GO')
@@ -170,6 +176,7 @@ class LinesGrouping extends Component {
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
     }
+  
     /**
      * BOUGES LES POINTS POUR LES ALIGNER AVEC LA LIGNE
      * UTILE SEULEMENT AU DEBUT
@@ -180,6 +187,7 @@ class LinesGrouping extends Component {
         var that = this;
         var line = d3.line()
 
+        // console.log(this.props)
         var offsetYAlignement = this.props.offsetY[this.props.iteration]
         // offsetY = 150
         // console.log(offsetY)
@@ -234,6 +242,12 @@ class LinesGrouping extends Component {
         // if (offsetXAlignement != 0) offsetX = 0;
         // var offsetY = pointOnLine[1] - this.BBox['y']
 
+        /** DETECT OFFSET IF BULLET */
+        var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
+        var offset = 50//(placeHolderLine.lines.length>0) ? 150 : 50;
+        // console.log(offset, placeHolderLine, placeHolderLine.lines.length)
+        
+
         // console.log(offsetX, this.props.iteration)
 
         var changePositionArraySketchLines = this.props.line.map((d)=>{
@@ -242,7 +256,7 @@ class LinesGrouping extends Component {
             var transformLine = getTransformation(d3.select('#item-'+ stroke.id).attr('transform'));
             // console.log(transformLine, stroke.position)
             // return {'id': stroke.id, 'position': [stroke.position[0]+offsetX, stroke.position[1]-offsetYAlignement]}
-            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX + 150, transformLine.translateY-offsetYAlignement]}
+            return {'id': stroke.id, 'position': [transformLine.translateX+offsetX + offset, transformLine.translateY-offsetYAlignement]}
         })
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
@@ -297,15 +311,15 @@ class LinesGrouping extends Component {
                 .attr('stroke', (d)=>d.colorStroke)
                 .attr('stroke-width', (d)=>d.sizeStroke)
 
-            showBboxBB(placeHolderLine.BBox, 'red')
+            // showBboxBB(placeHolderLine.BBox, 'red')
             var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-            var X = this.BBox.x - transformDrag.translateX - 200; 
-            var Y = this.BBox.y - transformDrag.translateY - 260;
+            var X = this.BBox.x - transformDrag.translateX - 80; 
+            var Y = this.BBox.y - transformDrag.translateY - 15;
             d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
 
            
 
-            console.log(this.props.placeholders)
+            // console.log(this.props.placeholders)
         }
 
         
@@ -320,7 +334,7 @@ class LinesGrouping extends Component {
             var myScaleX = d3.scaleLinear().domain([placeHolderText.BBox.x, placeHolderText.BBox.x + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
             var myScaleY = d3.scaleLinear().domain([placeHolderText.BBox.y, placeHolderText.BBox.y + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
 
-    
+            showBboxBB(placeHolderText.BBox, 'red')
             if (scale != undefined && scale.length > 0){
                 // console.log('GOO')
                 var lines = JSON.parse(JSON.stringify(scale))

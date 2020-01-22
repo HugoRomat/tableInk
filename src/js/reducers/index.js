@@ -58,7 +58,7 @@ alphabet.forEach((d)=>{
 // initialState.lettres = lettres; 
 initialState.galleryItems = galleryData;
 initialState.tags = tags;
-// initialState.tables = tables
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 initialState.voiceQueries = voice;
@@ -70,7 +70,7 @@ initialState.colorPalette.lines = strokesPalette;
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.voiceQueries));
+    // console.log(JSON.stringify(state.groupLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -164,7 +164,25 @@ initialState.colorPalette.lines = strokesPalette;
             }
             
             return state;
-    
+            
+
+      case 'UPDATE_PLACEHOLDER':
+        var id = action.data.id;
+        var data = action.data.placeholder;
+        var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+        if (index > -1){
+          state = update(state, { 
+            stickyLines: {
+              [index] : {
+                placeHolder: {$set: data}
+              }
+            }
+          })
+        }
+        
+        return state;
+
+
       case 'ADD_TAG': return {  ...state, tags: [ ...state.tags, action.data] };
       case 'ADD_VOICE_QUERIES': return {  ...state, voiceQueries: [ ...state.voiceQueries, action.data] };
     
@@ -258,6 +276,22 @@ initialState.colorPalette.lines = strokesPalette;
             return state;
 
 
+
+    case 'TAP_GROUP':
+      var idGroup = action.data.id;
+      var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+      if (index > -1){
+          state = update(state, { 
+            groupLines: {
+              [index] : {
+                tap: {$set: action.data.tap}
+              }
+            }
+          })
+      }
+      
+      return state;
+            
 
       case 'ADD_LINE_TO_GROUP':
           var id = action.data.idGroup;

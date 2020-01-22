@@ -128,14 +128,16 @@ class Background extends Component {
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove();
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path').remove();
         d3.select('#placeHolderOuterBGPattern-'+that.props.id).selectAll('g').remove();
-        
+        var lineBG = this.props.placeholders.find(x => x.id == 'backgroundLine')
         
         this.props.placeholders.forEach((d)=>{
             // console.log(d)
             if (d.id == 'outerBackground' && d.lines.length > 0){
+                // console.log('GO', that.BBox)
                 // console.log(d.BBox.x + d.BBox.width, that.BBox.x + that.BBox.width)
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +100]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100, that.BBox.y + that.BBox.height + 100]);
+                if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
+                else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
+                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
                 const grouped = groupBy(d.lines, line => line.type);
                 
                 var scale = grouped.get("normal");

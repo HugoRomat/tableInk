@@ -62,7 +62,8 @@ class Picker extends Component {
         this.mc.on("panmove", function(ev) {
             if (that.isDrawing == false) var item = d3.select('#'+that.elementSelected).select('.nonfake');
             else var item = d3.select('#pathPalette')
-            if (item != null){
+            console.log(item.empty())
+            if (item.empty() == false){
                 var strokeWidth = parseFloat(item.attr('stroke-width'));
                 var color = d3.rgb(item.attr('stroke'));
                 // var opacity = color.opacity;
@@ -199,7 +200,7 @@ class Picker extends Component {
 
         this.mc.on("tap", function(ev) {
             console.log('TAP')
-            if (ev.pointers[0]['pointerType'] == 'touch' ){
+            if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'auto')
                 var element = document.elementFromPoint(ev.pointers[0]['x'], ev.pointers[0]['y']);
                 if (element.tagName == 'path' && element.className.baseVal == "fake"){
@@ -267,7 +268,7 @@ class Picker extends Component {
         if (this.tempArrayStroke.length > 1){
             var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
             var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
-            
+            var id = guid();
             arrayPoints.forEach((d)=>{
                 d[0] = d[0] - firstPoint[0];
                 d[1] = d[1] - firstPoint[1]
@@ -276,10 +277,13 @@ class Picker extends Component {
             var data = {
                 'points': arrayPoints, 
                 'data': {'class':[], 'sizeStroke': this.size, 'colorStroke': this.color}, 
-                'id': guid() , 
+                'id':  id, 
                 'position': [firstPoint[0],firstPoint[1]]
             }
+
+            
             this.props.addPaletteLine(data);
+            this.selectItem('palette-'+id);
         }
         
     }

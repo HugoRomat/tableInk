@@ -185,7 +185,7 @@ class ColorsMenu extends Component {
                     if (isColor.length > 0) that.props.setCommandFunction({'command': 'highlight', 'args': isColor[0]});
                 }
                 else if(speech.match(/sum/g)) {that.props.setCommandFunction({'command': 'SUM', 'args': []}) }
-                else if(speech.match(/AVG/g)) {that.props.setCommandFunction({'command': 'AVG', 'args': []})} 
+                else if(speech.match(/AVG/g) || speech.match(/average/g)) {that.props.setCommandFunction({'command': 'AVG', 'args': []})} 
                 
 
                 d3.select('#containerFunction').html(speech)
@@ -350,8 +350,8 @@ class ColorsMenu extends Component {
                             </svg>
                         </div>
                </div>
-               <div id='range'><input type="range" orient="vertical" min="0" max="1" defaultValue="1" step='0.1' className="slider" id="myRange"/></div>
-                <div id="colorsMenu"></div>
+               {/* <div id='range'><input type="range" orient="vertical" min="0" max="1" defaultValue="1" step='0.1' className="slider" id="myRange"/></div>
+                <div id="colorsMenu"></div> */}
 
                 {/* <div id="layers">
                     <div id="showGrid" className="buttonMenu"> 
