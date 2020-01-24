@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, _getBBox, getTransformation, guid, simplify } from "../Helper";
+import { getNearestElement, _getBBox, getTransformation, guid, simplify, _getBBoxPromise } from "../Helper";
 import LinePlaceHolder from "./LinePlaceHolder";
 // import LinePlaceHolder
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
@@ -27,6 +27,10 @@ class PlaceHolder extends Component {
             .on('pointerdown', function(d){
                 if (d3.event.pointerType == 'pen' ){
                     that.down = true;
+                    _getBBoxPromise('tagSVG').then((d)=>{
+                        that.positionBox = d;
+                        // console.log('GO', transformPan)
+                    })
                 }
                 
                 /**
@@ -40,8 +44,11 @@ class PlaceHolder extends Component {
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
                     if (that.down){
                         // console.log('#item-' + that.props.parent.id)
-                        var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-                        that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
+                        // var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
+                        // that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
+                        var X = d3.event.x - that.positionBox.x;
+                        var Y = d3.event.y - that.positionBox.y;
+                        that.tempArrayStroke.push([X, Y])
                         that.drawLine();
                     }
                        
@@ -65,7 +72,7 @@ class PlaceHolder extends Component {
                     that.props.addLine(data);
                     that.tempArrayStroke = [];
                     that.down = false;
-                    that.removeTempLine();
+                    // that.removeTempLine();
                     
                 }
 
@@ -110,18 +117,18 @@ class PlaceHolder extends Component {
 
         
         if (this.props.data.id == 'left'){
-            var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
 
-            element.selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
+            // element.selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
             
             var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
             element
@@ -135,13 +142,13 @@ class PlaceHolder extends Component {
 
         // console.log('HEY', that.props.data.id + '-' + this.props.parent.id)
         d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 0).attr('y1', 75)
-            .attr('x2', 150).attr('y2', 75)
+            .attr('x1', 0).attr('y1', 50)
+            .attr('x2', 100).attr('y2', 50)
             .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
         d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 75).attr('y1', 0)
-            .attr('x2', 75).attr('y2', 150)
+            .attr('x1', 50).attr('y1', 0)
+            .attr('x2', 50).attr('y2', 100)
             .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
         // <rect id={'horizontal-' + this.props.data.id} />

@@ -165,7 +165,22 @@ initialState.colorPalette.lines = strokesPalette;
             
             return state;
             
-
+            case 'UPDATE_PLACEHOLDER':
+              var id = action.data.id;
+              var data = action.data.placeholder;
+              var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+              if (index > -1){
+                state = update(state, { 
+                  stickyLines: {
+                    [index] : {
+                      placeHolder: {$set: data}
+                    }
+                  }
+                })
+              }
+              
+              return state;
+              
       case 'UPDATE_PLACEHOLDER':
         var id = action.data.id;
         var data = action.data.placeholder;
@@ -280,6 +295,7 @@ initialState.colorPalette.lines = strokesPalette;
     case 'TAP_GROUP':
       var idGroup = action.data.id;
       var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+      // console.log(index)
       if (index > -1){
           state = update(state, { 
             groupLines: {
@@ -373,7 +389,7 @@ initialState.colorPalette.lines = strokesPalette;
         
 
       case 'MOVE_SKETCH_LINES':
-        // console.log('HEYYYY')
+        // console.log('HEYYYY', action.data)
         action.data.forEach((element)=>{
           var id = element.id;
           var position = element.position;

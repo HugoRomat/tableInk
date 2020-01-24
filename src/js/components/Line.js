@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement } from "./Helper";
+import { getNearestElement, getTransformation } from "./Helper";
 import reducers from "../reducers";
 
 class Line extends Component {
@@ -28,7 +28,7 @@ class Line extends Component {
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             .attr('stroke', 'black')
-            .attr('stroke-width', '20')
+            .attr('stroke-width', '10')
             .attr('stroke-opacity', '0')
             
            
@@ -44,10 +44,17 @@ class Line extends Component {
         //     // else color = 'blue'
         //     d3.select('#'+that.props.stroke.id).attr('stroke', scale(that.props.stroke.device +1))
         // }
+
+
+        d3.select('#item-'+that.props.stroke.id)
+            .on('contextmenu', function(){
+                d3.event.preventDefault();
+            })
     
     }
     
     componentDidUpdate(){
+        // console.log('UPDATE')
         // console.log(this.props.stroke.data.class)
         var line = d3.line()
         var that = this;
@@ -62,7 +69,7 @@ class Line extends Component {
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
             .attr('stroke', 'black')
-            .attr('stroke-width', '20')
+            .attr('stroke-width', '10')
             .attr('stroke-opacity', '0')
         
         d3.select('#item-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
@@ -71,6 +78,7 @@ class Line extends Component {
         // console.log("BYE BYEs")
     }
     render() {
+        // getTransformation()
         // console.log(this.props.stroke.position[0])
         return (
             <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>

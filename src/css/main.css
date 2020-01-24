@@ -264,3 +264,20 @@ path{
     right: -180px;
     /* right:-111px; */
 }
+
+
+.postit{
+    pointer-events: none;
+}
+#tagSVG{
+    position: absolute;
+    top: -3px;
+    height: 100;
+    width: 100;
+    right: -46px;
+    user-select: none;
+    touch-action: none;
+    cursor: text;
+    background-color: grey;
+    /* background: red; */
+}

@@ -29,14 +29,16 @@ class LinesGrouping extends Component {
         // this.BBox = this.getBoundinxBoxEveryone();
         
         this.BBox = this.props.BBs[this.props.iteration];
-        // console.log(this.BBox)
+        // console.log(this.BBox,this.props.iteration)
         // this.movePoints();
         // console.log('LINES GROUPING', this.props.iteration, this.props.BBs)
         this.addEventsContainer();
         this.addTags()
-        if (this.BBox != null) this.movePoints();
-
-        this.addContainer();
+        if (this.BBox != null && this.BBox != undefined) {
+            this.movePoints();
+            this.addContainer();
+        }
+        
         // this.addGesturesContainer();
         // this.addPlaceHolder();
     }
@@ -66,18 +68,28 @@ class LinesGrouping extends Component {
 
             // showBboxBB(this.BBox, 'red');
             // this.addPlaceHolder();
-            // console.log(this.props.line)
-            getBoundinxBoxLines(this.props.line).then((d)=>{
-                this.BBox = d;
-                this.addContainer();
 
-                this.addPlaceHolder();
-                // if (this.shouldRecalculatePosition){
-                //     console.log('Sketcline')
-                //     this.addPlaceHolder();
-                //     this.shouldRecalculatePosition = false;
-                // }
-            })
+            setTimeout(function(){
+                getBoundinxBoxLines(that.props.line).then((d)=>{
+                    // console.log('=================== GO', that.props.line)
+                    that.BBox = d;
+                    // d3.selectAll('.BB').remove()
+                    // showBboxBB(d, 'red')
+                    that.addContainer();
+
+                    that.addPlaceHolder();
+                })
+            }, 1000)
+            // console.log(this.props.line)
+            // getBoundinxBoxLines(this.props.line).then((d)=>{
+            //     console.log('=================== GO', d)
+            //     this.BBox = d;
+                
+            //     showBboxBB(d, 'red')
+            //     this.addContainer();
+
+            //     this.addPlaceHolder();
+            // })
             // console.log(this.props.BBs, prevProps.BBs)
             //Si j'ai deja bouge mes points
             // console.log('SKETCH LINESs', this.props.BBs, prevProps.BBs)

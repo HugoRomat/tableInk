@@ -99,22 +99,23 @@ class TagInterface extends Component {
             .attr("d", line(that.props.stroke.data))
             .attr('fill', 'none')
             .attr('stroke', 'black')
-            .attr('stroke-width', '10')
-            .attr('opacity', '0')
-            .attr("stroke-dasharray", "10");
+            .attr('stroke-width', '1')
+            .attr('opacity', '0.1')
+            .attr("stroke-dasharray", "10")
+            .attr('stroke-linejoin', "round")
       
         // var step = that.props.stroke.tagHold.BB.width + 30;
-        var step = 150;
+        var step = 100;
         var path = d3.select('#'+that.props.stroke.id).node()
         var length = path.getTotalLength();
         var f = 0
-
+        // console.log(that.props.stroke)
         for (var i = 0; i < length; i += step){
             var point = path.getPointAtLength(i);
             // var X = point['x'] - transformPan.translateX - that.props.stroke.tagHold.offsetX - that.props.stroke.tagHold.BB.width/2;
             // var Y = point['y'] - transformPan.translateY - that.props.stroke.tagHold.offsetY - that.props.stroke.tagHold.BB.height/2;
-            var X = point['x'] - 75;
-            var Y = point['y'] - 75;
+            var X = point['x'] - 50;
+            var Y = point['y'] - 50;
 
 
             var container = d3.select('#item-'+that.props.stroke.id).select('#patternTag').append('g').attr('transform', 'translate('+X+','+Y+')')
@@ -124,16 +125,17 @@ class TagInterface extends Component {
                     .attr('iteration', '0')
                     .attr('x', 0)//that.props.stroke.tagHold.offsetX + transformPan.translateX)
                     .attr('y', 0)//that.props.stroke.tagHold.offsetY + transformPan.translateY)
-                    .attr('width', 150)//that.props.stroke.tagHold.BB.width)
-                    .attr('height', 150)//that.props.stroke.tagHold.BB.height)
+                    .attr('width', 100)//that.props.stroke.tagHold.BB.width)
+                    .attr('height', 100)//that.props.stroke.tagHold.BB.height)
                     .attr('fill', 'rgba(252, 243, 242, 0.4)')
-
+                    .attr('stroke-linejoin', "round")
+                    // console.log(that.props.stroke.tagHold.tagSnapped)
             if (that.props.stroke.tagHold.tagSnapped.length == 0){
-
+                
                 for (var j = 0; j < that.props.stroke.tagHold.placeHolder[0]['lines'].length; j += 1){
                     var element = that.props.stroke.tagHold.placeHolder[0]['lines'][j];
                     var gElement = container//.append('g').attr('transform', 'translate('+(- that.props.stroke.tagHold.offsetX)+','+(- that.props.stroke.tagHold.offsetY)+')')
-
+                    // console.log(element)
                     gElement.append('path')
                         .attr('class', 'placeholderTag')
                         .attr('d', (d)=>line(element.data))
@@ -141,6 +143,7 @@ class TagInterface extends Component {
                         .attr('stroke', (d)=> element.colorStroke )
                         .attr('stroke-width', element.sizeStroke)
                         .style('pointer-events', 'none')
+                        .attr('stroke-linejoin', "round")
                 }  
             }
             /** IN CASE OF MANY TAG SNAPPED **/
@@ -160,6 +163,7 @@ class TagInterface extends Component {
                         .attr('stroke', (d)=> element.colorStroke )
                         .attr('stroke-width', element.sizeStroke)
                         .style('pointer-events', 'none')
+                        .attr('stroke-linejoin', "round")
                     } 
                 } else {
                     // console.log(that.props.stroke.tagHold)
@@ -174,6 +178,7 @@ class TagInterface extends Component {
                         .attr('stroke', (d)=> element.colorStroke )
                         .attr('stroke-width', element.sizeStroke)
                         .style('pointer-events', 'none')
+                        .attr('stroke-linejoin', "round")
                     } 
                 }
                 f++;

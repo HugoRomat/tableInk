@@ -15,17 +15,21 @@ import highlighter from './../../../../static/higlighter.png';
 import pen from './../../../../static/pen2.png';
 import pattern from './../../../../static/patternPen.png';
 import functionPen from './../../../../static/functionPen.png';
+import pageFlags from './../../../../static/pageflags.png';
 
 
 import { 
+    addTagCanvas,
     setWorkspace
 } from '../../actions';
 import { guid, _getBBoxPromise } from "../Helper";
 import Lines from "./Lines";
 import { SpeechRecognitionClass } from "../SpeechReognition/Speech";
+import Tags from "../Tags/Tags";
 
 
 const mapDispatchToProps = { 
+    addTagCanvas,
     setWorkspace
  };
 const mapStateToProps = (state, ownProps) => {  
@@ -40,7 +44,8 @@ class ColorsMenu extends Component {
         super(props);
         this.handedness = 'right';
         this.state = {
-            'patternLines': []
+            'patternLines': [],
+            'tagLines':[]
         }
         this.speech = new SpeechRecognitionClass(this);
         this.colors = ['#ffc125', '#ff7f00', '#dc143c', '#8B4513', "#1e90ff", '#00c5cd', "#3cb371", "#BA55D3", "#000000"];
@@ -217,6 +222,8 @@ class ColorsMenu extends Component {
 
 
         this.drawSVGPattern();
+        this.moveTagStock();
+        this.drawTag();
 
 
         $('#myRange').on('change', function(event) {
@@ -284,6 +291,134 @@ class ColorsMenu extends Component {
       
 
     }
+    /** POUR BOUGER LE TAG SUR L'INTERFACE */
+    drawTag = async() => {
+        var that = this;
+        this.positionBox = await _getBBoxPromise('tagSVG');
+        var el = document.getElementById("tagSVG");
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        // var tap = new Hammer.Tap();
+        this.mc.add(pan);
+
+        this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                // console.log('HEY')
+                that.tempArrayStroke = [];
+                _getBBoxPromise('tagSVG').then((d)=>{
+                    that.positionBox = d;
+                })
+            }
+          })
+          this.mc.on("pan", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                var X = ev.srcEvent.x - that.positionBox.x;
+                var Y = ev.srcEvent.y - that.positionBox.y;
+                that.tempArrayStroke.push([X, Y]);
+                that.drawTempStrokeTag();
+            }
+          })
+          this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
+                var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke));
+                arrayPoints.forEach((d)=>{
+                    d[0] = d[0] - firstPoint[0];
+                    d[1] = d[1] - firstPoint[1]
+                })
+                var data = {
+                    'points': arrayPoints, 
+                    'data': {'class':[], 'sizeStroke': that.props.sizeStroke, 'colorStroke': that.props.colorStroke}, 
+                    'id': guid() , 
+                    'position': [firstPoint[0],firstPoint[1]]
+                }
+                that.setState({'tagLines': [...that.state.tagLines, data]});
+                d3.select('#penTempTag').attr("d", [])
+            }
+          })
+      
+    }
+    /** POUR BOUGER LE TAG SUR L'INTERFACE */
+    moveTagStock(){
+        var that = this;
+
+        var el = document.getElementById("tagMenu");
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+        // var tap = new Hammer.Tap();
+        this.mc.add(pan);
+
+        this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                that.newNode = d3.select('#tagMenu').node().cloneNode(true);
+                document.getElementById("buttons").appendChild(that.newNode);
+            }
+          })
+          this.mc.on("pan", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                d3.select(that.newNode).style('position', 'absolute').style('left', ev.srcEvent.x - 200).style('top', ev.srcEvent.y - 50)
+            }
+          })
+          this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                d3.select(that.newNode).remove();
+                that.addTagOnCanvas(ev.pointers[0].x, ev.pointers[0].y)
+                that.setState({'tagLines': []});
+            }
+          })
+    }
+    addTagOnCanvas(x, y){
+        var id = guid();
+        var firstPoint = [[x, y], [x+100, y]];
+        
+        var arrayStrokes = []
+        // JSON.parse(JSON.stringify(this.state.tagLines));
+        // console.log(this.state.tagLines)
+        this.state.tagLines.forEach((d, i)=>{
+            var newObject = {}
+            newObject.colorStroke = this.state.tagLines[i].data.colorStroke
+            newObject.sizeStroke = this.state.tagLines[i].data.sizeStroke
+            newObject.data = this.state.tagLines[i].points.map((d)=> [d[0]+this.state.tagLines[i].position[0],  d[1]+this.state.tagLines[i].position[1]]);
+            newObject.id = this.state.tagLines[i].id;
+            arrayStrokes.push(newObject)
+        })
+
+        var master = {
+            'id': id,
+            'width': 100,
+            'height': 100,
+            'placeHolder': [
+                {'id':'left', 'data': {}, 'lines':arrayStrokes}
+            ],
+            'tagSnapped': [],
+            'position': [0,0]
+            
+        }
+        // console.log(master)
+
+        var that = this;
+        var data = {
+            'id': guid(),
+            'data':  firstPoint,
+            'tagHold': master,
+            'isPattern': false
+        }
+        // console.log(data)
+        this.props.addTagCanvas(data);
+        // console.log(data)
+    }
+    drawTempStrokeTag(){
+        var that = this;
+        var line = d3.line()
+        // console.log(that.props)
+        d3.select('#penTempTag')
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', that.props.colorStroke)
+            .attr('stroke-width', that.props.sizeStroke)
+            .attr("stroke-dasharray", 'none')
+            .attr('stroke-linejoin', "round")
+    }
     drawTempStroke(){
         var that = this;
         var line = d3.line()
@@ -314,6 +449,9 @@ class ColorsMenu extends Component {
             }
         })
     }
+    holdTag = (d) => {
+
+    }
     render() {
        
         return (
@@ -343,10 +481,22 @@ class ColorsMenu extends Component {
                     <div className="pen" id="pattern"><img src={pattern} />
                         <svg id="patternSVG">
                             <g id="options"></g>
-                            <path id="penTempPattern"></path>
+                            
                                 <Lines 
                                     sketchLines = {this.state.patternLines}
                                 />
+                                <path id="penTempPattern"></path>
+                            </svg>
+                        </div>
+
+                        <div className="pen" id="tagMenu"><img src={pageFlags} />
+                            <svg id="tagSVG">
+                                <g id="options"></g>
+                                
+                                    <Lines 
+                                        sketchLines = {this.state.tagLines}
+                                    />
+                                     <path id="penTempTag"></path>
                             </svg>
                         </div>
                </div>

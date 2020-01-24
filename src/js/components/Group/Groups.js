@@ -142,17 +142,7 @@ class Groups extends Component {
                 // getBBoxEachLine={this.getBBoxEachLine}
             />
         });
-        // console.log(this.props.groupLines)
-        // const groupItems = this.props.groupLines.map((d, i) => {
-        //     // console.log(d)
-        //     return <g className="group" id={d.id} key={i} transform={`translate(${d.position[0]},${d.position[1]})`} > 
-        //         {d.data.map((e, j) => { return <g key={j} transform={`translate(${e.position[0]},${e.position[1]})`}>
-        //             <Line key={j} stroke={e}/>
-        //             </g> })}
-        //     </g>
-        // });
 
-        // console.log(groupItems)
         
         return (
 

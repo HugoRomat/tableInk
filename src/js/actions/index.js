@@ -60,6 +60,12 @@ export const addText = data => ({
     type: 'ADD_TEXT',
     data
 })
+
+// export const moveStrokes = data => ({
+//     type: 'MOVE_STROKES',
+//     data
+// })
+
 export const addLinesLetter = data => ({
     type: 'ADD_LINES_LETTER',
     data

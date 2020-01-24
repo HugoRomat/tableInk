@@ -92,8 +92,8 @@ class Tag extends Component {
             if (ev.pointers[0].pointerType == 'touch'){
                 if (that.down){
                     // console.log(that.down)
-                    that.findIntersection(that.allBoundingBox, ev);
-                    that.dragged(ev);
+                    // that.findIntersection(that.allBoundingBox, ev);
+                    // that.dragged(ev);
                 }
             }
         })
@@ -116,34 +116,34 @@ class Tag extends Component {
             
         });
 
-        this.mc.on('press', function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                that.colorForHolding(true);
+        // this.mc.on('press', function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+        //         that.colorForHolding(true);
 
-                /** Calculate the BBox for the Tag */
-                var data = JSON.parse(JSON.stringify(that.props.stroke));
-                var lines = data.placeHolder[0]['lines'].map((d)=> d.id)
-                // console.log(lines)
-                getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
-                    // showBboxBB(d, 'red')
-                    _getBBoxPromise(['rect-'+that.props.stroke.id]).then((e)=>{
-                        // showBboxBB(e, 'red')
-                        data.offsetX = d.x - e.x;
-                        data.offsetY = d.y - e.y;
-                        data.BB = d;
-                        that.props.holdTag(data); 
-                    })
-                })
+        //         /** Calculate the BBox for the Tag */
+        //         var data = JSON.parse(JSON.stringify(that.props.stroke));
+        //         var lines = data.placeHolder[0]['lines'].map((d)=> d.id)
+        //         // console.log(lines)
+        //         getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
+        //             // showBboxBB(d, 'red')
+        //             _getBBoxPromise(['rect-'+that.props.stroke.id]).then((e)=>{
+        //                 // showBboxBB(e, 'red')
+        //                 data.offsetX = d.x - e.x;
+        //                 data.offsetY = d.y - e.y;
+        //                 data.BB = d;
+        //                 that.props.holdTag(data); 
+        //             })
+        //         })
                 
-            }
-        })
-        this.mc.on('pressup', function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                // that.props.dragItem(false);
-                that.props.holdTag(false);
-                that.colorForHolding(false)
-            }
-        })
+        //     }
+        // })
+        // this.mc.on('pressup', function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+        //         // that.props.dragItem(false);
+        //         that.props.holdTag(false);
+        //         that.colorForHolding(false)
+        //     }
+        // })
         
             
         d3.select('#item-'+that.props.stroke.id)

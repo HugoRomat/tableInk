@@ -350,7 +350,7 @@ class Picker extends Component {
             />
         });
         var X = window.innerWidth - 290;
-        var Y = 390;
+        var Y = 600;
         return (
 
             <g id="colorPalette" transform={`translate(${X},${Y})`}>
