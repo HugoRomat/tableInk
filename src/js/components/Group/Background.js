@@ -139,9 +139,14 @@ class Background extends Component {
                 // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
                 // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
 
-                if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
-                else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
+
+                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 85, that.BBox.x + that.BBox.width + 140]);
+                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 , that.BBox.y + that.BBox.height + 50]);
+
+
+                // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
+                // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
+                // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
 
                 const grouped = groupBy(d.lines, line => line.type);
                 
@@ -193,8 +198,9 @@ class Background extends Component {
 
                             for (var i = 0; i < length; i += step){
                                 var point = path.getPointAtLength(i);
-                                var X = point['x']// + that.props.parent.position[0];
-                                var Y = point['y']// + that.props.parent.position[1];
+                                // that.props.patternPenData.BBox.width/2;
+                                var X = point['x'] - myPattern.pattern.BBox.width/2// + that.props.parent.position[0];
+                                var Y = point['y'] - myPattern.pattern.BBox.height/2// + that.props.parent.position[1];
                     
                                 var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id).append('g').attr('transform', 'translate('+X+','+Y+')')
                                 for (var j = 0; j < myPattern.pattern.strokes.length; j += 1){

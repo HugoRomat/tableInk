@@ -52,6 +52,9 @@ class Line extends Component {
             })
     
     }
+    shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState);
+    }
     
     componentDidUpdate(){
         // console.log('UPDATE')

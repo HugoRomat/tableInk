@@ -151,8 +151,10 @@ export class postIt {
                 
 
             // this.colors.forEach((d)=>{
-         
-
+            BB.y -= 50;
+            BB.x -= 90;
+            BB.width += 150;
+            BB.height += 100;
 
             this.createFlipPage(BB);
             // this.initEvent();
@@ -261,8 +263,86 @@ export class postIt {
 
     //    this.transition(data, dataPath1, BB)
 
+        this.data =data;
+        this.dataPath1 = dataPath1;
+        this.BB = BB;
+
     }
-    transition(data, dataPath1, BB){
+    reverseTransition(){
+        var data = this.data;
+        var dataPath1 = this.dataPath1
+        var BB = this.BB;
+
+
+        var that = this;
+        var newData = JSON.parse(JSON.stringify(data));
+        data[0] = {...data[0], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
+        data[1] = {...data[1], 
+            'x': BB.x + BB.width - 90 + 80, 'y': BB.y + 70,
+            'x1': BB.x + BB.width - 25 + 80, 'y1': BB.y + 70,
+            'x2': BB.x + BB.width - 90 + 80, 'y2': BB.y + 75,
+        }
+        data[2] = {...data[2], 
+            'x': BB.x + BB.width - 90 + 80, 'y': BB.y,
+            'x1': BB.x + BB.width - 80 + 80, 'y1': BB.y + 50,
+            'x2': BB.x + BB.width - 80 + 80, 'y2': BB.y
+        }
+        data[3] = {...data[3], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
+     
+        var path = data.map((d)=> {
+            // console.log(d.code)
+            if (d.code == 'Z') return d.code 
+            if (d.code == 'C') return d.code + d.x1 + ',' + d.y1 + ' ' + d.x2 + ',' + d.y2 + ' ' + d.x + ',' + d.y;
+            else return d.code + d.x + ',' + d.y;
+        })
+
+        path = path.join('')
+
+        d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
+
+
+
+
+
+        dataPath1[0] = {...dataPath1[0], 'x': BB.x, 'y': BB.y}
+        dataPath1[1] = {...dataPath1[1], 'x': BB.x, 'y': BB.y + BB.height}
+        dataPath1[2] = {...dataPath1[2], 'x': BB.x + BB.width + 80, 'y': BB.y + BB.height}
+        dataPath1[3] = {...dataPath1[3], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
+
+        // data[4] = {...data[4], 'x': BB.x + BB.width - 50, 'y': BB.y + 300}
+        dataPath1[4] = {...dataPath1[4], 
+            'x': BB.x + BB.width - 90 + 80, 'y': BB.y + 70,
+            'x1': BB.x + BB.width - 25 + 80, 'y1': BB.y + 70,
+            'x2': BB.x + BB.width - 90 + 80, 'y2': BB.y + 75,
+        }
+        
+        dataPath1[5] = {...dataPath1[4], 
+            'x': BB.x + BB.width - 90 + 80, 'y': BB.y,
+            'x1': BB.x + BB.width - 80 + 80, 'y1': BB.y + 50,
+            'x2': BB.x + BB.width - 80 + 80, 'y2': BB.y
+        }
+        dataPath1[6] = {...dataPath1[6], 'x': BB.x, 'y': BB.y}
+
+
+        var path = dataPath1.map((d)=> {
+            // console.log(d.code)
+            if (d.code == 'Z') return d.code 
+            if (d.code == 'C') return d.code + d.x1 + ',' + d.y1 + ' ' + d.x2 + ',' + d.y2 + ' ' + d.x + ',' + d.y;
+            else return d.code + d.x + ',' + d.y;
+        })
+
+
+        path = path.join('')
+        d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
+
+    }
+    transition(){
+
+        var data = this.data;
+        var dataPath1 = this.dataPath1
+        var BB = this.BB;
+
+
         var that = this;
         var newData = JSON.parse(JSON.stringify(data));
         newData[0] = {...newData[0], 'x': BB.x + BB.width + 80, 'y': BB.y + 300}
@@ -286,7 +366,7 @@ export class postIt {
 
         path = path.join('')
 
-        d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(2000).attr('d',path )
+        d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
 
 
 
@@ -319,8 +399,7 @@ export class postIt {
         })
 
         path = path.join('')
-        d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(2000).attr('d',path )
-
+        d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
 
 
     }

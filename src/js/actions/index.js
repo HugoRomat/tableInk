@@ -22,6 +22,11 @@ export const addLinesClass = data => ({
     data
 })
 
+export const swipeGroup = data => ({
+    type: 'SWIPE_GROUP',
+    data
+})
+
 export const addLineToExistingGroup = data => ({
     type: 'ADD_LINE_EXISTING_GROUP',
     data
@@ -58,6 +63,11 @@ export const changeModelGroupLines = data => ({
 })
 export const addText = data => ({
     type: 'ADD_TEXT',
+    data
+})
+
+export const updatePlaceHolderGroup = data => ({
+    type: 'UPDATE_PLACEHOLDER_GROUP',
     data
 })
 

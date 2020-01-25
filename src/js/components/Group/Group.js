@@ -67,14 +67,14 @@ class Group extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "5")
-            .attr('opacity', '1.0')
+            .attr('opacity', '0.0')
         
         d3.select('#fake-'+that.props.group.id)
             .attr("d", line(that.strokePath))
             .attr('fill', 'none')
             .attr('stroke', '#9C9EDEDF')
-            .attr('stroke-width', '50')
-            .attr('opacity', '0.3')
+            .attr('stroke-width', '1')
+            .attr('opacity', '0.0')
 
         
             // getBoundinxBoxLines([that.props.group.id]).then((d)=>{
@@ -87,45 +87,50 @@ class Group extends Component {
             // })
     
     }
-    
+    updateStroke(){
+        var that = this;
+        var line = d3.line()
+        d3.select('#'+that.props.group.id).attr("d", line(that.strokePath))
+        d3.select('#fake-'+that.props.group.id).attr("d", line(that.strokePath))
+    }
     updateLine(){
         var that = this;
         // console.log(this.props.group)
         this.placeHolder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder)); 
 
         
-        this.createStroke();
+        
 
         var el = document.getElementById('fake-'+that.props.group.id);
         this.mc = new Hammer.Manager(el);
-        var press = new Hammer.Press({time: 250});
+        // var press = new Hammer.Press({time: 250});
         var pan = new Hammer.Pan({'pointers':0, threshold: 1});
         // var pan2fingers = new Hammer.Pan({'pointers':1, threshold: 1});
-        var tap = new Hammer.Tap();
+        // var tap = new Hammer.Tap();
 
-        this.mc.add(press);
+        // this.mc.add(press);
         this.mc.add(pan);
-        this.mc.add(tap);
-        pan.recognizeWith(press);
+        // this.mc.add(tap);
+        // pan.recognizeWith(press);
         // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
-        pan.recognizeWith(tap);
+        // pan.recognizeWith(tap);
 
         
-        this.mc.on("tap", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' ){
-                if (that.props.isGuideHold){
-                    that.props.setGroupTapped({'item': that.props.group.id});
-                    that.colorForTaping(false);
-                }
-                else {
-                    // console.log(that.props.isGuideHold)
-                    that.colorForTaping(true);
-                    that.props.addToSelection({'id':that.props.group.id});
+        // this.mc.on("tap", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'pen' ){
+        //         if (that.props.isGuideHold){
+        //             that.props.setGroupTapped({'item': that.props.group.id});
+        //             that.colorForTaping(false);
+        //         }
+        //         else {
+        //             // console.log(that.props.isGuideHold)
+        //             that.colorForTaping(true);
+        //             that.props.addToSelection({'id':that.props.group.id});
                     
-                }
-            }
-        })
+        //         }
+        //     }
+        // })
         this.mc.on("panstart", function(event) {
             if (event.pointers[0].pointerType == 'pen' ){
                 that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
@@ -147,28 +152,28 @@ class Group extends Component {
                 // console.log(Y+ that.BBOxPathMain.y, that.BBOxPathMain.y + that.BBOxPathMain.height)
                 if (Y+ that.BBOxPathMain.y > that.BBOxPathMain.y + that.BBOxPathMain.height){
                     that.strokePath.push([X,Y])
-                    that.createStroke();
+                    that.updateStroke();
                 } else {
                     // var lastPoint = 
                     // that.strokePath.push([X,Y])
                 }
             }
         })
-        this.mc.on("panend", function(ev) {
-        })
-        this.mc.on("press", function(ev) {
-            // console.log('press')
-            if (ev.pointers[0].pointerType == 'touch' ){
-                // that.press = true;
-                that.props.holdGuide(that.props.group.id);
-            }
-        })
-        this.mc.on("pressup", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' ){
-                // that.press = false;
-                that.props.holdGuide(false);
-            }
-        })
+        // this.mc.on("panend", function(ev) {
+        // })
+        // this.mc.on("press", function(ev) {
+        //     // console.log('press')
+        //     if (ev.pointers[0].pointerType == 'touch' ){
+        //         // that.press = true;
+        //         that.props.holdGuide(that.props.group.id);
+        //     }
+        // })
+        // this.mc.on("pressup", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch' ){
+        //         // that.press = false;
+        //         that.props.holdGuide(false);
+        //     }
+        // })
         
           
 
@@ -277,8 +282,10 @@ class Group extends Component {
     componentDidMount(){
         console.log('GOs')
         this.updateLine();   
-        // this.eventWrite();
+        this.createStroke();
         this.postIt = new postIt(this);
+
+        d3.select('#postItImage-' + this.props.group.id).style('opacity', 0)
     }
     drawBG(){
 
@@ -596,72 +603,137 @@ class Group extends Component {
             // console.log('groupHolded')
         }
         // console.log(this.props)
+        if (this.props.group.swipe != prevProps.group.swipe){
+            var modelId = this.props.group.model.id;
 
+            if (this.props.group.swipe == false){
+                // d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)');
+
+                // d3.select('#'+that.props.group.id).attr('opacity', '0.0');
+                // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.0').attr('stroke-width', '1');
+
+                d3.select('#postItImage-' + that.props.group.id).select('.path2').style('opacity',1);
+                d3.select('#postItImage-' + that.props.group.id).select('.path1').style('opacity',1);
+
+
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 0);
+                this.postIt.reverseTransition();
+
+
+
+                d3.select('#item-'+modelId).transition().duration(1000).style('opacity', 0);
+                setTimeout(function(){ that.hideStyleGuide();  }, 1000);
+
+                /** HIDE THE STROKE */
+                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
+                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
+            }
+            else if (this.props.group.swipe){
+                // console.log('SWIPE')
+                d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+                // 
+                this.postIt.transition();
+
+                setTimeout(function(){ 
+                    d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',0);
+                    d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
+                }, 1000)
+
+              
+            
+
+
+
+
+                d3.select('#item-'+modelId).style('opacity', 0);
+
+                setTimeout(function(){ 
+                    that.showStyleGuide(); 
+                }, 1000)
+
+                /** HIDE THE STROKE */
+                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
+                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
+                // console.log('swipe')
+                // d3.select('#'+that.props.group.id).attr('opacity', '0.4');
+                // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.4').attr('stroke-width', '50');
+                // d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+            }
+        }
         if (this.props.group.tap != prevProps.group.tap){
-            // console.log('HEY', this.props.group.tap)
+            // console.log('HEY', this.props.group)
             var modelId = this.props.group.model.id;
             if (this.props.group.tap == false){
                 d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)')
+
+                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
+                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 0)
             }
-            if (this.props.group.tap){
+            else if (this.props.group.tap){
                 
-                
-                this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
-
-                    
-                    // console.log('HEY', BBgroup);
-                    // drawCircle(BBgroup.x, BBgroup.y, 10, 'red')
-                    var X = BBgroup.x - 60;
-                    var Y = BBgroup.y - 60;
-                    var width = BBgroup.width + 120;
-                    var height = BBgroup.height + 120;
-                    // showBboxBB(BBgroup, 'red')
-                    // console.log(this.props.group.id,this.props.group.tap)
-                    _getBBoxPromise('item-'+modelId).then((BBguide)=>{
-                        // var ratioX = BBguide.width/width;
-                        // var ratioY = BBguide.height/height;
-                        d3.select('#item-'+modelId).attr('transform', 'translate('+X+','+Y+')scale(1)')
-                        d3.select('#item-'+modelId).select('#rect-outerBackground').attr('width', width).attr('height', height)
-
-
-                        var firstLineItem = d3.select('#containerBackground-0-' + that.props.group.id);
-                        var widthLine = parseFloat(firstLineItem.attr('width')) + 40
-                        var heightLine = parseFloat(firstLineItem.attr('height')) +40
-                        var xLine = parseFloat(firstLineItem.attr('x')) - X - 80
-                        var yLine = parseFloat(firstLineItem.attr('y')) - Y - 20
-                        
-                        // d3.select('#item-'+modelId).select('#placeHolder-backgroundLine-'+modelId).attr('transform', 'translate('+xLine+','+yLine+')scale(1)')
-                        d3.select('#item-'+modelId).select('#rect-backgroundLine').attr('width', widthLine).attr('height', heightLine).attr('x', xLine).attr('y', yLine)
-                        d3.select('#item-'+modelId).select('#rect-backgroundText')
-                            .attr('width', parseFloat(firstLineItem.attr('width')) - 60)
-                            .attr('height', parseFloat(firstLineItem.attr('height')))
-                            .attr('x', parseFloat(firstLineItem.attr('x')) - X)
-                            .attr('y', parseFloat(firstLineItem.attr('y')) - Y)
-
-                    })
-                    // this.allBoundingBox = BB;
-                    
-                   
-                })
-
-                
-                d3.select('#groupStyle-'+this.props.group.id)
-                    // .
+                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.4')
+                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.4').attr('stroke-width', '50')
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 1)
             }
         }
-        // this.initiateTable()
-        // DRAW The box for swiping
-        /**/
+    }
+    showStyleGuide(){
+        var that = this;
+        var modelId = this.props.group.model.id;
+        // console.log(this.props.group)
+        this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
+            // console.log('HEY', modelId);
+            // drawCircle(BBgroup.x, BBgroup.y, 10, 'red')
+            var X = BBgroup.x - 90;
+            var Y = BBgroup.y - 50;
+            var width = BBgroup.width + 240;
+            var height = BBgroup.height + 100;
 
-        // var d = _getBBox('background-'+this.props.group.id)
-        
-        // console.log(d)
-        // d3.select('#rect-'+this.props.group.id)
-        //     .attr('width', d.width)
-        //     .attr('height', d.height)
-        //     .attr('x', d.x)
-        //     .attr('y', d.y)
-        //     .attr('fill', 'rgba(0,255,0,0.3')
+            var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        // BBLine.x = BBLine.x - transformPan.translateX;
+        // BBLine.y = BBLine.y - transformPan.translateY;
+
+            // showBboxBB(BBgroup, 'red')
+            // console.log(this.props.group.id,this.props.group.tap)
+            /** BBOX DU GROUPE ENTIER */
+            _getBBoxPromise('item-'+modelId).then((BBguide)=>{
+                // var ratioX = BBguide.width/width;
+                // var ratioY = BBguide.height/height;
+                d3.select('#item-'+modelId).attr('transform', 'translate('+X+','+Y+')scale(1)')
+                d3.select('#item-'+modelId).select('#rect-outerBackground').attr('width', width).attr('height', height)
+
+                var firstLineItem = d3.select('#containerBackground-0-' + that.props.group.id);
+
+                /** BBOX DE LA PREMIERE LIGNE ***/
+                _getBBoxPromise('containerBackground-0-' + that.props.group.id).then((BBfirstLine)=>{
+
+                    var widthLine = BBfirstLine.width + 40;
+                    var heightLine = BBfirstLine.height + 40;
+
+
+                    var xLine = BBfirstLine.x - X - 80 - transformPan.translateX;
+                    var yLine = BBfirstLine.y - Y - 20 - transformPan.translateY;
+                    
+                    // d3.select('#item-'+modelId).select('#placeHolder-backgroundLine-'+modelId).attr('transform', 'translate('+xLine+','+yLine+')scale(1)')
+                    d3.select('#item-'+modelId).select('#rect-backgroundLine').attr('width', widthLine).attr('height', heightLine).attr('x', xLine).attr('y', yLine)
+                    
+                    
+                    d3.select('#item-'+modelId).select('#rect-backgroundText')
+                        .attr('width', widthLine - 100)
+                        .attr('height', heightLine - 40)
+                        .attr('x',  xLine + 80)
+                        .attr('y', yLine + 20)
+
+                    d3.select('#item-'+modelId).transition().duration(1000).style('opacity', 1);
+                })
+
+            })
+        })
+    }
+    hideStyleGuide(){
+        var modelId = this.props.group.model.id;
+        d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.1)')
     }
     getBoundinxBoxEveryong(){
         // console.log(this.props)

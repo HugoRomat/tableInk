@@ -27,10 +27,6 @@ class PlaceHolder extends Component {
             .on('pointerdown', function(d){
                 if (d3.event.pointerType == 'pen' ){
                     that.down = true;
-                    _getBBoxPromise('tagSVG').then((d)=>{
-                        that.positionBox = d;
-                        // console.log('GO', transformPan)
-                    })
                 }
                 
                 /**
@@ -44,11 +40,8 @@ class PlaceHolder extends Component {
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
                     if (that.down){
                         // console.log('#item-' + that.props.parent.id)
-                        // var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-                        // that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
-                        var X = d3.event.x - that.positionBox.x;
-                        var Y = d3.event.y - that.positionBox.y;
-                        that.tempArrayStroke.push([X, Y])
+                        var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
+                        that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
                         that.drawLine();
                     }
                        
@@ -72,7 +65,7 @@ class PlaceHolder extends Component {
                     that.props.addLine(data);
                     that.tempArrayStroke = [];
                     that.down = false;
-                    // that.removeTempLine();
+                    that.removeTempLine();
                     
                 }
 
@@ -98,6 +91,8 @@ class PlaceHolder extends Component {
         
     }
     componentDidUpdate(prevProps, prevState){
+        // console.log('DRAZ')
+        // this.drawPlaceHolder();
     }
     drawPlaceHolder(){
 
@@ -136,20 +131,22 @@ class PlaceHolder extends Component {
                 .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('fill', 'rgba(252, 243, 242, 1)')
-                .style("filter", "url(#drop-shadow)")
+                // .attr('fill', 'rgba(252, 243, 242, 1)')
+                // .style("filter", "url(#drop-shadow)")
+                .attr('stroke', 'rgba(252, 243, 242, 1)')
+                .attr('fill', 'white')
         }
 
-        // console.log('HEY', that.props.data.id + '-' + this.props.parent.id)
-        d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 0).attr('y1', 50)
-            .attr('x2', 100).attr('y2', 50)
-            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+        
+        // d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
+        //     .attr('x1', 0).attr('y1', 50)
+        //     .attr('x2', 100).attr('y2', 50)
+        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
-        d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 50).attr('y1', 0)
-            .attr('x2', 50).attr('y2', 100)
-            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+        // d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
+        //     .attr('x1', 50).attr('y1', 0)
+        //     .attr('x2', 50).attr('y2', 100)
+        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
         // <rect id={'horizontal-' + this.props.data.id} />
         // <rect id={'vertical-' + this.props.data.id} />
@@ -161,6 +158,8 @@ class PlaceHolder extends Component {
     render() {
         // console.log(this.props.lines)
         const listItems = this.props.lines.map((d, i) => {
+
+            // console.log(d)
             return <LinePlaceHolder 
                 key={i} 
                 stroke={d}

@@ -4,6 +4,9 @@ import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBo
 import { connect } from 'react-redux';
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
 import html2canvas from 'html2canvas';
+import  $ from 'jquery';
+
+import clip from '../../../../static/clip.png'
 
 import { 
     addLineToTagGroup,
@@ -14,7 +17,7 @@ import {
 
 import PlaceHolder from "./PlaceHolder";
 // import PlaceHolderText from "./PlaceHolderText";
-import { boxBox } from "intersects";
+import { boxBox, boxCircle } from "intersects";
 
 const mapDispatchToProps = { 
     addLineToTagGroup,
@@ -40,8 +43,10 @@ class Tag extends Component {
         this.lastPosition = {};
         this.drag = false;
 
+        this.iteration = 0;
         this.state = {
-            'BBox':{}
+            'BBox':{},
+            'currentPlaceHolder': null
         };
 
     }
@@ -53,35 +58,35 @@ class Tag extends Component {
 
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':1, threshold: 50});
-        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
+        var pan = new Hammer.Pan({'pointers':1, threshold: 0});
+        // var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.1});
         var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
         
        
         this.mc.add(pan);
         this.mc.add(tap);
-        this.mc.add(swipe);
+        // this.mc.add(swipe);
         this.mc.add(press);
-        pan.recognizeWith(swipe);
+        // pan.recognizeWith(swipe);
         pan.recognizeWith(press);
+        // pan.requireFailure(swipe);
 
        this.mc.add(pan);
        this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
                 
-                    that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
-                    that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
-                    that.dragstarted(ev);
-                    // var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
-                    _getBBoxPromise('item-' + that.props.stroke.id).then(( BB)=>{
-                        // console.log(BB)
-                        that.allBoundingBox = BB;
-                        // that.allBoundingBox.x += getPan.translateX;
-                        // that.allBoundingBox.y += getPan.translateY;
-                    })
-                    that.down = true
-               
+                that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+                that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+                that.dragstarted(ev);
+                // var getPan =  getTransformation(d3.select('#panItems').attr('transform'));
+                _getBBoxPromise('item-' + that.props.stroke.id).then(( BB)=>{
+                    // console.log(BB)
+                    that.allBoundingBox = BB;
+                    // that.allBoundingBox.x += getPan.translateX;
+                    // that.allBoundingBox.y += getPan.translateY;
+                })
+                that.down = true
             }
             if (ev.pointers[0].pointerType == 'pen' ){
                 
@@ -93,7 +98,12 @@ class Tag extends Component {
                 if (that.down){
                     // console.log(that.down)
                     // that.findIntersection(that.allBoundingBox, ev);
-                    // that.dragged(ev);
+                    that.dragged(ev);
+
+                    if ( $('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
+                        $('#item-'+that.props.stroke.id).removeClass( "saveRight" );
+                        d3.select('#item-'+that.props.stroke.id).select('.imgClip').remove()
+                    }
                 }
             }
         })
@@ -103,72 +113,98 @@ class Tag extends Component {
                 that.down = false;
             }
         })
-        this.mc.on("swipeleft", function(ev) {
+        this.mc.on("swipe", function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                    console.log('SWIPE')
+                    if ( !$('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
+                        
+
+                        var X = 0;
+                        var Y = 300
+                        var where =  d3.selectAll('.saveRight');
+                        console.log(where.size())
+                        // if (where.empty()){
+
+                        // } else {
+                        //     var transform = getTransformation(where.attr('transform'));
+                            Y = (where.size() * 120) + 300
+                            // console.log(where)
+                        // }
+                        
+
+                        $('#item-'+that.props.stroke.id).addClass( "saveRight" );
+                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
+
+                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip')
+                            .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
+
+                    }
+                   
                 
             }
             
         });
-        this.mc.on("swipeleft", function(ev) {
+        
+
+        this.mc.on('press', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                if (that.props.holdTag != undefined) that.colorForHolding(true);
+
+                /** Calculate the BBox for the Tag */
+                // var data = JSON.parse(JSON.stringify(that.props.stroke));
+                // var lines = data.placeHolder[0]['lines'].map((d)=> d.id)
+                // console.log(lines)
+                // getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
+                //     // showBboxBB(d, 'red')
+                //     _getBBoxPromise(['rect-'+that.props.stroke.id]).then((e)=>{
+                //         // showBboxBB(e, 'red')
+                //         data.offsetX = d.x - e.x;
+                //         data.offsetY = d.y - e.y;
+                //         data.BB = d;
+                        if (that.props.holdTag != undefined) that.props.holdTag(that.props.stroke); 
+                //     })
+                // })
                 
             }
-            
-        });
+        })
+        this.mc.on('pressup', function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+                // that.props.dragItem(false);
+                if (that.props.holdTag != undefined) that.props.holdTag(false);
+                if (that.props.holdTag != undefined) that.colorForHolding(false)
+            }
+        })
 
-        // this.mc.on('press', function(ev) {
-        //     if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-        //         that.colorForHolding(true);
-
-        //         /** Calculate the BBox for the Tag */
-        //         var data = JSON.parse(JSON.stringify(that.props.stroke));
-        //         var lines = data.placeHolder[0]['lines'].map((d)=> d.id)
-        //         // console.log(lines)
-        //         getBoundinxBoxLines(lines, 'stroke-').then((d)=>{
-        //             // showBboxBB(d, 'red')
-        //             _getBBoxPromise(['rect-'+that.props.stroke.id]).then((e)=>{
-        //                 // showBboxBB(e, 'red')
-        //                 data.offsetX = d.x - e.x;
-        //                 data.offsetY = d.y - e.y;
-        //                 data.BB = d;
-        //                 that.props.holdTag(data); 
-        //             })
-        //         })
+        this.mc.on('tap', function(ev) {
+            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 
-        //     }
-        // })
-        // this.mc.on('pressup', function(ev) {
-        //     if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-        //         // that.props.dragItem(false);
-        //         that.props.holdTag(false);
-        //         that.colorForHolding(false)
-        //     }
-        // })
+                that.iteration += 1
+                var othersTags = that.props.stroke.tagSnapped;
+
+                if (othersTags.length > 0){
+                    var where = that.iteration % (othersTags.length + 1);
+                    // console.log(where)
+                    /* Pour le premier element */
+                    if (where == 0){
+                        // console.log(that.props.stroke.placeHolder[0])
+                        that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(that.props.stroke.placeHolder[0]))})
+                    } 
+                    /* Pour les autres elements */
+                    else {
+                        var newTag = othersTags[where-1];
+                        // console.log(newTag.placeHolder[0])
+                        that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(newTag.placeHolder[0]))})
+                        // console.log(newTag)
+                    }
+                    
+                }
+
+            }
+        })
+        
         
             
         d3.select('#item-'+that.props.stroke.id)
-            // .on('pointerdown', function(d){
-            //     if (d3.event.pointerType == 'touch'){
-            //         that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-            //         that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-            //         that.dragstarted(that);
-            //     }
-            // })
-            // .on('pointermove', function(d){
-            //     if (d3.event.pointerType == 'touch'){
-            //         var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-            //         var differenceTime = that.startPosition.time - Date.now();
-                    
-            //         if (dist > 10 ){
-            //             that.dragged(that);
-            //         }
-            //     }
-            // })
-            // .on('pointerup', function(d){
-            //     if (d3.event.pointerType == 'touch'){
-            //         that.dragended(that);
-            //     }
-            // })
             .on('contextmenu', function(){
                 d3.event.preventDefault();
             })
@@ -179,7 +215,8 @@ class Tag extends Component {
         // var BBox = _getBBox(this.props.stroke.id);
         // console.log(BBox)
         // this.setState({'BBox': BBox})
-            this.addBG()
+        this.addBG();
+        // this.drawLine()
     
     }
     addBG(){
@@ -224,58 +261,22 @@ class Tag extends Component {
             var BB = await _getBBoxPromise(BBid[i])
             // showBboxBB(BB, 'red');
             // showBboxBB(BBTemp, 'blue');
-            var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+            var centerX = BBTemp.x + (BBTemp.width/2);
+            var centerY = BBTemp.y + (BBTemp.height/2)
+            // var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+            var intersected = boxCircle(BB.x, BB.y, BB.width, BB.height, centerX,centerY,1)
+
             // console.log(intersected)
             if (intersected) {
                 var tagName = BBid[i].split('-')[0];
-
-                // console.log(tagName)
-                // if (tagName == 'item'){
-/*
-                    var id = BBid[i];
-                    var idSImple = id.split('-')[1];
-                    // showBboxBB(BBTemp, 'red')
-                    // console.log(JSON.stringify(BBTemp))
-                    html2canvas(document.body, { 'useCORS': true, 'x':BBTemp.x, 'y':BBTemp.y,'taintTest': false,'allowTaint': false}).then((canvas) =>{
-                    
-                        // 'height': BBTemp.height, 'width': BBTemp.width, 'x':BBTemp.x, 'y':BBTemp.y,
-                    // this.getScreenshotOfElement(document.body,BBTemp.x, BBTemp.y,  BBTemp.width,  BBTemp.height).then((image)=>{
-
-                        var outputCanvas = document.createElement('canvas');
-                        var outputContext = outputCanvas.getContext('2d');
-                        outputCanvas.width = BBTemp.width;
-                        outputCanvas.height = BBTemp.height;
-                        outputContext.drawImage(canvas,0,0,window.innerWidth,window.innerHeight);
-                        // console.log(image)
-                        var image = outputCanvas.toDataURL()
-                        var dataTagToGuide = JSON.parse(JSON.stringify(that.props.stroke));
-                        dataTagToGuide.image = image
-                        this.props.addTagToGuide({
-                            'idGuide':idSImple, 
-                            'tag':dataTagToGuide,
-                            
-                        })
-                    })
-                        // var ctx = canvas.getContext("2d");
-                        // var imageData = ctx.getImageData(BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
-                        // console.log(canvas.toDataURL())
-                       
-                        this.props.removeTag(this.props.stroke.id)
-                    // });*/
-                    
-                //     this.down = false;
-                // }
-                // else {
-                    var id = BBid[i];
-                    var idSImple = id.split('-')[1];
-                    this.props.addTagSnapped({
-                        'idReceiver':idSImple, 
-                        'idSender':that.props.stroke.id
-                    })
-                    this.props.removeTag(this.props.stroke.id)
-                    this.down = false;
-                // }
-                
+                var id = BBid[i];
+                var idSImple = id.split('-')[1];
+                this.props.addTagSnapped({
+                    'idReceiver':idSImple, 
+                    'idSender':that.props.stroke.id
+                })
+                this.props.removeTag(this.props.stroke.id)
+                this.down = false;
             }
         }
     }
@@ -301,11 +302,12 @@ class Tag extends Component {
 
         })
     }
-    dragstarted(env) {
+    dragstarted(event) {
         // if (d3.event.sourceEvent == tou
         // console.log(d3.event.sourceEvent)
-        var that = env;
-        // that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()}
+        var that = this;
+        that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+
         // that.drag = false;
         // console.log('HEY', env, this)
         // d3.event.sourceEvent.stopPropagation();
@@ -362,7 +364,7 @@ class Tag extends Component {
 
         // To say nothing is holded anymore and dragged
         // clearTimeout(that.timerPress);
-        
+        if (this.props.amountDragged) this.props.amountDragged({'x': that.lastPosition.x - that.startPosition.x, 'y': that.lastPosition.y - that.startPosition.y})
         if (that.props.isGallery == false){
             // that.props.dragItem(false);
             // that.props.holdGuide(false);
@@ -387,28 +389,30 @@ class Tag extends Component {
     }
     drawRectangle(width, height, x, y){
         var that = this;
-        var sketch = d3sketchy();
-        var rec = sketch.rectStroke({ x:x, y:y, width:width, height:height, density: 3, sketch:2});
-        var flattened = [].concat(...rec)
+        // var sketch = d3sketchy();
+        // var rec = sketch.rectStroke({ x:x, y:y, width:width, height:height, density: 3, sketch:2});
+        // var flattened = [].concat(...rec)
 
         d3.select('#tagSnapped-'+that.props.stroke.id).append('rect')
             .attr('width', width)
             .attr('height', height)
             .attr('x', x)
             .attr('y',y)
-            .attr('fill', 'rgba(252, 243, 242, 1)')
+            .attr('stroke', 'rgba(252, 243, 242, 1)')
+            .attr('fill', 'white')
+            
 
-        for (var i in flattened){
-            var item = flattened[i];
-            d3.select('#tagSnapped-'+that.props.stroke.id)
-            .append('path')
-            .attr('d', (d)=>{ return item })
-            .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '0.3')
-            .style('stroke-linecap', 'round')
-            .style('stroke-linejoin', 'round')
-        }
+        // for (var i in flattened){
+        //     var item = flattened[i];
+        //     d3.select('#tagSnapped-'+that.props.stroke.id)
+        //         .append('path')
+        //         .attr('d', (d)=>{ return item })
+        //         .attr('fill', 'none')
+        //         .attr('stroke', 'black')
+        //         .attr('stroke-width', '0.3')
+        //         .style('stroke-linecap', 'round')
+        //         .style('stroke-linejoin', 'round')
+        // }
         
        
     }
@@ -428,10 +432,10 @@ class Tag extends Component {
     colorForHolding(isIt){
         var that = this;
 
-        d3.select('#rect-'+that.props.stroke.id).attr('width', 200).attr('height', 200).attr('x', 0).attr('y', 0)
+        d3.select('#rect-'+that.props.stroke.id).attr('width', 100).attr('height', 100).attr('x', 0).attr('y', 0)
         d3.select('#rect-'+that.props.stroke.id).attr('fill', 'rgba(252, 243, 242, 0)')
         if (isIt == true){
-            d3.select('#rect-'+that.props.stroke.id).attr('fill', 'grey')
+            d3.select('#rect-'+that.props.stroke.id).attr('fill', 'rgba(252, 243, 242, 0.3)')
             
         }
     }
@@ -441,20 +445,29 @@ class Tag extends Component {
 
         var scale = 1;
 
-        // console.log(this.props.stroke.placeHolder)
-        const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
-                return <PlaceHolder 
-                    key={i}
-                    data={d}
+
+        var placeHolder = <PlaceHolder 
+                    data={this.props.stroke.placeHolder[0]}
                     parent={this.props.stroke}
                    
-                    lines={d.lines}
+                    lines={this.props.stroke.placeHolder[0].lines}
                     addLine={this.addLine}
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
                 />
-        });
+        if (this.state.currentPlaceHolder != null){
+                placeHolder = <PlaceHolder 
+                data={this.state.currentPlaceHolder}
+                parent={this.props.stroke}
+               
+                lines={this.state.currentPlaceHolder.lines}
+                addLine={this.addLine}
+
+                colorStroke = {this.props.colorStroke}
+                sizeStroke = {this.props.sizeStroke}
+                />
+        }
 
         // const tagSnapped = this.props.stroke.tagSnapped.map((d, i) => {
         //     return <Tag 
@@ -481,7 +494,7 @@ class Tag extends Component {
                 
                 <path id={this.props.stroke.id}></path>
                 {/* <path id={'fake-'+this.props.stroke.id}></path> */}
-                {listPlaceHolder}
+                    {placeHolder}
                 <rect id={'rect-'+this.props.stroke.id} style={{'pointerEvents': 'none' }}/>
 
                 

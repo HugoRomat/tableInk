@@ -271,13 +271,18 @@ path{
 }
 #tagSVG{
     position: absolute;
-    top: -3px;
+    top: 21px;
     height: 100;
     width: 100;
-    right: -46px;
+    right: -80px;
     user-select: none;
     touch-action: none;
     cursor: text;
-    background-color: grey;
+    background-color: white;
+    /* background: red;
     /* background: red; */
+}
+
+#tagMenu{
+    height: 150px;
 }

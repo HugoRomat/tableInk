@@ -429,7 +429,32 @@ export async function retrieveStyle(idLine){
 
     return {'color': color, 'size': strokeSize}
 }
-
+export function whereIsPointer(x, y){
+    
+    
+    // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
+    
+    var id = null
+    var type = null;
+    d3.selectAll('.fakeStroke').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
+        id = element.id.split('-')[1];
+        type = 'path';
+    }
+    d3.selectAll('.fakeStroke').style('pointer-events', 'none');
+    d3.selectAll('.postit').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    if (element.tagName == 'path' && element.className.baseVal == "path1"){
+        id = element.id.split('-')[1];
+        type = 'group';
+    }
+    // console.log(element)
+    d3.selectAll('.postit').style('pointer-events', 'none')
+    
+    return {'id': id, 'type': type}
+    
+}
 export async function checkIfSomething(x, y){
     
     var BBid = [];
@@ -854,15 +879,15 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
         var id = BBid[i];
         var idSImple = id.split('-')[1];
         var type = id.split('-')[0]
-        if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
+        // if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
         /** Make it bigger if it's a group */
-        if (type == 'group') {
+        // if (type == 'group') {
             var BB = await _getBBoxPromise(BBid[i]);
             BB.x -= 40;
             BB.y -= 40;
             BB.width += 50;
             BB.height += 50;
-        }
+        // }
         // showBboxBB(BBTemp, 'red');
         // showBboxBB(BB, 'blue');
         var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
@@ -968,29 +993,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
         }
     }
 }
-export function whereIsPointer(x, y){
-    
-    
-    // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
-    
-    var id = null
-    d3.selectAll('.fakeStroke').style('pointer-events', 'auto');
-    var element = document.elementFromPoint(x, y);
-    if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
-        id = element.id.split('-')[1];
-    }
-    d3.selectAll('.fakeStroke').style('pointer-events', 'none');
-    d3.selectAll('.postit').style('pointer-events', 'auto');
-    var element = document.elementFromPoint(x, y);
-    if (element.tagName == 'path' && element.className.baseVal == "path1"){
-        id = element.id.split('-')[1];
-    }
-    // console.log(element)
-    d3.selectAll('.postit').style('pointer-events', 'none')
-    
-    return id
-    
-}
+
 export function is_point_inside_selection(point, array_selection) {
     var vs = array_selection;
     var x = point[0], y = point[1];

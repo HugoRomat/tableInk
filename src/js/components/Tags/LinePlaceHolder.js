@@ -12,7 +12,7 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        // console.log(this.props)
+        // console.log('stroke-'+this.props.stroke.id)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)
@@ -24,6 +24,7 @@ class LinePlaceHolder extends Component {
             .attr('fill', 'none')
     }
     componentDidUpdate(){
+        // console.log('UPDATE')
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
         d3.select('#stroke-'+that.props.stroke.id)
@@ -36,9 +37,10 @@ class LinePlaceHolder extends Component {
     }
    
     render() {
+        
         return (
  
-            <path id={'stroke-'+this.props.stroke.id} />//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
+            <path id={'stroke-'+this.props.stroke.id} style={{'pointerEvents': 'none' }}/>//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
 
         );
         

@@ -20,7 +20,8 @@ import pageFlags from './../../../../static/pageflags.png';
 
 import { 
     addTagCanvas,
-    setWorkspace
+    setWorkspace,
+    addTag
 } from '../../actions';
 import { guid, _getBBoxPromise } from "../Helper";
 import Lines from "./Lines";
@@ -30,7 +31,8 @@ import Tags from "../Tags/Tags";
 
 const mapDispatchToProps = { 
     addTagCanvas,
-    setWorkspace
+    setWorkspace,
+    addTag
  };
 const mapStateToProps = (state, ownProps) => {  
     return { 
@@ -248,6 +250,12 @@ class ColorsMenu extends Component {
         //        console.log('TEP')
         //     }
         // })
+        _getBBoxPromise('patternSVG').then((d)=>{
+            // d.x += transformPan.translateX;
+            // d.y += transformPan.translateY;
+            that.positionBox = d;
+            // console.log('GO', transformPan)
+        })
 
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
@@ -263,6 +271,7 @@ class ColorsMenu extends Component {
           })
           this.mc.on("pan", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
+                // console.log(that.positionBox)
                 var X = ev.srcEvent.x - that.positionBox.x;
                 var Y = ev.srcEvent.y - that.positionBox.y;
                 that.tempArrayStroke.push([X, Y]);
@@ -369,7 +378,7 @@ class ColorsMenu extends Component {
     }
     addTagOnCanvas(x, y){
         var id = guid();
-        var firstPoint = [[x, y], [x+100, y]];
+        var firstPoint = [[x, y], [x+20, y]];
         
         var arrayStrokes = []
         // JSON.parse(JSON.stringify(this.state.tagLines));
@@ -383,28 +392,43 @@ class ColorsMenu extends Component {
             arrayStrokes.push(newObject)
         })
 
-        var master = {
-            'id': id,
+        var id = guid();
+        // var firstPoint = [x, y];
+        var data = {
+            'id': guid(),
             'width': 100,
             'height': 100,
             'placeHolder': [
                 {'id':'left', 'data': {}, 'lines':arrayStrokes}
             ],
             'tagSnapped': [],
-            'position': [0,0]
+            'position': [x, y]
             
         }
-        // console.log(master)
+        this.props.addTag(data)
 
-        var that = this;
-        var data = {
-            'id': guid(),
-            'data':  firstPoint,
-            'tagHold': master,
-            'isPattern': false
-        }
-        // console.log(data)
-        this.props.addTagCanvas(data);
+        // var master = {
+        //     'id': id,
+        //     'width': 100,
+        //     'height': 100,
+        //     'placeHolder': [
+        //         {'id':'left', 'data': {}, 'lines':arrayStrokes}
+        //     ],
+        //     'tagSnapped': [],
+        //     'position': [0,0]
+            
+        // }
+        // // console.log(master)
+
+        // var that = this;
+        // var data = {
+        //     'id': guid(),
+        //     'data':  firstPoint,
+        //     'tagHold': master,
+        //     'isPattern': false
+        // }
+        // // console.log(data)
+        // this.props.addTagCanvas(data);
         // console.log(data)
     }
     drawTempStrokeTag(){
