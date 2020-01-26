@@ -20,8 +20,6 @@ function importAll(r) { return r.keys().map(r); }
 const images = importAll(require.context('./../usecases/demo', false, /\.(json)$/));
 var galleryData = [];
 images.forEach((d)=> {galleryData = galleryData.concat(d) })
-// console.log(galleryData)
-
 
 const initialState = { 
     'sketchLines': [],
