@@ -59,7 +59,7 @@ initialState.galleryItems = galleryData;
 initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-initialState.groupLines = group
+// initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 initialState.voiceQueries = voice;

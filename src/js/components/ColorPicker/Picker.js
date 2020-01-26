@@ -32,6 +32,9 @@ class Picker extends Component {
         this.size = 10;
         this.elementSelected = null;
         this.isDrawing = false;
+
+        this.offsetX = -250;
+        this.offsetY = -130;
     }
     htmlToElement(html) {
         var template = document.createElement('template');
@@ -143,6 +146,7 @@ class Picker extends Component {
         this.mc.add(tap);
         pan.recognizeWith(tap);
         this.mc.on("panstart", function(ev) {
+            // console.log('GO')
             if (ev.pointers[0].pointerType == 'touch'){
                 
             }
@@ -159,8 +163,10 @@ class Picker extends Component {
             }
             if (ev.pointers[0].pointerType == 'pen'){
                 // console.log(ev.srcEvent.x)
-                var X = ev.pointers[0].x - that.startPosition.x;
-                var Y = ev.pointers[0].y - that.startPosition.y;
+
+                /* ADD OFFSET FOR THE PALETTE */
+                var X = ev.pointers[0].x - that.startPosition.x - 240;
+                var Y = ev.pointers[0].y - that.startPosition.y - 70;
                 that.tempArrayStroke.push([X, Y]);
                 that.drawTempStroke();
             }
@@ -308,6 +314,7 @@ class Picker extends Component {
        
     }
     drawBG(){
+        var that = this;
         // var sketch = d3sketchy()
         
         // var rec = sketch.rectStroke({ x:0, y:0, width:300, height:window.innerHeight - 390, density: 3, sketch:2});
@@ -316,22 +323,34 @@ class Picker extends Component {
        
        
 
-        d3.select('#colorPalettePaths').append('rect')
-            .attr('width', 300)
-            .attr('height', window.innerHeight - 390)
-            .attr('x', 0)
-            .attr('y',0)
-            .attr('fill', 'rgba(252, 243, 242,  0.4)')
-            .style("filter", "url(#drop-shadow)")
+        // d3.select('#colorPalettePaths').append('rect')
+        //     .attr('width', 300)
+        //     .attr('height', window.innerHeight - 390)
+        //     .attr('x', 0)
+        //     .attr('y',0)
+        //     .attr('fill', 'rgba(252, 243, 242,  0.4)')
+        //     .style("filter", "url(#drop-shadow)")
             
 
-             var td = this.htmlToElement(paletteSVG);
+             
         var newNode = d3.select('#colorPalettePaths')
-        .append('g').attr('id', 'pathEventReceiverPalette').attr('transform', 'translate(0,0)scale(6)rotate(-120)').attr('stroke', 'black').attr('fill', 'none').style('pointer-events', 'none')
+            .append('g').attr('id', 'pathEventReceiverPalette')
+            .attr('transform', 'translate('+that.offsetX+','+that.offsetY+')scale(1)')
+            
             // .append('g').attr('id', 'pathEventReceiverPalette').attr('transform', 'translate(50,900)scale(6)rotate(-120)').attr('stroke', 'black').attr('fill', 'none').style('pointer-events', 'none')
 
-        var pathTache = newNode.node().append(td.childNodes[0])
 
+        var td = this.htmlToElement(paletteSVG);
+        d3.select(td.childNodes[1]).attr('id', 'pathPaletteSVG')
+        newNode.node().append(td.childNodes[1])
+        d3.select('#pathPaletteSVG').attr('stroke', 'black').attr('fill', 'rgba(252, 243, 242,  0.4)').style("filter", "url(#drop-shadow)")//.style('pointer-events', 'none')
+        
+        
+        var td = this.htmlToElement(paletteSVG);
+        d3.select(td.childNodes[2]).attr('id', 'holePaletteSVG')
+        newNode.node().append(td.childNodes[2])
+        d3.select('#holePaletteSVG').attr('stroke', 'black').attr('fill', 'white')
+        
 
         // d3.select('#colorPalettePaths').selectAll('path')
         //     .data(flattened).enter()
