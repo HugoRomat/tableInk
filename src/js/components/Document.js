@@ -409,7 +409,7 @@ class Document extends Component {
 
         var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
-        var pan = new Hammer.Pan({'pointers':0, threshold: 80});
+        var pan = new Hammer.Pan({'pointers':0, threshold: 100});
         var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.01});
 
         this.mc.add(press);
@@ -436,7 +436,7 @@ class Document extends Component {
 
                     var group = that.props.groupLines.find(x => x.id==id)
                     if (group != null ) {
-                        console.log(group.swipe)
+                        // console.log(group.swipe)
                         /** FIND PARENT ELEMENT */
                         that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe})
                     }
@@ -630,13 +630,13 @@ class Document extends Component {
                     var transform = getTransformation(d3.select('#panItems').attr('transform'))
                     that.speech.setPositionTyping([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
                 }
+                
                 if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
                     that.erasing = true;
                     d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
                 }
-                if (d3.event.pointerType == 'pen'){
-        
-                        that.pointerDown(d3.event)
+                else if (d3.event.pointerType == 'pen'){
+                    that.pointerDown(d3.event)
                     
                 }
                 // console.log("HELLO", d3.event)
@@ -647,11 +647,11 @@ class Document extends Component {
                     that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
 
                     that.tempArrayStroke = that.tempArrayStroke.slice(-10);
-
+                    // console.log('erase')
                     that.eraseStroke();
                     that.drawEraseStroke();
                 }
-                if (d3.event.pointerType == 'pen'){
+                else if (d3.event.pointerType == 'pen'){
                    
                         that.pointermove(d3.event);
                         // that.write = true;
@@ -667,7 +667,7 @@ class Document extends Component {
                     that.removeTempStroke();
                     d3.selectAll('.fakeStroke').style('pointer-events', 'none')
                 }
-                if (d3.event.pointerType == 'pen'){
+                else if (d3.event.pointerType == 'pen'){
                     that.pointerUp(d3.event)
                     // that.write = false;
                 }
@@ -1850,9 +1850,8 @@ class Document extends Component {
         d3.select('#penTemp')
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
-            .attr('stroke', 'black')
+            .attr('stroke', 'grey')
             .attr('stroke-width', '10')
-            .attr('opacity', '0.2')
             .attr("stroke-dasharray", "10");
     }
     eraseStroke(){
@@ -1868,7 +1867,7 @@ class Document extends Component {
         if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
             
             var id = element.id.split('-')[1];
-            // console.log(id)
+            console.log(id)
             this.props.removeSketchLines([id]);
         }
     }

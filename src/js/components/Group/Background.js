@@ -140,7 +140,7 @@ class Background extends Component {
                 // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
 
 
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 85, that.BBox.x + that.BBox.width + 140]);
+                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 90, that.BBox.x + that.BBox.width + 150]);
                 var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 , that.BBox.y + that.BBox.height + 50]);
 
 
@@ -176,10 +176,11 @@ class Background extends Component {
 
                 /** for pattern data */
                 if (pattern != undefined && pattern.length > 0){
-                   
+                   console.log(d)
                     pattern.forEach((myPattern, i)=>{
                         var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id)
                         var myLine = JSON.parse(JSON.stringify(myPattern['data']))
+                        console.log(d.BBox.x)
                         var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]})
                             
                             

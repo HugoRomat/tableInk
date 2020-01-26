@@ -11,6 +11,7 @@ import {d3sketchy} from './../../../../customModules/d3.sketchy'
 import { _getBBoxPromise, guid, checkIfSomething, drawCircle, distance } from "../Helper";
 // import strokesJSON from './../../usecases/paletteLine.json';
 
+import paletteSVG from './../../../../static/palette.svg'
 
 const mapDispatchToProps = { 
     addPaletteLine
@@ -44,7 +45,15 @@ class Picker extends Component {
         })
         this.color = this.props.colorStroke;
         this.size = this.props.sizeStroke;
+
+        
     } 
+    htmlToElement(html) {
+        var template = document.createElement('template');
+        html = html.trim(); // Never return a text node of whitespace as the result
+        template.innerHTML = html;
+        return template.content.firstChild;
+    }
     setInteractionRectangle(){
         var that = this;
         var el = document.getElementById('overlayGestures');
@@ -62,7 +71,7 @@ class Picker extends Component {
         this.mc.on("panmove", function(ev) {
             if (that.isDrawing == false) var item = d3.select('#'+that.elementSelected).select('.nonfake');
             else var item = d3.select('#pathPalette')
-            console.log(item.empty())
+            // console.log(item.empty())
             if (item.empty() == false){
                 var strokeWidth = parseFloat(item.attr('stroke-width'));
                 var color = d3.rgb(item.attr('stroke'));
@@ -302,10 +311,10 @@ class Picker extends Component {
        
     }
     drawBG(){
-        var sketch = d3sketchy()
+        // var sketch = d3sketchy()
         
-        var rec = sketch.rectStroke({ x:0, y:0, width:300, height:window.innerHeight - 390, density: 3, sketch:2});
-        var flattened = [].concat(...rec)
+        // var rec = sketch.rectStroke({ x:0, y:0, width:300, height:window.innerHeight - 390, density: 3, sketch:2});
+        // var flattened = [].concat(...rec)
 
        
 
@@ -317,16 +326,22 @@ class Picker extends Component {
             .attr('fill', 'rgba(252, 243, 242,  0.4)')
             .style("filter", "url(#drop-shadow)")
             
-        d3.select('#colorPalettePaths').selectAll('path')
-            .data(flattened).enter()
-            .append('path')
-            .attr('d', (d)=>{ return d })
-            .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '0.3')
-            .style('stroke-linecap', 'round')
-            .style('stroke-linejoin', 'round')
-            .style('opacity', 0.4)
+
+
+        var td = this.htmlToElement(paletteSVG);
+        var newNode = d3.select('#colorPalettePaths').append('g').attr('transform', 'translate(0,0)scale(1)')
+        var pathTache = newNode.node().append(td.childNodes[0])
+
+        // d3.select('#colorPalettePaths').selectAll('path')
+        //     .data(flattened).enter()
+        //     .append('path')
+        //     .attr('d', (d)=>{ return d })
+        //     .attr('fill', 'none')
+        //     .attr('stroke', 'black')
+        //     .attr('stroke-width', '0.3')
+        //     .style('stroke-linecap', 'round')
+        //     .style('stroke-linejoin', 'round')
+        //     .style('opacity', 0.4)
 
     }
    

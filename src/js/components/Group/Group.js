@@ -404,6 +404,7 @@ class Group extends Component {
                 polygon = mergeRectangles(polygon, arrayBBox[i])
             }
         } else polygon = arrayBBox[0]
+        // showBboxBB(polygon, 'red')
         //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
         lines.forEach((d)=>{
             d.data = d.data.map((f)=> [f[0] - polygon.x, f[1] - polygon.y])

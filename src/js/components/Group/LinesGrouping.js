@@ -350,8 +350,8 @@ class LinesGrouping extends Component {
                 // console.log(tag)
                 this.setState({tagInsideBullet: <Tag key={0} stroke={tag} isGallery={false} holdTag={null} colorStroke = {'red'} sizeStroke = {10} /> })
                 var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-                var X = this.BBox.x - transformDrag.translateX - 105; 
-                var Y = this.BBox.y - transformDrag.translateY - 80;
+                var X = this.BBox.x - transformDrag.translateX - 145; 
+                var Y = this.BBox.y - transformDrag.translateY - 100;
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
             }
 

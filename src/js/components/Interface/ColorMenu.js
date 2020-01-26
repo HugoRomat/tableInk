@@ -303,7 +303,8 @@ class ColorsMenu extends Component {
     /** POUR BOUGER LE TAG SUR L'INTERFACE */
     drawTag = async() => {
         var that = this;
-        this.positionBox = await _getBBoxPromise('tagSVG');
+        that.positionBoxTag = await _getBBoxPromise('tagSVG')
+        
         var el = document.getElementById("tagSVG");
         this.mc = new Hammer.Manager(el);
         var pan = new Hammer.Pan({'pointers':1, threshold: 1});
@@ -314,15 +315,18 @@ class ColorsMenu extends Component {
             if (ev.pointers[0].pointerType == 'pen'){
                 // console.log('HEY')
                 that.tempArrayStroke = [];
-                _getBBoxPromise('tagSVG').then((d)=>{
-                    that.positionBox = d;
-                })
+                // _getBBoxPromise('tagSVG').then((d)=>{
+                //     that.positionBox = d;
+                
+                // })
             }
           })
           this.mc.on("pan", function(ev) {
+              
             if (ev.pointers[0].pointerType == 'pen'){
-                var X = ev.srcEvent.x - that.positionBox.x;
-                var Y = ev.srcEvent.y - that.positionBox.y;
+                // console.log(that.positionBoxTag.y)
+                var X = ev.srcEvent.x - that.positionBoxTag.x;
+                var Y = ev.srcEvent.y - that.positionBoxTag.y;
                 that.tempArrayStroke.push([X, Y]);
                 that.drawTempStrokeTag();
             }
