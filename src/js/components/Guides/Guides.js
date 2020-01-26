@@ -29,7 +29,7 @@ class Guides extends Component {
     }
     render() {
 
-        // console.log( this.props.stickyLines)
+        // console.log( this.props.tagHold)
         const listItems = this.props.stickyLines.map((d, i) => {
                 return <Guide 
                     key={i} 
@@ -39,6 +39,7 @@ class Guides extends Component {
                     holdGuide={this.props.holdGuide}
                     dragItem={this.props.dragItem}
                     setGuideTapped={this.setGuideTapped}
+                    tagHold={this.props.tagHold}
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}

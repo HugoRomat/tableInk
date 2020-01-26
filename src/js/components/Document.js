@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, drawRect, whoIsInside, retrieveStyle, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax, checkIfSomething } from "./Helper";
+import { distance, guid, drawRect, whoIsInside, retrieveStyle, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax, checkIfSomething, whereIsPointer, findIntersectionRecursive } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 import {d3sketchy} from './../../../customModules/d3.sketchy'
@@ -34,7 +34,10 @@ import {
     addTag,
     addVoiceQueries,
     addTagCanvas,
-    addImage
+    addImage,
+    tapGroup,
+    swipeGroup,
+    moveSketchLines
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -67,7 +70,10 @@ const mapDispatchToProps = {
     addTag,
     addVoiceQueries,
     addTagCanvas,
-    addImage
+    addImage,
+    tapGroup,
+    swipeGroup,
+    moveSketchLines
 };
 
 
@@ -147,6 +153,8 @@ class Document extends Component {
         this.lastStepTagPattern = 0;
         this.stateLeftBar = 'normal';
         this.init();
+
+        this.positionTag = [];
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
@@ -159,7 +167,7 @@ class Document extends Component {
     componentDidMount(){
         var that = this;
         this.listenHammer();
-        this.listenHammerRectangle();
+        // this.listenHammerRectangle();
         this.listenEvents();
         // d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
         // d3.select('#eventReceiver').style('width', '100%').style('height', '100%');
@@ -221,20 +229,20 @@ class Document extends Component {
         
         // <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} />
 
-        var sketch = d3sketchy()
-        var rec = sketch.rectStroke({ x:0, y:-100, width:0, height:window.innerWidth+100, density: 1, sketch:10});
+        // var sketch = d3sketchy()
+        // var rec = sketch.rectStroke({ x:0, y:-100, width:0, height:window.innerWidth+100, density: 1, sketch:10});
             
 
-        var flattened = [].concat(...rec)
-        d3.select('#leftPart').selectAll('path')
-            .data(flattened).enter()
-            .append('path')
-            .attr('d', (d)=>{ return d })
-            .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '0.3')
-            .style('stroke-linecap', 'round')
-            .style('stroke-linejoin', 'round')
+        // var flattened = [].concat(...rec)
+        // d3.select('#leftPart').selectAll('path')
+        //     .data(flattened).enter()
+        //     .append('path')
+        //     .attr('d', (d)=>{ return d })
+        //     .attr('fill', 'none')
+        //     .attr('stroke', 'black')
+        //     .attr('stroke-width', '0.3')
+        //     .style('stroke-linecap', 'round')
+        //     .style('stroke-linejoin', 'round')
 
             $('#eventReceiver').on({
                 'dragover dragenter': function(e) {
@@ -329,79 +337,80 @@ class Document extends Component {
             this.drawGrid(this.grid.x,this.grid.y, this.grid.width, this.grid.height);
         }
     }
-    listenHammerRectangle(){
-        var that = this;
-        var el = document.getElementById("leftPart");
-        this.mc = new Hammer.Manager(el);
+    // listenHammerRectangle(){
+    //     var that = this;
+    //     var el = document.getElementById("leftPart");
+    //     this.mc = new Hammer.Manager(el);
 
-        var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
-        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
-        this.mc.add(pan);
-        this.mc.add(swipe);
-        this.mc.add(press);
+    //     var press = new Hammer.Press({time: 250});
+    //     var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+    //     var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
+    //     this.mc.add(pan);
+    //     this.mc.add(swipe);
+    //     this.mc.add(press);
 
-        pan.recognizeWith(swipe);
-        pan.recognizeWith(press);
+    //     pan.recognizeWith(swipe);
+    //     pan.recognizeWith(press);
 
-        this.mc.on("panstart", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerDown(ev.srcEvent)
-            }
-          })
-          this.mc.on("pan", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
-                that.pointermove(ev.srcEvent)
-            }
-          })
-          this.mc.on("panend", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerUp(ev.srcEvent)
-            }
-          })
-        this.mc.on("swiperight", function(ev) {
-            // console.log(ev)
-            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                // if (ev.srcEvent.x < 300){
-                    that.createSwipeRight(ev);
-                // }
-            }
-        })
+    //     this.mc.on("panstart", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'pen'){
+    //             that.pointerDown(ev.srcEvent)
+    //         }
+    //       })
+    //       this.mc.on("pan", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'pen'){
+    //             that.pointermove(ev.srcEvent)
+    //         }
+    //       })
+    //       this.mc.on("panend", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'pen'){
+    //             that.pointerUp(ev.srcEvent)
+    //         }
+    //       })
+    //     this.mc.on("swiperight", function(ev) {
+    //         // console.log(ev)
+    //         if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+    //             // if (ev.srcEvent.x < 300){
+    //                 that.createSwipeRight(ev);
+    //             // }
+    //         }
+    //     })
 
-        this.mc.on("swipeleft", function(ev) {
-            // console.log(ev)
-            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                // if (ev.srcEvent.x < 300){
-                    that.createSwipeLeft(ev);
-                // }
-            }
-        })
-        this.mc.on("press", function(ev) {
-            ev.srcEvent.preventDefault();
-            if (ev.pointers[0]['pointerType'] == 'touch'){
+    //     this.mc.on("swipeleft", function(ev) {
+    //         // console.log(ev)
+    //         if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+    //             // if (ev.srcEvent.x < 300){
+    //                 that.createSwipeLeft(ev);
+    //             // }
+    //         }
+    //     })
+    //     this.mc.on("press", function(ev) {
+    //         ev.srcEvent.preventDefault();
+    //         if (ev.pointers[0]['pointerType'] == 'touch'){
                
-                // console.log('listen')
-                that.voiceQuery({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
-            }
-        })
-        this.mc.on("pressup", function(ev) {
-            ev.srcEvent.preventDefault();
-        })
+    //             // console.log('listen')
+    //             that.voiceQuery({'x':ev.srcEvent.x, 'y' :ev.srcEvent.y});
+    //         }
+    //     })
+    //     this.mc.on("pressup", function(ev) {
+    //         ev.srcEvent.preventDefault();
+    //     })
         
-        d3.select('#leftPart').on('contextmenu', function(){
-            d3.event.preventDefault();
-        })
-    }
+    //     d3.select('#leftPart').on('contextmenu', function(){
+    //         d3.event.preventDefault();
+    //     })
+    // }
     listenHammer(){
         var that = this;
+        this.panGroup = null;
        
         var el = document.getElementById("eventReceiver");
         this.mc = new Hammer.Manager(el);
 
         var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
-        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
-        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1});
+        var pan = new Hammer.Pan({'pointers':0, threshold: 100});
+        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.01});
 
         this.mc.add(press);
         this.mc.add(swipe);
@@ -411,15 +420,42 @@ class Document extends Component {
         pan.recognizeWith(tap);
         // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
-        // swipe.recognizeWith(pan);
+        // pan.recognizeWith(swipe);
+        pan.requireFailure(swipe);
 
+        this.mc.on("swipe", function(ev) {
+            if (ev.pointers[0].pointerType == 'touch'){
+                var x = ev.pointers[0]['x'];
+                var y = ev.pointers[0]['y'];
+                var element = whereIsPointer(x, y)
+                var id = element.id;
+                    console.log('SWIPE', id)
+                if (id == null){
+                // OPEN GALLERY
+                } else {
+
+                    var group = that.props.groupLines.find(x => x.id==id)
+                    if (group != null ) {
+                        // console.log(group.swipe)
+                        /** FIND PARENT ELEMENT */
+                        that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe})
+                    }
+                }
+            }
+        })
         
         this.mc.on("panstart", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen' ){
-                that.pointerDown(ev.srcEvent)
-            }
+           
             if (ev.pointers[0].pointerType == 'touch'){
-                that.panStartCanvas(ev);
+                var element = whereIsPointer(event.x, event.y);
+                var id = element.id;
+                that.panGroup = that.props.groupLines.find(x => x.id==id)
+                that.panStroke = that.props.sketchLines.find(x => x.id==id)
+                
+
+                if (that.panGroup) that.panStartGroup(ev);
+                else if ( that.panStroke) that.panStartStroke(ev);
+                else that.panStartCanvas(ev);
             }
           })
           this.mc.on("pan", function(ev) {
@@ -438,20 +474,24 @@ class Document extends Component {
 
                     that.straightLine = {'x': x, 'y': y};
                 }
-                if (ev.pointers[0].pointerType == 'pen'){
-                    that.pointermove(ev.pointers[0]);
-                    // that.write = true;
-                } 
+                
             }
             if (ev.pointers.length == 1 && ev.pointers[0].pointerType == 'touch'){
-                // console.log(that.write)
-                that.panCanvas(ev);
+
+                if (that.panGroup) that.panMoveGroup(ev);
+                else if ( that.panStroke) that.panMoveStroke(ev);
+                else that.panCanvas(ev);
             }
           })
           this.mc.on("panend", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerUp(ev.srcEvent, ev)
-                // that.write = false;
+            
+            if (ev.pointers[0].pointerType == 'touch'){
+               
+
+                if (that.panGroup) that.panEndGroup(ev);
+                else if ( that.panStroke) that.panEndStroke(ev);
+                that.panGroup = null;
+                that.panStroke = null
             }
             
           })
@@ -535,9 +575,41 @@ class Document extends Component {
         })
         this.mc.on("tap", function(ev) {
             if (ev.pointers[0]['pointerType'] == 'touch' ){
-                that.speech.setAlphabet(that.props.lettres)
-                var transform = getTransformation(d3.select('#panItems').attr('transform'))
-                that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
+
+                var x = ev.pointers[0]['x'];
+                var y = ev.pointers[0]['y'];
+                var element = whereIsPointer(x, y)
+                var id = element.id;
+                    // console.log(element)
+                if (id == null){
+                    that.speech.setAlphabet(that.props.lettres)
+                    var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                    that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
+
+                    that.props.groupLines.forEach((d)=>{
+                        that.props.swipeGroup({'id': d.id, 'swipe': false});
+                        that.props.tapGroup({'id': d.id, 'tap': false})
+                    })
+                    
+                    
+
+                } else {
+                    var group = that.props.groupLines.find(x => x.id==id)
+                    // var panStroke = that.props.sketchLines.find(x => x.id==id)
+                    // console.log(group)
+                    // var type = element.split('-')[0];
+                    if (group != null ) {
+                        /** FIN PARENT ELEMENT */
+                        // var id = element.split('-')[1];
+                        // var group = that.props.groupLines.find(x => [].concat(... x['lines']).find(x => x == id))
+                        
+                        // console.log(!group.tap)
+                        // console.log(group.id)
+                        that.props.tapGroup({'id': group.id, 'tap': !group.tap})
+                    }
+                }
+                
+             
             }
         })
         /** FOR TEXT ENTRY */
@@ -558,9 +630,14 @@ class Document extends Component {
                     var transform = getTransformation(d3.select('#panItems').attr('transform'))
                     that.speech.setPositionTyping([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
                 }
+                
                 if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
                     that.erasing = true;
                     d3.selectAll('.fakeStroke').style('pointer-events', 'auto')
+                }
+                else if (d3.event.pointerType == 'pen'){
+                    that.pointerDown(d3.event)
+                    
                 }
                 // console.log("HELLO", d3.event)
             }) 
@@ -570,9 +647,15 @@ class Document extends Component {
                     that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
 
                     that.tempArrayStroke = that.tempArrayStroke.slice(-10);
-
+                    // console.log('erase')
                     that.eraseStroke();
                     that.drawEraseStroke();
+                }
+                else if (d3.event.pointerType == 'pen'){
+                   
+                        that.pointermove(d3.event);
+                        // that.write = true;
+                     
                 }
             })
             .on('pointerup', function(){
@@ -584,8 +667,123 @@ class Document extends Component {
                     that.removeTempStroke();
                     d3.selectAll('.fakeStroke').style('pointer-events', 'none')
                 }
+                else if (d3.event.pointerType == 'pen'){
+                    that.pointerUp(d3.event)
+                    // that.write = false;
+                }
             
             })  
+    }
+    /** PAN START A GROUP ***/
+    panStartGroup(ev){
+        var that = this;
+        this.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+        this.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+        // console.log(that.panGroup)
+        var getPan = getTransformation(d3.select('#panItems').attr('transform'));
+        _getBBoxPromise('group-' + that.panGroup.id).then((BB)=> {
+            // showBboxBB(BB, 'red')
+            that.allBoundingBox = BB;
+            // that.allBoundingBox.x += getPan.translateX - 20;
+            // that.allBoundingBox.y += getPan.translateY - 20;
+            that.allBoundingBox.width += 40;
+            that.allBoundingBox.height += 40;
+        })
+    }
+    /** PAN MOVE A GROUP ***/
+    panMoveGroup(event){
+        var that = this;       
+        var transform = getTransformation(d3.select('#group-'+that.panGroup.id).attr('transform'));  
+        var offsetX = event.srcEvent.x - that.lastPosition.x;
+        var offsetY = event.srcEvent.y - that.lastPosition.y;
+        var X = offsetX + transform.translateX;
+        var Y = offsetY + transform.translateY;
+        d3.select('#group-'+that.panGroup.id).attr('transform', 'translate('+X+','+Y+')')
+        var linesAttached = that.panGroup['lines'];
+
+        // console.log(linesAttached)
+        linesAttached.forEach((groupLine)=>{
+            groupLine.forEach((lineId)=>{
+                var id = 'item-'+lineId;
+                var transform = getTransformation(d3.select('#'+id).attr('transform'));
+                var X = offsetX + transform.translateX;
+                var Y = offsetY + transform.translateY;
+                d3.select('#'+id).attr('transform', 'translate('+X+','+Y+')')
+            })
+        })
+
+        if (that.allBoundingBox) findIntersectionRecursive(that.allBoundingBox, event, this.lastPosition, that.panGroup.id, this.props.groupLines);
+
+
+
+        that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+    }
+    panEndGroup(){
+        // console.log('panend')
+        var lines = [].concat(...this.panGroup['lines'])
+        
+        // var data = lines.map((d)=>{
+        //     // console.log(d)
+        //     var transform = getTransformation(d3.select('#item-'+d).attr('transform'))
+        //     return {'id': d, 'position': [transform.translateX, transform.translateY]};
+        // })
+        var data = []
+        // d3.select('.standAloneLines').selectAll('g').each(function(){
+        //     var id = d3.select(this).attr('id').split('-')[1];
+        //     var transform = getTransformation(d3.select('#item-'+id).attr('transform'))
+        //     data.push({'id': id, 'position': [transform.translateX, transform.translateY]})
+        //     // this.props.moveSketchLines([]);
+        // })
+
+        // this.props.moveSketchLines(data);
+    }
+    /** PAN START A GROUP ***/
+    panStartStroke(ev){
+        var that = this;
+        this.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+        this.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+        // console.log(that.panGroup)
+        var getPan = getTransformation(d3.select('#panItems').attr('transform'));
+        _getBBoxPromise('item-' + that.panStroke.id).then((BB)=> {
+            // showBboxBB(BB, 'red')
+            that.allBoundingBox = BB;
+            // that.allBoundingBox.x += getPan.translateX;
+            // that.allBoundingBox.y += getPan.translateY;
+            that.allBoundingBox.width += 0;
+            that.allBoundingBox.height += 0;
+        })
+    }
+    /** PAN MOVE A STROKE ***/
+    panMoveStroke(event){
+        var that = this;       
+        var transform = getTransformation(d3.select('#item-'+that.panStroke.id).attr('transform'));  
+        var offsetX = event.srcEvent.x - that.lastPosition.x;
+        var offsetY = event.srcEvent.y - that.lastPosition.y;
+        var X = offsetX + transform.translateX;
+        var Y = offsetY + transform.translateY;
+        d3.select('#item-'+that.panStroke.id).attr('transform', 'translate('+X+','+Y+')')   
+        if (that.allBoundingBox) findIntersectionRecursive(that.allBoundingBox, event, this.lastPosition, that.panStroke.id, this.props.groupLines);
+        that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+    }
+    panEndStroke(event){
+        var that = this;
+        //     return {'id': d, 'position': [stroke.position[0]-offsetXAlignement, stroke.position[1]-offsetYAlignement]}
+        // })
+        var data = [];
+        // d3.select('.standAloneLines').selectAll('g').each(function(){
+        //     var id = d3.select(this).attr('id').split('-')[1];
+        //     var transform = getTransformation(d3.select('#item-'+id).attr('transform'))
+        //     data.push({'id': id, 'position': [transform.translateX, transform.translateY]})
+        //     // this.props.moveSketchLines([]);
+        // })
+
+        // this.props.moveSketchLines(data);
+
+        // d3.select('.standAloneLines').selectAll('g').each(function(){
+        //     var id = d3.select(this).attr('id').split('-')[1];
+        //     var transform = getTransformation(d3.select('#item-'+id).attr('transform'))
+        //     this.props.moveSketchLines([{'id': id, 'position': [transform.translateX, transform.translateY]}]);
+        // })
     }
     panStartCanvas(ev){
         this.lastPosition = {'x': ev.srcEvent.x, 'y': ev.srcEvent.y}
@@ -603,54 +801,63 @@ class Document extends Component {
         d3.select('#panItems').attr('transform', 'translate('+X+','+Y+')')
         this.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
 
-        // console.log(this.showGrid)
-        if (this.showGrid) this.panGrid(X, Y, offsetX, offsetY);
+
+        /*** POUR MA BARRE DE GAUCHE ***/
+        d3.selectAll('.saveRight').each(function(){
+            var transform = getTransformation(d3.select(this).attr('transform'))
+            var X = transform.translateX - offsetX;
+            var Y = transform.translateY - offsetY;
+
+            d3.select(this).attr('transform', 'translate('+X+','+Y+')rotate('+transform.rotate+')')
+        })
+ 
+
     }
-    createSwipeRight(){
-        var that = this;
-        // console.log('GO', window.innerWidth)
-        if (this.stateLeftBar == 'normal'){
-            d3.select('.lineRed').transition().duration(1000).style('left', window.innerWidth);
-            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+window.innerWidth +','+0+')');
-            d3.select('#nameApp').transition().duration(1000).style('opacity', '0'); 
-            this.setState({'openGalleryModel': true});
-            this.stateLeftBar = 'gallery';
-        }
-        else if (this.stateLeftBar == 'small'){
-            d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
-            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
-            d3.select('#nameApp').transition().duration(1000).style('left', '323px');
+    // createSwipeRight(){
+    //     var that = this;
+    //     // console.log('GO', window.innerWidth)
+    //     if (this.stateLeftBar == 'normal'){
+    //         d3.select('.lineRed').transition().duration(1000).style('left', window.innerWidth);
+    //         d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+window.innerWidth +','+0+')');
+    //         d3.select('#nameApp').transition().duration(1000).style('opacity', '0'); 
+    //         this.setState({'openGalleryModel': true});
+    //         this.stateLeftBar = 'gallery';
+    //     }
+    //     else if (this.stateLeftBar == 'small'){
+    //         d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
+    //         d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
+    //         d3.select('#nameApp').transition().duration(1000).style('left', '323px');
 
-            that.arrangeGuideNormal();
+    //         that.arrangeGuideNormal();
 
-            this.setState({'openGalleryModel': false});
-            this.stateLeftBar = 'normal'
-        }
-    }
-    createSwipeLeft(){
-        var that = this;
+    //         this.setState({'openGalleryModel': false});
+    //         this.stateLeftBar = 'normal'
+    //     }
+    // }
+    // createSwipeLeft(){
+    //     var that = this;
 
-        if (this.stateLeftBar == 'gallery'){
-            d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
-            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
-            d3.select('#nameApp').transition().duration(1000).style('opacity', '1');
-            // d3.select('#nameApp').transition().duration(1000).style('left', '323px');
+    //     if (this.stateLeftBar == 'gallery'){
+    //         d3.select('.lineRed').transition().duration(1000).style('left',  that.marginOffset + 'px');
+    //         d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate('+that.marginOffset +','+0+')');
+    //         d3.select('#nameApp').transition().duration(1000).style('opacity', '1');
+    //         // d3.select('#nameApp').transition().duration(1000).style('left', '323px');
 
-            this.setState({'openGalleryModel': false});
-            this.stateLeftBar = 'normal'
-        }
-        else if (this.stateLeftBar == 'normal'){
-            d3.select('.lineRed').transition().duration(1000).style('left',  '100px');
-            d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate(100,'+0+')');
-            d3.select('#nameApp').transition().duration(1000).style('left', '123px');
+    //         this.setState({'openGalleryModel': false});
+    //         this.stateLeftBar = 'normal'
+    //     }
+    //     else if (this.stateLeftBar == 'normal'){
+    //         d3.select('.lineRed').transition().duration(1000).style('left',  '100px');
+    //         d3.select('#leftPart').transition().duration(1000).attr('transform', 'translate(100,'+0+')');
+    //         d3.select('#nameApp').transition().duration(1000).style('left', '123px');
 
-            that.arrangeGuideSmall();
+    //         that.arrangeGuideSmall();
     
-            this.setState({'openGalleryModel': false});
-            this.stateLeftBar = 'small'
-        }
+    //         this.setState({'openGalleryModel': false});
+    //         this.stateLeftBar = 'small'
+    //     }
         
-    }
+    // }
     arrangeGuideSmall(){
         d3.select('#guides').selectAll('.guide').each(function(d, i){
             // var transform = getTransformation(d3.select(this).attr('transform'))
@@ -696,10 +903,11 @@ class Document extends Component {
             //     // that.duplicateSticky(that.isGuideHold);
             // }
             
-            if (event.x < 300){
-                that.sticky = true;
-            }
-            else if (that.guideTapped){
+            // if (event.x < 300){
+            //     that.sticky = true;
+            // }
+           
+            if (that.guideTapped){
                 that.tapGuide = that.guideTapped;
             }
             else if (that.isPatternPen){
@@ -719,6 +927,7 @@ class Document extends Component {
         // }
         
     }
+
     pointermove(event){
         var that = this;
         // console.log(that.isGuideHold, )
@@ -770,7 +979,7 @@ class Document extends Component {
         }
         
     }
-    pointerUp(event, sourceEvent){
+    pointerUp(event){
         var that = this;
         // console.log('UP')
         if (event.pointerType == 'pen') that.detectingFlick(event);
@@ -794,12 +1003,12 @@ class Document extends Component {
 
             }
             else if (that.state.tagHold){
-                that.addTagOnCanvas();
+                that.addTagOnCanvas(event);
             }
-            else if (that.sticky && that.isGuideHold == false){
-                that.addStrokeTag(event); 
-                // that.addStrokeGuide(); 
-            }
+            // else if (that.sticky && that.isGuideHold == false){
+            //     that.addStrokeTag(event); 
+            //     // that.addStrokeGuide(); 
+            // }
             /** Instancie un guide vide  */
             /*else if (that.sticky && that.isGuideHold == false){
                 // console.log(length)
@@ -834,9 +1043,9 @@ class Document extends Component {
             }
             /** Copie un guide a gauche //DUPLICATION */
             else if (that.sticky && that.isGuideHold){
-                that.addStrokeGuideCopy(this.isGuideHold, event); 
+                that.addStrokeGuideCopy(this.isGuideHold, event, guid()); 
             }
-            /** Holding a guide to create a sticky */
+            /** Tap a guide to create a sticky */
             else if (that.tapGuide){
                
                 // console.log(that.tapGuide)
@@ -865,7 +1074,9 @@ class Document extends Component {
                 //     console.log(d)
                 // })
                 //It's a guide OR a stroke
-                if (length > 150 && sourceEvent.deltaTime < 400){
+
+                // console.log()
+                if (length > 150 && Date.now() - that.pointerDownPoperties.time < 400){
                     var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
 
 
@@ -879,6 +1090,7 @@ class Document extends Component {
                             console.log(closelements)
                             that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
     
+                                
                                 // console.log(elementLines)
                                 that.makingGroup(elementLines, 'initial', strokeGuide);
                             })
@@ -993,26 +1205,35 @@ class Document extends Component {
             d[1] = d[1] - firstPoint[1]
         })
 
-
+        
         var modelData = this.props.stickyLines.find(x => x.id == model);
+        var idChild = guid();
+        if (model == 'initial'){
+            var idNewGuide = guid()
+            modelData = JSON.parse(JSON.stringify(modelData));
+            modelData.id = idNewGuide;
+            modelData.child = idChild
+
+            this.addStrokeGuideCopy(modelData, {'x': 0, 'y': 0}); 
+           
+        }
 
         
-        
-
-
-        // console.log(modelData, model)
-        var id = guid();
         var group = {
-            'id': id, 
+            'id': idChild, 
             'lines':lines, 
             'position': [0,0],
             'model': modelData,
+            'tap': false,
+            'swipe': false,
             'stroke': {'points':arrayPoints, 'position': [firstPoint[0],firstPoint[1]]}
         };
         // console.log(group)
         // this.props.addLinesClass({'idLines':selection, 'class':['group-'+id]})
         this.props.createGroupLines(group);
         // this.props.removeSketchLines();
+
+        
 
 
         // for (var i in selection){
@@ -1241,7 +1462,7 @@ class Document extends Component {
         for (var i = 0; i < that.objectIn.length; i++){
             var id1 = that.objectIn[i];
             var BB1 = _getBBox('item-'+id1.id)
-            // showBboxBB(BB1, 'red');
+            showBboxBB(BB1, 'red');
         }
 
         console.log(that.objectIn)
@@ -1259,11 +1480,11 @@ class Document extends Component {
         
     }
     addStrokeGuideCopy(guideToCopy, evt){
-        var sticky = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == guideToCopy)));
+        var sticky = JSON.parse(JSON.stringify(guideToCopy));
         // this.props.stickyLines
-        console.log(evt)
+        // console.log(evt)
         // sticky.forEach(st => {
-        sticky.id = guid();
+        // sticky.id = id;
         sticky.placeHolder.forEach(element => {
             // console.log(element)
             element.lines.forEach((d)=>{
@@ -1282,8 +1503,8 @@ class Document extends Component {
         var firstPoint = [ev['x'], ev['y']];
         var data = {
             'id': id,
-            'width': 150,
-            'height': 150,
+            'width': 100,
+            'height': 100,
             'placeHolder': [
                 {'id':'left', 'data': {}, 'lines':[]}
             ],
@@ -1365,7 +1586,7 @@ class Document extends Component {
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
 
         var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
-        if (dist > (this.guidHoldObject.width)){
+        if (dist > 450){//(this.guidHoldObject.width)){
             that.lastMovePosition = {'x': event['x'],'y': event['y']};
             // drawCircle(event['x'], event['y'], 10, 'red');
             var newGuide = [
@@ -1415,27 +1636,28 @@ class Document extends Component {
             .attr('opacity', '0.2')
             .attr("stroke-dasharray", "10");
       
-        // var step = that.state.tagHold.BB.width + 30;
+      
 
-        // console.log(that.state.tagHold.tagSnapped.length)
-        var step = 150;
+        var step = 130;
         var f = 0;
         var path = d3.select('#penTemp').node()
         var length = path.getTotalLength();
-        // console.log('==========')
+        // console.log('==========', length - this.lastStepTagPattern)
 
-        if (length - this.lastStepTagPattern > step){
+        if (this.positionTag.length == 0 || length - this.lastStepTagPattern > step){
             this.lastStepTagPattern = length;
             // console.log(that.state.tagHold)
             d3.select('#tempTag').selectAll('*').remove()
+            that.positionTag = [];
             for (var i = 0; i < length; i += step){
                 var point = path.getPointAtLength(i);
                 // var X = point['x'] - transformPan.translateX - that.state.tagHold.offsetX - that.state.tagHold.BB.width/2;
                 // var Y = point['y'] - transformPan.translateY - that.state.tagHold.offsetY - that.state.tagHold.BB.height/2;
-                var X = point['x'] - 75;
-                var Y = point['y']  - 75;
+                var X = point['x'] - 50;
+                var Y = point['y']  - 50;
     
-
+                that.positionTag.push({'x': X, 'y': Y})
+                // console.log(that.positionTag)
                 if (that.state.tagHold.tagSnapped.length == 0){
                     var container = d3.select('#tempTag').append('g').attr('transform', 'translate('+X+','+Y+')')
                     for (var j = 0; j < that.state.tagHold.placeHolder[0]['lines'].length; j += 1){
@@ -1481,15 +1703,55 @@ class Document extends Component {
             }
         }
     }
-    addTagOnCanvas(){
+    addTagOnCanvas(ev){
         var that = this;
-        var data = {
-            'id': guid(),
-            'data':  that.tempArrayStroke,
-            'tagHold': that.state.tagHold,
-            'isPattern': (that.state.tagHold) ? true : false
+        // var data = {
+        //     'id': guid(),
+        //     'data':  that.tempArrayStroke,
+        //     'tagHold': that.state.tagHold,
+        //     'isPattern': (that.state.tagHold) ? true : false
+        // }
+        // console.log(data)
+        // this.props.addTagCanvas(data);
+
+
+        // var data = {
+        //     'id': id,
+        //     'width': 100,
+        //     'height': 100,
+        //     'placeHolder': [
+        //         {'id':'left', 'data': {}, 'lines':[]}
+        //     ],
+        //     'tagSnapped': [],
+        //     'position': [firstPoint[0],firstPoint[1]]
+            
+        // }
+        // console.log(that.positionTag)
+        for (var i in that.positionTag){
+            var position = that.positionTag[i]
+            // var id = guid();
+            var firstPoint = [position['x'], position['y']];
+            var data = JSON.parse(JSON.stringify(that.state.tagHold));
+            // data.data = that.tempArrayStroke;
+            data.id = guid();
+            data.position = firstPoint;
+            data.placeHolder[0]['lines'].forEach(element => {
+                element.id = guid()
+            });
+
+            for (var j in data.tagSnapped){
+
+                var placeHolderTagSnapped = data.tagSnapped[j]['placeHolder'];
+                placeHolderTagSnapped[0]['lines'].forEach(element => {element.id = guid()});
+                // console.log(data.tagSnapped[j])
+            }
+
+    
+            // console.log(data)
+            this.props.addTag(data)
         }
-        this.props.addTagCanvas(data);
+      
+        that.positionTag = []
         // console.log(data)
     }
 /**
@@ -1588,9 +1850,8 @@ class Document extends Component {
         d3.select('#penTemp')
             .attr("d", line(that.tempArrayStroke))
             .attr('fill', 'none')
-            .attr('stroke', 'black')
+            .attr('stroke', 'grey')
             .attr('stroke-width', '10')
-            .attr('opacity', '0.2')
             .attr("stroke-dasharray", "10");
     }
     eraseStroke(){
@@ -1606,7 +1867,7 @@ class Document extends Component {
         if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
             
             var id = element.id.split('-')[1];
-            // console.log(id)
+            console.log(id)
             this.props.removeSketchLines([id]);
         }
     }
@@ -1957,6 +2218,7 @@ class Document extends Component {
 
         if (this.linesInselection.length != 0 && this.linesInselection.elements.length != 0 && this.guideTapped != false){
             var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped);
+            console.log(sticky)
             var data = {
                 'idGroups': this.linesInselection.elements, 
                 'model': sticky
@@ -1991,13 +2253,8 @@ class Document extends Component {
                     <g id='panItems' transform={'translate(0,0)'}>
                         <g id="grid" />
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
-                        <g id="tempLines"><path id="penTemp"></path></g>
-                        <g id="tempGroup">
-
-                            
-                        </g>
-                        <g id ="tempTag"> </g>
-                        <Lines />
+                        
+                        
                         <Groups 
                             setSelection={this.setSelection}
                             setGroupTapped={this.setGroupTapped}
@@ -2007,16 +2264,42 @@ class Document extends Component {
                             isGuideHold={this.isGuideHold}
                             // holdGroup={this.holdGroup}
                         />
+                        <Lines />
                         <Textes />
-                        <TagsInterface/>
-                        <Images/>
+                        {/* <TagsInterface
+                            holdTag={this.holdTag} 
+                        /> */}
+                        <Tags 
                     
+                            holdTag={this.holdTag} 
+                            colorStroke = {this.state.colorStroke}
+                            sizeStroke = {this.state.sizeStroke}
+                        /> 
+                        <Images/>
+                        <Guides 
+                            holdGuide={this.holdGuide} 
+                            dragItem={this.dragItem}
+                            setGuideTapped={this.setGuideTapped}
+
+                            colorStroke = {this.state.colorStroke}
+                            sizeStroke = {this.state.sizeStroke}
+                            penType = {this.state.penType}
+                            tagHold={this.state.tagHold}
+
+                            patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
+                        />
+                        <g id="tempLines"><path id="penTemp"></path></g>
+                        <g id="tempGroup">
+
+                            
+                        </g>
+                        <g id ="tempTag"> </g>
                         
                     </g>
 
-                   <g id="leftPart" transform={`translate(300,0)`}>
+                   {/* <g id="leftPart" transform={`translate(300,0)`}>
                         <rect width={'100%'} height={'110%'} x={'-100%'} y={'-5%'}  fill={'white'} />
-                   </g>
+                   </g> */}
                     {/* <rect id='leftPart' width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'}  fill={'white'} /> */}
                     {/* <image id="imageRect" width={this.marginOffset + 'px'} height={'110%'} x={0} y={'-5%'} href={paperTexture} /> */}
                      {/* //fill={'url(#grump_avatar)'}/> */}
@@ -2036,23 +2319,8 @@ class Document extends Component {
                         selectColorSize = {this.selectColorSize}
                     />
                     
-                    <Guides 
-                        holdGuide={this.holdGuide} 
-                        dragItem={this.dragItem}
-                        setGuideTapped={this.setGuideTapped}
-
-                        colorStroke = {this.state.colorStroke}
-                        sizeStroke = {this.state.sizeStroke}
-                        penType = {this.state.penType}
-
-                        patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
-                    />
-                    <Tags 
-                    
-                        holdTag={this.holdTag} 
-                        colorStroke = {this.state.colorStroke}
-                        sizeStroke = {this.state.sizeStroke}
-                    />
+                 
+                    {/* */}
 
                     {/* <rect id='swipeLayer'  x={0} y={0} fill='red' opacity='0' /> */}
                  
@@ -2086,7 +2354,7 @@ class Document extends Component {
                     isSticky={this.isSticky} 
                     isGroup ={this.isGroup} 
                 />
-                 <div id="nameApp"> Nom du project </div>
+                 <div id="nameApp"> Bl(ink) </div>
                 {this.state.shouldOpenAlphabet ? <Lettres openAlphabet={this.openAlphabet} /> : null}
             </div>
         );

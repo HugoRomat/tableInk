@@ -1,12 +1,15 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
-import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise } from "./../Helper";
+import { getTransformation, getNearestElement, showBbox, distance, guid, _getBBox, calculateBB, _getBBoxPromise, showBboxBB } from "./../Helper";
 import { connect } from 'react-redux';
 
 
 import { 
     shouldOpenMenu,
-    addLineToStickyGroup
+    addLineToStickyGroup,
+    updatePlaceHolder,
+    updatePlaceHolderGroup,
+    swipeGroup
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
@@ -14,12 +17,15 @@ import PlaceHolderText from "./PlaceHolderText";
 
 const mapDispatchToProps = { 
     shouldOpenMenu,
-    addLineToStickyGroup
+    addLineToStickyGroup,
+    updatePlaceHolder,
+    updatePlaceHolderGroup,
+    swipeGroup
 };
 const mapStateToProps = (state, ownProps) => {  
   
   return { 
-    //   stickyLines: state.rootReducer.present.stickyLines
+      groupLines: state.rootReducer.present.groupLines
   };
 };
 
@@ -33,9 +39,12 @@ class Guide extends Component {
         this.startPosition = {};
         this.lastPosition = {};
         this.drag = false;
+        this.isExpand = false;
 
         this.state = {
-            'BBox':{}
+            'BBox':{},
+            // 'scale': 0.3
+            // 'shouldExpand': false
         };
     }
     componentDidMount(){
@@ -72,34 +81,38 @@ class Guide extends Component {
 
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
-        var press = new Hammer.Press({time: 250});
+        var pan = new Hammer.Pan({'pointers':1, threshold: 50});
         var tap = new Hammer.Tap();
+        var press = new Hammer.Press({time: 250});
+        var pinch = new Hammer.Pinch({});
 
         this.mc.add(press);
         this.mc.add(pan);
+        this.mc.add(pinch);
         this.mc.add(tap);
-        pan.recognizeWith(press);
-        pan.recognizeWith(tap)
 
-       this.mc.add(pan);
-       this.mc.on("panstart", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
-                that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
-                that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
-                that.dragstarted(ev);
-            }
-        })
-        this.mc.on("panmove", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch'){
-                that.dragged(ev);
-            }
-        })
-        this.mc.on("panend", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' ){
-                that.dragended(ev);
-            }
-        })
+
+        pan.recognizeWith(press);
+
+
+    //    this.mc.add(pan);
+    //    this.mc.on("panstart", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
+    //             that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
+    //             that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+    //             that.dragstarted(ev);
+    //         }
+    //     })
+    //     this.mc.on("panmove", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'touch'){
+    //             that.dragged(ev);
+    //         }
+    //     })
+    //     this.mc.on("panend", function(ev) {
+    //         if (ev.pointers[0].pointerType == 'touch' ){
+    //             that.dragended(ev);
+    //         }
+    //     })
         this.mc.on("press", function(event){
             if (event.pointers[0].pointerType == 'touch'){
                 that.props.dragItem(false);
@@ -116,9 +129,10 @@ class Guide extends Component {
         })
 
         this.mc.on("tap", function(event){
+            // console.log(event)
             // console.log('GO',that.props.stroke.id)
             // clearTimeout(that.timerPress);
-            if (event.pointers[0].pointerType == 'touch'){
+            if (event.changedPointers[0].pointerType == 'touch'){
                 that.props.setGuideTapped(that.props.stroke.id);
                 that.colorForHolding(true);
                 setTimeout(function(){
@@ -136,6 +150,33 @@ class Guide extends Component {
             //     'idLines': []//env.props.stroke.data.linesAttached
             // })
         })
+
+        // this.mc.on("pinchstart", function(event){
+        //     console.log('PINCH')
+        //     if (event.changedPointers[0].pointerType == 'touch'){
+        //         // that.expandGuide();
+                
+
+        //         if (that.isExpand == false) {
+        //             d3.select('#panItems').style('opacity', 0.2);
+        //             var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+        //             d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)')
+
+        //             that.isExpand = true;
+        //         }
+        //         else {
+        //             d3.select('#panItems').style('opacity', 1);
+
+        //             var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+        //             d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(0.3)')
+
+                  
+        //             that.isExpand = false;
+
+        //             // that.computeLines();
+        //         }
+        //     }
+        // })
 
 
             
@@ -170,7 +211,10 @@ class Guide extends Component {
        
     
     }
+    
+    expandGuide(){
 
+    }
     dragstarted(event) {
      
         var that = this;
@@ -191,7 +235,8 @@ class Guide extends Component {
         var offsetY = event.srcEvent.y - that.lastPosition.y;
         var X = offsetX + transform.translateX;
         var Y = offsetY + transform.translateY;
-        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')')
+        // console.log(transform)
+        d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')scale('+transform.scaleX+')')
 
 
             
@@ -261,7 +306,7 @@ class Guide extends Component {
            
     }
     addLine = (d) => {
-        // console.log('DOOO')
+        console.log('DOOO',d)
        this.props.addLineToStickyGroup({
            'idGuide': d.idGuide,
            'where':d.where,
@@ -307,8 +352,31 @@ class Guide extends Component {
         return scale
 
     }
+    swipeGroup = (d) => {
+        // console.log(this.props.groupLines, d)
+        // that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe})
+        var group = this.props.groupLines.find(x => x.id == d.id)
+
+        if (group.swipe == true){
+            this.props.updatePlaceHolderGroup({'idGroup': group.id, 'model':this.props.stroke})
+    
+        }
+        // console.log(group)
+        this.props.swipeGroup({'id': group.id,  'swipe': !group.swipe})
+
+        
+    }
+    moveTag = (d) => {
+        // var group = this.props.groupLines.find(x => x.id == this.props.stroke.child);
+        // var position = group.placeHolder[1]['lines'][0]['tag']['position']
+        var position = this.props.stroke.placeHolder[1]['lines'][0]['tag']['position']
+        position[0] += d.x; 
+        position[1] += d.y;
+        this.props.updatePlaceHolderGroup({'idGroup': this.props.stroke.child, 'model':JSON.parse(JSON.stringify(this.props.stroke))})
+       console.log(this.props.stroke)
+    }
     render() {
-        console.log(this.props.stroke);
+        // console.log(this.props.stroke);
         var BB = calculateBB(this.props.stroke.points);
         // console.log(this.props.stroke);
         // var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
@@ -331,17 +399,23 @@ class Guide extends Component {
                     BBoxParent={BB}
                     lines={d['lines']}
                     addLine={this.addLine}
+                    // shouldExpand={this.state.shouldExpand}
 
+                    tagHold={this.props.tagHold}
                     penType = {this.props.penType}
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
                     patternPenData = {this.props.patternPenData}
+                    updatePlaceHolderGroup = {this.props.updatePlaceHolderGroup}
+
+                    moveTag = {this.moveTag}
+                    swipeGroup = {this.swipeGroup}
                 />
         });
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(0.3)`}>
                 
                 
                 {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}

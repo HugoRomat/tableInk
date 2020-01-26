@@ -1,0 +1,18 @@
+<?xml version="1.0"?><svg width="640" height="480" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>Page Curl modified</title>
+ <defs>
+  <linearGradient id="linearGradient3157">
+   <stop offset="0" id="stop3159" stop-color="#e8e8e8"/>
+   <stop id="stop3169" offset="0.25" stop-color="#eeeeee"/>
+   <stop id="stop3165" offset="0.5" stop-color="#e4e4e4"/>
+   <stop offset="0.8375" id="stop3167" stop-color="#c7c7c7"/>
+   <stop offset="1" id="stop3161" stop-color="#e0e0e0"/>
+  </linearGradient>
+  <linearGradient xlink:href="#linearGradient3157" id="linearGradient3163" x1="0.097345" y1="0.712766" x2="0.526549" y2="0.368085"/>
+ </defs>
+ <metadata id="metadata7">image/svg+xml</metadata>
+ <g>
+  <title>Layer 1</title>
+  <path d="m279.931488,0.863831l357.723785,440.131439c-30.696716,-44.121155 -113.710815,-96.30542 -423.275299,-164.815186c49.31662,-130.472794 87.284607,-225.999474 65.551483,-275.316254l0.000031,0z" id="path3155" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" fill-rule="evenodd" fill="url(#linearGradient3163)"/>
+ </g>
+</svg>

@@ -1,0 +1,54 @@
+[{
+    "points": [
+        [
+            0,
+            0
+        ],
+        [
+            -5,
+            21
+        ],
+        [
+            -7,
+            85.5
+        ]
+    ],
+    "id": "initial",
+    "paddingBetweenLines": 50,
+    "width": 200,
+    "height": 150,
+    "placeHolder": [
+        {
+            "id": "outerBackground",
+            "data": {
+                "method": "scale"
+            },
+            "lines": []
+        },
+        {
+            "id": "backgroundLine",
+            "data": {
+                "method": "scale"
+            },
+            "lines": []
+        },
+        {
+            "id": "backgroundText",
+            "data": {
+                "method": "scale"
+            },
+            "lines": []
+        }
+    ],
+    "position": [
+        0,
+        0
+    ],
+    "textPosition": {
+        "where": "right",
+        "position": [
+            25,
+            20
+        ]
+    }
+}]

@@ -1,0 +1,28 @@
+<?xml version="1.0"?><svg width="793.7007874015749" height="1122.5196850393702" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title>page turn</title>
+ <defs>
+  <linearGradient id="linearGradient4596">
+   <stop stop-color="#666666" offset="0" id="stop4598"/>
+   <stop stop-color="#ffffff" offset="1" id="stop4600"/>
+  </linearGradient>
+  <linearGradient id="linearGradient4574">
+   <stop stop-color="#999999" id="stop4576" offset="0"/>
+   <stop stop-color="#cccccc" offset="0.100919" id="stop4582"/>
+   <stop stop-color="#b3b3b3" id="stop4584" offset="0.26172"/>
+   <stop stop-color="#eeeeee" offset="0.5429" id="stop4586"/>
+   <stop stop-color="#aaaaaa" id="stop4578" offset="1"/>
+  </linearGradient>
+  <linearGradient y2="0.596525" x2="0.385214" y1="0.487342" x1="0.490566" id="linearGradient4592" xlink:href="#linearGradient4596"/>
+  <linearGradient y2="0.14259" x2="0.847818" y1="0.543298" x1="0.462369" id="linearGradient4594" xlink:href="#linearGradient4574"/>
+ </defs>
+ <metadata id="metadata7">image/svg+xml</metadata>
+ <g>
+  <title>Layer 1</title>
+  <g id="layer1">
+   <g transform="matrix(3.62465 0 0 3.79008 -209.337 -1507.3)" id="g4588">
+    <path fill="url(#linearGradient4592)" d="m57.755295,563.409973l0,130.361938l131.186996,0c-17.195511,-11.053894 -126.061417,-120.127014 -131.186996,-130.361938z" id="path3790"/>
+    <path fill="url(#linearGradient4594)" d="m188.750702,693.60321c-12.329941,-0.443542 -131.323723,-115.537964 -130.995411,-130.193176c0.07935,9.927185 78.409534,31.365845 112.210285,17.326599c-7.040924,39.733704 10.563568,112.027283 18.785126,112.866638l0,-0.000061z" id="path4572"/>
+   </g>
+  </g>
+ </g>
+</svg>

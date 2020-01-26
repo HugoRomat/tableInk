@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, _getBBox, getTransformation, guid, simplify } from "../Helper";
+import { getNearestElement, _getBBox, getTransformation, guid, simplify, _getBBoxPromise } from "../Helper";
 import LinePlaceHolder from "./LinePlaceHolder";
 // import LinePlaceHolder
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
@@ -91,6 +91,8 @@ class PlaceHolder extends Component {
         
     }
     componentDidUpdate(prevProps, prevState){
+        // console.log('DRAZ')
+        // this.drawPlaceHolder();
     }
     drawPlaceHolder(){
 
@@ -110,18 +112,18 @@ class PlaceHolder extends Component {
 
         
         if (this.props.data.id == 'left'){
-            var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
 
-            element.selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
+            // element.selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
             
             var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
             element
@@ -129,20 +131,22 @@ class PlaceHolder extends Component {
                 .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('fill', 'rgba(252, 243, 242, 1)')
-                .style("filter", "url(#drop-shadow)")
+                // .attr('fill', 'rgba(252, 243, 242, 1)')
+                // .style("filter", "url(#drop-shadow)")
+                .attr('stroke', 'rgba(252, 243, 242, 1)')
+                .attr('fill', 'white')
         }
 
-        // console.log('HEY', that.props.data.id + '-' + this.props.parent.id)
-        d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 0).attr('y1', 75)
-            .attr('x2', 150).attr('y2', 75)
-            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+        
+        // d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
+        //     .attr('x1', 0).attr('y1', 50)
+        //     .attr('x2', 100).attr('y2', 50)
+        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
-        d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
-            .attr('x1', 75).attr('y1', 0)
-            .attr('x2', 75).attr('y2', 150)
-            .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
+        // d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
+        //     .attr('x1', 50).attr('y1', 0)
+        //     .attr('x2', 50).attr('y2', 100)
+        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
 
         // <rect id={'horizontal-' + this.props.data.id} />
         // <rect id={'vertical-' + this.props.data.id} />
@@ -154,6 +158,8 @@ class PlaceHolder extends Component {
     render() {
         // console.log(this.props.lines)
         const listItems = this.props.lines.map((d, i) => {
+
+            // console.log(d)
             return <LinePlaceHolder 
                 key={i} 
                 stroke={d}

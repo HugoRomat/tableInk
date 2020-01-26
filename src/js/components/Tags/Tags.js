@@ -40,7 +40,7 @@ class Tags extends Component {
         
     // }
     render() {
-        console.log(this.props.tags)
+        // console.log(this.props.tags)
         const listItems = this.props.tags.map((d, i) => {
                 return <Tag 
                     key={i} 

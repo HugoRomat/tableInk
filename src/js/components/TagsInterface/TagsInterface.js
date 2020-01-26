@@ -32,6 +32,7 @@ class TagsInterface extends Component {
                 return <TagInterface 
                     key={i} 
                     stroke={d}
+                    holdTag={this.props.holdTag}
             />
         });
        

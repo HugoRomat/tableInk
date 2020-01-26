@@ -22,6 +22,11 @@ export const addLinesClass = data => ({
     data
 })
 
+export const swipeGroup = data => ({
+    type: 'SWIPE_GROUP',
+    data
+})
+
 export const addLineToExistingGroup = data => ({
     type: 'ADD_LINE_EXISTING_GROUP',
     data
@@ -43,6 +48,10 @@ export const setWorkspace = data => ({
     data
 })
 
+export const tapGroup = data => ({
+    type: 'TAP_GROUP',
+    data
+})
 
 export const moveSketchLines = data => ({
     type: 'MOVE_SKETCH_LINES',
@@ -56,8 +65,23 @@ export const addText = data => ({
     type: 'ADD_TEXT',
     data
 })
+
+export const updatePlaceHolderGroup = data => ({
+    type: 'UPDATE_PLACEHOLDER_GROUP',
+    data
+})
+
+// export const moveStrokes = data => ({
+//     type: 'MOVE_STROKES',
+//     data
+// })
+
 export const addLinesLetter = data => ({
     type: 'ADD_LINES_LETTER',
+    data
+})
+export const updatePlaceHolder = data => ({
+    type: 'UPDATE_PLACEHOLDER',
     data
 })
 

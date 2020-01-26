@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
 import { getNearestElement, _getBBox, getTransformation } from "../Helper";
+import Tag from "../Tags/Tag";
 
 
 class LinePlaceHolder extends Component {
@@ -12,7 +13,7 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        // console.log(this.props)
+        console.log(this.props)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
@@ -71,13 +72,28 @@ class LinePlaceHolder extends Component {
     //         .attr('stroke-width', that.props.stroke.sizeStroke)
     //         .attr('fill', 'none') 
     // }
-   
+    amountDragged = (d) => {
+        this.props.moveTag(d);
+    }
     render() {
+
+        var tag = null;
+        // console.log(this.props.stroke)
+        if (this.props.stroke.tag != undefined){
+
+            tag = <Tag
+                    key={0} 
+                    stroke={this.props.stroke.tag}
+                    colorStroke = {'red'}
+                    sizeStroke = {10}
+                    amountDragged={this.amountDragged}
+                />
+        }
         return (
             <g>
                 <path id={'item-'+this.props.stroke.id} />
                 <g id={'pattern-'+this.props.stroke.id} ></g>
-
+                {tag}
             </g>
             //transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
 

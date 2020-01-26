@@ -128,14 +128,26 @@ class Background extends Component {
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove();
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path').remove();
         d3.select('#placeHolderOuterBGPattern-'+that.props.id).selectAll('g').remove();
-        
+        var lineBG = this.props.placeholders.find(x => x.id == 'backgroundLine')
         
         this.props.placeholders.forEach((d)=>{
             // console.log(d)
             if (d.id == 'outerBackground' && d.lines.length > 0){
+                // console.log('GO', that.BBox)
                 // console.log(d.BBox.x + d.BBox.width, that.BBox.x + that.BBox.width)
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +100]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100, that.BBox.y + that.BBox.height + 100]);
+                // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
+                // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
+                // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
+
+
+                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 90, that.BBox.x + that.BBox.width + 150]);
+                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 , that.BBox.y + that.BBox.height + 50]);
+
+
+                // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
+                // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
+                // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
+
                 const grouped = groupBy(d.lines, line => line.type);
                 
                 var scale = grouped.get("normal");
@@ -158,16 +170,17 @@ class Background extends Component {
                         .attr('d', ()=>line(myLine.data))
                         .attr('fill', 'none')
                         .attr('stroke', ()=> myLine.colorStroke )
-                        .attr('stroke-width', (e)=>{return myLine.sizeStroke + (that.BBox.width / d.BBox.width);})
+                        .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width);})
                     }
                 }
 
                 /** for pattern data */
                 if (pattern != undefined && pattern.length > 0){
-                   
+                   console.log(d)
                     pattern.forEach((myPattern, i)=>{
                         var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id)
                         var myLine = JSON.parse(JSON.stringify(myPattern['data']))
+                        console.log(d.BBox.x)
                         var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]})
                             
                             
@@ -177,7 +190,7 @@ class Background extends Component {
                             .attr('d', (d)=>line(myNewLine))
                             .attr('fill', 'none')
                             .attr('stroke', (d)=> myPattern.colorStroke )
-                            .attr('stroke-width', (e)=> myPattern.sizeStroke + (that.BBox.width / d.BBox.width))
+                            .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width))
                             .attr('opacity', '0')
 
                             var step = myPattern.pattern.BBox.width;
@@ -186,8 +199,9 @@ class Background extends Component {
 
                             for (var i = 0; i < length; i += step){
                                 var point = path.getPointAtLength(i);
-                                var X = point['x']// + that.props.parent.position[0];
-                                var Y = point['y']// + that.props.parent.position[1];
+                                // that.props.patternPenData.BBox.width/2;
+                                var X = point['x'] - myPattern.pattern.BBox.width/2// + that.props.parent.position[0];
+                                var Y = point['y'] - myPattern.pattern.BBox.height/2// + that.props.parent.position[1];
                     
                                 var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id).append('g').attr('transform', 'translate('+X+','+Y+')')
                                 for (var j = 0; j < myPattern.pattern.strokes.length; j += 1){

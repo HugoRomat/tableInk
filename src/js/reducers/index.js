@@ -14,7 +14,8 @@ import tables from './../usecases/tables.json';
 import tags from './../usecases/tags.json';
 import sticky from './../usecases/newSticky.json';
 import voice from './../usecases/voiceQuery.json';
-
+import strokesPalette from './../usecases/paletteLine.json';
+// import tagsInterface from './../usecases/tagsInterface.json';
 
 function importAll(r) { return r.keys().map(r); }
 const images = importAll(require.context('./../usecases/demo', false, /\.(json)$/));
@@ -35,7 +36,7 @@ const initialState = {
     'tables': [],
     'grid': false,
     'voiceQueries': [],
-    'tagsInterface': [],
+    // 'tagsInterface': [],
     'colorPalette':  {'lines':[]},
     'imagesCanvas': []
     ,
@@ -55,19 +56,23 @@ alphabet.forEach((d)=>{
 
 // initialState.lettres = lettres; 
 initialState.galleryItems = galleryData;
-initialState.tags = tags
-// initialState.tables = tables
+initialState.tags = tags;
+// initialState.tagsInterface = tagsInterface;
+
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
-voice
-initialState.voiceQueries = voice
+
+initialState.voiceQueries = voice;
 initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
-initialState.sketchLines = strokes
+initialState.sketchLines = strokes;
+initialState.colorPalette.lines = strokesPalette;
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.voiceQueries));
+    // console.log(JSON.stringify(state.groupLines));
+    // console.log(JSON.stringify(state.stickyLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -110,6 +115,7 @@ initialState.sketchLines = strokes
           var sender = action.data.idSender;
           var index = state.tags.indexOf(state.tags.find(x => x.id == sender));
           var indexReceiver = state.tags.indexOf(state.tags.find(x => x.id == receiver));
+          
           var data = JSON.parse(JSON.stringify(state['tags'][index]))
           // console.log(state['tags'][index], state['tags'][indexReceiver])
           if (indexReceiver > -1){
@@ -160,8 +166,62 @@ initialState.sketchLines = strokes
               }
             }
             
-            return state;
-    
+      return state;
+      
+      case 'UPDATE_PLACEHOLDER':
+        var id = action.data.id;
+        var data = action.data.placeholder;
+        var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+        if (index > -1){
+          state = update(state, { 
+            stickyLines: {
+              [index] : {
+                placeHolder: {$set: data}
+              }
+            }
+          })
+        }
+        
+        return state;
+
+        case 'UPDATE_PLACEHOLDER_GROUP':
+          var idGroup = action.data.idGroup;
+          var data = action.data.model;
+          var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+
+          // console.log( state.groupLines[index], data)
+          if (index > -1){
+            state = update(state, { 
+              groupLines: {
+                [index] : {
+                  model: {$set: data}
+                }
+              }
+            })
+          }
+          
+          return state;
+              
+
+
+
+      case 'UPDATE_PLACEHOLDER':
+        var id = action.data.id;
+        var data = action.data.placeholder;
+        var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+        if (index > -1){
+          state = update(state, { 
+            stickyLines: {
+              [index] : {
+                placeHolder: {$set: data}
+              }
+            }
+          })
+        }
+        
+        return state;
+
+
       case 'ADD_TAG': return {  ...state, tags: [ ...state.tags, action.data] };
       case 'ADD_VOICE_QUERIES': return {  ...state, voiceQueries: [ ...state.voiceQueries, action.data] };
     
@@ -255,6 +315,39 @@ initialState.sketchLines = strokes
             return state;
 
 
+  case 'SWIPE_GROUP':
+    var idGroup = action.data.id;
+    var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+    // console.log(index)
+    if (index > -1){
+        state = update(state, { 
+          groupLines: {
+            [index] : {
+              swipe: {$set: action.data.swipe}
+            }
+          }
+        })
+    }
+    
+    return state;
+
+
+    case 'TAP_GROUP':
+      var idGroup = action.data.id;
+      var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == idGroup))
+      // console.log(index)
+      if (index > -1){
+          state = update(state, { 
+            groupLines: {
+              [index] : {
+                tap: {$set: action.data.tap}
+              }
+            }
+          })
+      }
+      
+      return state;
+            
 
       case 'ADD_LINE_TO_GROUP':
           var id = action.data.idGroup;
@@ -291,17 +384,17 @@ initialState.sketchLines = strokes
 
       case 'ADD_SKETCH_LINE':
         // console.log(action.data.data.sizeStroke)
-        if (action.data.data.sizeStroke > 10){
-          return { 
-            ...state, 
-            sketchLines: [ action.data, ...state.sketchLines] 
-          };
-        } else {
+        // if (action.data.data.sizeStroke > 10){
+        //   return { 
+        //     ...state, 
+        //     sketchLines: [ action.data, ...state.sketchLines] 
+        //   };
+        // } else {
           return { 
             ...state, 
             sketchLines: [ ...state.sketchLines, action.data] 
           };
-        }
+        // }
       
         
       case 'ADD_IMAGE': 
@@ -336,7 +429,7 @@ initialState.sketchLines = strokes
         
 
       case 'MOVE_SKETCH_LINES':
-        // console.log('HEYYYY')
+        // console.log('HEYYYY', action.data)
         action.data.forEach((element)=>{
           var id = element.id;
           var position = element.position;

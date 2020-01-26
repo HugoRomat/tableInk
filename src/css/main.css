@@ -208,7 +208,7 @@ path{
 
 #pens{
     position: absolute;
-    top: 700px;
+    top: 50px;
     display: flex;
     flex-direction: column;
     right: 90px;
@@ -263,4 +263,26 @@ path{
     width: 200px;
     right: -180px;
     /* right:-111px; */
+}
+
+
+.postit{
+    pointer-events: none;
+}
+#tagSVG{
+    position: absolute;
+    top: 21px;
+    height: 100;
+    width: 100;
+    right: -80px;
+    user-select: none;
+    touch-action: none;
+    cursor: text;
+    background-color: white;
+    /* background: red;
+    /* background: red; */
+}
+
+#tagMenu{
+    height: 150px;
 }

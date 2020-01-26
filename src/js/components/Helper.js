@@ -5,7 +5,7 @@ import CalcOmbb from './../../../customModules/ombb';
 import CalcConvexHull from './../../../customModules/convexhull';
 import Vector from './../../../customModules/vector';
 
-import {polygonPolygon, boxCircle} from 'intersects';
+import {polygonPolygon, boxCircle, boxBox} from 'intersects';
 import Polygon from 'polygon'
 
 
@@ -429,7 +429,32 @@ export async function retrieveStyle(idLine){
 
     return {'color': color, 'size': strokeSize}
 }
-
+export function whereIsPointer(x, y){
+    
+    
+    // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
+    
+    var id = null
+    var type = null;
+    d3.selectAll('.fakeStroke').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
+        id = element.id.split('-')[1];
+        type = 'path';
+    }
+    d3.selectAll('.fakeStroke').style('pointer-events', 'none');
+    d3.selectAll('.postit').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    if (element.tagName == 'path' && element.className.baseVal == "path1"){
+        id = element.id.split('-')[1];
+        type = 'group';
+    }
+    // console.log(element)
+    d3.selectAll('.postit').style('pointer-events', 'none')
+    
+    return {'id': id, 'type': type}
+    
+}
 export async function checkIfSomething(x, y){
     
     var BBid = [];
@@ -809,6 +834,164 @@ export function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
 	let y = y1 + ua * (y2 - y1)
 
 	return {x, y}
+}
+export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, allGroups){
+    // console.log(BBTemp)
+    // var alreadyAdded = []
+    var that = this;
+    
+    var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+    
+
+    var offsetX = ev.srcEvent.x - lastPosition.x;
+    var offsetY = ev.srcEvent.y - lastPosition.y;
+    BBTemp.x += offsetX//+ transformPan.translateX;
+    BBTemp.y += offsetY//+ transformPan.translateY;
+
+    var isItAGroup = allGroups.find(group => group.id == id)
+    var arrayLineAttached = (isItAGroup) ? isItAGroup.lines.join().split(',') : []
+    // console.log(offsetY, offsetX)
+    var BBid = [];
+    // var arrayLineAttached = this.props.group.lines.join().split(',')
+    // console.log(arrayLineAttached)
+    /** Push all the lines */
+    d3.select('.standAloneLines').selectAll('g').each(function(){
+        var idSImple = d3.select(this).attr('id').split('-')[1]
+        // console.log(d3.select(this).attr('id'))
+        if (arrayLineAttached.indexOf(idSImple) == -1 && idSImple != id) BBid.push(d3.select(this).attr('id'))
+    })
+     /** Push all the groups */
+    d3.selectAll('.groupPath').each(function(){
+        var idSImple = d3.select(this).attr('id').split('-')[1]
+        if (idSImple != id) BBid.push('group-'+idSImple)
+    })
+    // console.log(BBid)
+    findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups)
+}
+async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGroups) {
+       
+    // showBboxBB(BBTemp, 'red');
+    // console.log(BBid)
+    //Put my lines in an array
+    // console.log(BBid)
+    // Check for all these lines
+    for (var i in BBid){
+        var id = BBid[i];
+        var idSImple = id.split('-')[1];
+        var type = id.split('-')[0]
+        // if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
+        /** Make it bigger if it's a group */
+        // if (type == 'group') {
+            var BB = await _getBBoxPromise(BBid[i]);
+            BB.x -= 40;
+            BB.y -= 40;
+            BB.width += 50;
+            BB.height += 50;
+        // }
+        // showBboxBB(BBTemp, 'red');
+        // showBboxBB(BB, 'blue');
+        var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+        if (intersected) {
+            
+            // console.log()
+            var insideandWhichGroup = allGroups.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
+            // console.log(insideandWhichGroup)
+            var isItAGroup = allGroups.find(group => group.id == idSImple)//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
+            // console.log()
+            // if not attached to a group
+
+            /** It's a group que je tappe */
+            if (isItAGroup != undefined){
+                // console.log(BBinitial)
+                // showBboxBB(BB, 'blue');
+                /* Cas horizontal vertial JE BOUGE VERTICAL */
+                
+                    if (isItAGroup.lines.length > 0){
+                        var arrayLineAttached = isItAGroup.lines.join().split(',')
+                        // console.log('je bpouge mon groupe', isItAGroup.lines)
+                        arrayLineAttached.forEach((d)=>{
+                            var transform = getTransformation(d3.select('#item-'+ d).attr('transform'));
+                            var X = offsetX + transform.translateX;
+                            var Y = offsetY + transform.translateY;
+                            d3.select('#item-'+ d).attr('transform', 'translate('+X+','+Y+')')
+                        })
+                    }
+                    var transform = getTransformation(d3.select('#'+id).attr('transform'));
+                    var X = (offsetX + transform.translateX) ;
+                    var Y = (offsetY + transform.translateY) ;
+                    d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
+
+                    if (isItAGroup.lines.length > 0){
+                        var arraywihoutItem = arrayLineAttached.map((k)=>'item-'+k)
+                        var newBB = JSON.parse(JSON.stringify(BBid))
+                        for (var i = arraywihoutItem.length - 1; i >= 0; i--) {
+                            var index = BBid.indexOf(BBid.find(x => x == arraywihoutItem[i]));
+                            newBB.splice(index,1)
+                        }
+                    } else var newBB = JSON.parse(JSON.stringify(BBid))
+                    var index = newBB.indexOf(newBB.find(x => x == id));
+                    newBB.splice(index,1)
+                    findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                
+            }
+            /** Not stroke inside a group */
+            else if (insideandWhichGroup == undefined){
+                if ((BB.x < BBinitial.x && BB.x + BB.width > BBinitial.x + BBinitial.width) && (BB.y > BBinitial.y && BB.y + BB.height < BBinitial.y + BBinitial.height)){
+                    // console.log('CAS 1')
+                }
+                /* Cas horizontal vertial JE BOUGE HORIZONTAL */
+                else if ((BB.x > BBinitial.x && BB.x + BB.width < BBinitial.x + BBinitial.width) && (BB.y < BBinitial.y && BB.y + BB.height > BBinitial.y + BBinitial.height)){
+                    // console.log('CAS 1')
+                }
+                else {
+                    var transform = getTransformation(d3.select('#'+id).attr('transform'));
+
+                    // console.log('je tape une ligne', transform, offsetX, offsetY)
+                    var X = offsetX + transform.translateX;
+                    var Y = offsetY + transform.translateY;
+                    // console.log(offsetX, offsetY)
+                    d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
+
+                    var index = BBid.indexOf(BBid.find(x => x == id));
+                    // console.log(index)
+                    var newBB = JSON.parse(JSON.stringify(BBid))
+                    newBB.splice(index,1)
+                    findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                }
+               
+            } 
+            /*** It's a line inside a group que je tape If already in a group */
+            else {
+                // console.log('GO')
+                // console.log(insideandWhichGroup)
+                var arrayLineAttached = insideandWhichGroup.lines.join().split(',')
+                arrayLineAttached.forEach((d)=>{
+                    var transform = getTransformation(d3.select('#item-'+ d).attr('transform'));
+                    var X = offsetX + transform.translateX;
+                    var Y = offsetY + transform.translateY;
+                    d3.select('#item-'+ d).attr('transform', 'translate('+X+','+Y+')')
+                })
+                // console.log(insideandWhichGroup)
+                var transform = getTransformation(d3.select('#group-'+insideandWhichGroup.id).attr('transform'));
+                var X = offsetX + transform.translateX;
+                var Y = offsetY + transform.translateY;
+                d3.select('#group-'+ insideandWhichGroup.id).attr('transform', 'translate('+X+','+Y+')')
+
+                /** Erase from array */
+                var arraywihoutItem = arrayLineAttached.map((k)=>'item-'+k)
+                var newBB = JSON.parse(JSON.stringify(BBid))
+                for (var i = arraywihoutItem.length - 1; i >= 0; i--) {
+                    var index = BBid.indexOf(BBid.find(x => x == arraywihoutItem[i]));
+                    // console.log(index)
+                    newBB.splice(index,1)
+                }
+                /** REMOVING THE GROUP */
+                var index = newBB.indexOf(newBB.find(x => x == 'group-'+insideandWhichGroup.id));
+                newBB.splice(index,1)
+                findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+            }
+        }
+    }
 }
 
 export function is_point_inside_selection(point, array_selection) {

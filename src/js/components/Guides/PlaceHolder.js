@@ -12,6 +12,7 @@ class PlaceHolder extends Component {
         this.down = false;
         this.tempArrayStroke = [];
         this.lastStepTagPattern = 0;
+        this.isTag = false;
     }
     // componentDidMount(){
     //     console.log(this.props.data)
@@ -25,27 +26,62 @@ class PlaceHolder extends Component {
 
         var el = document.getElementById('placeHolder-' + this.props.data.id + '-' + this.props.parent.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
-        this.mc.add(pan);
+        // var pan = new Hammer.Pan({'pointers':1, threshold: 120});
+        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1,velocity: 0.1});
 
+        // this.mc.add(pan);
+        this.mc.add(swipe);
+
+        // pan.requireFailure(swipe);
+        this.mc.on("swipe", function(ev) {
+            // console.log('SWIPE', that.props.parent)
+            if (ev.pointers[0].pointerType == 'touch'){
+
+                that.props.swipeGroup({'id': that.props.parent.child})
+
+            }
+                
+        })
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerDown(ev.srcEvent)
+                
             }
         })
         this.mc.on("pan", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerMove(ev.srcEvent)
+                // that.pointerMove(ev.srcEvent)
             }
         })
         this.mc.on("panend", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
-                that.pointerUp(ev.srcEvent)
+                // that.pointerUp(ev.srcEvent)
             }
         })
 
 
-      
+        d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id).on('pointerdown', function(){
+            if (d3.event.pointerType == 'pen'){
+                that.down = true;
+                that.pointerDown(d3.event)
+            }
+        }) 
+        .on('pointermove', function(){
+            if (d3.event.pointerType == 'pen'){
+                // console.log(that.props.tagHold)
+                if (that.props.tagHold && that.down) {
+                    that.pointerMove(d3.event);
+                    that.isTag = that.props.tagHold;
+                }
+                else if (that.down) that.pointerMove(d3.event)
+            }
+        })
+        .on('pointerup', function(){
+            if (d3.event.pointerType == 'pen'){
+                if (that.down) that.pointerUp(d3.event)
+                that.isTag = false;
+            }
+        
+        }) 
         
     }
     pointerDown(event){
@@ -109,8 +145,41 @@ class PlaceHolder extends Component {
     }
     pointerUp(event){
         var that = this;
-        console.log('GOOO') 
-        if (this.props.penType == 'normal'){
+        // console.log('GOOO') ;
+
+        if (this.isTag){
+
+            /** JUST TO REMOVE IDS AND MAKE A NEW ONE */
+            var firstPoint = [that.tempArrayStroke[0][0], that.tempArrayStroke[0][1]];
+            var dataNewTag = JSON.parse(JSON.stringify(this.isTag));
+            dataNewTag.id = guid();
+            dataNewTag.position = firstPoint;
+            dataNewTag.placeHolder[0]['lines'].forEach(element => {element.id = guid() });
+            for (var j in dataNewTag.tagSnapped){
+                var placeHolderTagSnapped = dataNewTag.tagSnapped[j]['placeHolder'];
+                placeHolderTagSnapped[0]['lines'].forEach(element => {element.id = guid()});
+            }
+
+            /******** ADD TO THE LINE  ****/
+
+            var data = {
+                'idGuide':that.props.parent.id,
+                'where':that.props.data.id,
+                'data':[{
+                    'id': guid(),
+                    'data': that.tempArrayStroke,
+                    'colorStroke': that.props.colorStroke,
+                    'sizeStroke': that.props.sizeStroke,
+                    'tag': dataNewTag
+                    // 'position': [firstPoint[0],firstPoint[1]]
+                }]
+            }
+            that.props.addLine(data);
+            that.tempArrayStroke = [];
+            that.down = false;
+            that.removeTempLine();
+        }
+        else if (this.props.penType == 'normal'){
             
             var data = {
                 'idGuide':that.props.parent.id,
@@ -149,6 +218,8 @@ class PlaceHolder extends Component {
             that.removeTempLine();
 
         }
+        // console.log(that.props.parent)
+        this.props.updatePlaceHolderGroup({'idGroup': that.props.parent.child, 'model':that.props.parent})
     }
     removeTempLine(){
         var that = this;
@@ -229,15 +300,10 @@ class PlaceHolder extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
+        // console.log('UPDATE', this.props.shouldExpand)
+        // this.drawPlaceHolder();
         if (this.props.data.id == 'backgroundLine'){
             if (this.props.parent.tag){
-                // d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
-                //     .attr('width', 45)
-                //     .attr('height', 45)
-                //     .attr('x', 35)
-                //     .attr('y',50)
-                //     .attr('fill', 'rgba(252, 0,0,  0.4)')
-
                 //     console.log(that.props.parent.tag)
                 d3.select('#imageTag-' + that.props.data.id + '-' + that.props.parent.id)
                     .attr('viewBox', '0 0 30 20')
@@ -256,8 +322,8 @@ class PlaceHolder extends Component {
         
         // console.log(sketch, rec)
 
-        var widthTotal = 200//this.props.parent.width;
-        var heightTotal = 200//this.props.parent.height;
+        var widthTotal = this.props.parent.width;
+        var heightTotal = this.props.parent.height;
         // console.log(this.props.parent.width)
         var that = this;
 
@@ -273,59 +339,67 @@ class PlaceHolder extends Component {
         var sketch = d3sketchy()
 
         if (this.props.data.id == 'backgroundLine'){
-            var rec = sketch.rectStroke({ x:35, y:35, width:130, height:80, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:100, y:300, width:widthTotal - 300, height:heightTotal - 600, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
 
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
-                .style('opacity', 0.1)
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
+            //     .style('opacity', 0.1)
 
-            rect = element
-                .attr('width', 130)
-                .attr('height', 80)
-                .attr('x', 35)
-                .attr('y',35)
-                .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            // rect = element
+            //     .attr('width', 130)
+            //     .attr('height', 80)
+            //     .attr('x', 35)
+            //     .attr('y',35)
+            //     .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            //     .style("filter", "url(#drop-shadow)")
+
+                rect = element
+                .attr('width', widthTotal - 300)
+                .attr('height', heightTotal - 600)
+                .attr('x', 100)
+                .attr('y',300)
+                .attr('fill', 'rgba(247, 247, 247, 0.0)')
                 .style("filter", "url(#drop-shadow)")
 
-            if (this.props.parent.tag){
-                d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
-                    .attr('width', 50)
-                    .attr('height', 50)
-                    .attr('x', 0)
-                    .attr('y',0)
-                    .attr('fill', 'rgba(252, 243, 242,  0.4)')
-            } 
+            // if (this.props.parent.tag){
+            //     d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
+            //         .attr('width', 50)
+            //         .attr('height', 50)
+            //         .attr('x', 0)
+            //         .attr('y',0)
+            //         .attr('fill', 'rgba(247, 247, 247, 0.4)')
+            // } 
 
         }
         else if (this.props.data.id == 'backgroundText'){
-            var rec = sketch.rectStroke({ x:80, y:55, width:75, height:40, density: 3, sketch:2});
-            var flattened = [].concat(...rec)
+            // var rec = sketch.rectStroke({ x:250, y:350, width:widthTotal - 500, height:heightTotal - 700, density: 3, sketch:2});
+            // var flattened = [].concat(...rec)
             
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
-                .style('opacity', 0.1)
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
+            //     .style('opacity', 0.1)
 
             rect = element
-                .attr('width', 75)
-                .attr('height', 40)
-                .attr('x', 80)
-                .attr('y',55)
-                .attr('fill', 'rgba(252, 243, 242,  0.4)')
+            .attr('width', widthTotal - 500)
+            .attr('height', heightTotal - 700)
+                .attr('x', 250)
+                .attr('y', 350)
+                .attr('fill', 'rgba(247, 247, 247, 0.0)')
                 .style("filter", "url(#drop-shadow)")
 
             // rect = element
@@ -337,31 +411,32 @@ class PlaceHolder extends Component {
         }
         else if (this.props.data.id == 'outerBackground'){
             
-            var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            var line = d3.line();
+            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
+            // var line = d3.line();
 
-            var flattened = [].concat(...rec)
+            // var flattened = [].concat(...rec);
+
+            // var width = (this.props.shouldExpand) ? 800 : widthTotal;
+            // var height = (this.props.shouldExpand) ? 800 : heightTotal;
 
             // console.log(flattened)
 
-            d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-                .data(flattened).enter()
-                .append('path')
-                .attr('d', (d)=>{ return d })
-                .attr('fill', 'none')
-                .attr('stroke', 'black')
-                .attr('stroke-width', '0.3')
-                .style('stroke-linecap', 'round')
-                .style('stroke-linejoin', 'round')
+            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
+            //     .data(flattened).enter()
+            //     .append('path')
+            //     .attr('d', (d)=>{ return d })
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'black')
+            //     .attr('stroke-width', '0.3')
+            //     .style('stroke-linecap', 'round')
+            //     .style('stroke-linejoin', 'round')
 
             rect = element
-                // .attr('width', widthTotal)
-                // .attr('height', heightTotal)
-                .attr('width', 800)
-                .attr('height', 800)
+                .attr('width', widthTotal)
+                .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('fill', 'rgba(252, 243, 242, 0.4)')
+                .attr('fill', 'rgba(247, 247, 247, 0.3)')
                 .style("filter", "url(#drop-shadow)")
 
             
@@ -386,14 +461,14 @@ class PlaceHolder extends Component {
         }
         
         if (rect != null){
-            rect.attr('stroke', 'grey')
+            rect.attr('stroke', 'rgba(79, 79, 79, 0.15)')
             rect.attr('opacity', 1.0)
                 .attr('stroke-width', '1')
 
           }
         // }
     }
-   
+    
     render() {
 
         
@@ -403,6 +478,7 @@ class PlaceHolder extends Component {
                 stroke={d}
                 colorStroke = {this.props.colorStroke}
                 sizeStroke = {this.props.sizeStroke}
+                moveTag = {this.props.moveTag}
             />
         });
 
@@ -417,13 +493,14 @@ class PlaceHolder extends Component {
                 <image id={'imageTag-' + this.props.data.id + '-' + this.props.parent.id} />
 
 
+               
+                <g className='paths'>
+                    {listItems}
+                </g>
                 <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}/>
 
                 <g id={'tempPattern-'+this.props.data.id  + '-' + this.props.parent.id} style={{'pointerEvents': 'none' }}></g>
 
-                <g className='paths'>
-                    {listItems}
-                </g>
 
                
             </g>
