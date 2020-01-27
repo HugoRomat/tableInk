@@ -443,13 +443,15 @@ export function whereIsPointer(x, y){
         type = 'path';
     }
     d3.selectAll('.fakeStroke').style('pointer-events', 'none');
+
+
     d3.selectAll('.postit').style('pointer-events', 'auto');
     var element = document.elementFromPoint(x, y);
+    // console.log(element)
     if (element.tagName == 'path' && element.className.baseVal == "path1"){
         id = element.id.split('-')[1];
         type = 'group';
     }
-    // console.log(element)
     d3.selectAll('.postit').style('pointer-events', 'none')
     
     return {'id': id, 'type': type}
@@ -855,7 +857,7 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
     // var arrayLineAttached = this.props.group.lines.join().split(',')
     // console.log(arrayLineAttached)
     /** Push all the lines */
-    d3.select('.standAloneLines').selectAll('g').each(function(){
+    d3.select('.standAloneLines').selectAll('.parentLine').each(function(){
         var idSImple = d3.select(this).attr('id').split('-')[1]
         // console.log(d3.select(this).attr('id'))
         if (arrayLineAttached.indexOf(idSImple) == -1 && idSImple != id) BBid.push(d3.select(this).attr('id'))
@@ -882,6 +884,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
         // if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
         /** Make it bigger if it's a group */
         // if (type == 'group') {
+            // console.log(BBid[i])
             var BB = await _getBBoxPromise(BBid[i]);
             BB.x -= 40;
             BB.y -= 40;

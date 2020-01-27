@@ -4,16 +4,18 @@ import * as d3 from 'd3';
 import { connect } from 'react-redux';
 
 import { 
-    addPaletteLine
+    addPaletteLine,
+    removePaletteLine
   } from './../../actions';
 import LinePalette from "./LinePalette";
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
-import { _getBBoxPromise, guid, checkIfSomething, drawCircle, distance } from "../Helper";
+import { _getBBoxPromise, guid, checkIfSomething, drawCircle, distance, getTransformation } from "../Helper";
 // import strokesJSON from './../../usecases/paletteLine.json';
 import paletteSVG from './../../../../static/palette.svg'
 
 const mapDispatchToProps = { 
-    addPaletteLine
+    addPaletteLine,
+    removePaletteLine
 };
 const mapStateToProps = (state, ownProps) => {  
     return { 
@@ -151,22 +153,20 @@ class Picker extends Component {
                 
             }
             if (ev.pointers[0].pointerType == 'pen' ){
-                d3.select('#overlayGestures').attr('width', window.innerWidth - 300).attr('height', window.innerHeight)
+                d3.select('#overlayGestures').attr('width', window.innerWidth - 550).attr('height', window.innerHeight)
                 that.isDrawing = true;
             }
             
         })
         this.mc.on("panmove", function(ev) {
             
-            if (ev.pointers[0].pointerType == 'touch'){
-               
-            }
+
             if (ev.pointers[0].pointerType == 'pen'){
                 // console.log(ev.srcEvent.x)
 
                 /* ADD OFFSET FOR THE PALETTE */
-                var X = ev.pointers[0].x - that.startPosition.x - 240;
-                var Y = ev.pointers[0].y - that.startPosition.y - 70;
+                var X = ev.pointers[0].x - that.startPosition.x - 236;
+                var Y = ev.pointers[0].y - that.startPosition.y - 66;
                 that.tempArrayStroke.push([X, Y]);
                 that.drawTempStroke();
             }
@@ -183,7 +183,7 @@ class Picker extends Component {
         this.mc.on('press', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 // console.log('PRESS')
-                d3.select('#overlayGestures').attr('width', window.innerWidth - 300).attr('height', window.innerHeight)
+                d3.select('#overlayGestures').attr('width', window.innerWidth - 550).attr('height', window.innerHeight)
 
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'auto')
                 var element = document.elementFromPoint(ev.pointers[0]['x'], ev.pointers[0]['y']);
@@ -215,31 +215,82 @@ class Picker extends Component {
             if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'auto')
                 var element = document.elementFromPoint(ev.pointers[0]['x'], ev.pointers[0]['y']);
+                // drawCircle(ev.pointers[0]['x'], ev.pointers[0]['y'], 10, 'red')
+                // console.log(element)
                 if (element.tagName == 'path' && element.className.baseVal == "fake"){
                     var id = element.id.split('-')[1];
                     var idNormal = 'palette-'+id;
+
+                    // d3.select('#'+ idNormal).selectAll('path').attr('stroke', 'red')
                     that.selectItem(idNormal);
                 }
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'none')
             }
         })
 
+        this.addErase('colorPalette');
+
+    }
+    addErase(id){
+        var that = this;
+        d3.select('#' + id).on('pointerdown', function(){
+            if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+                // console.log('HELLOs')
+                that.erasing = true;
+                that.tempArrayStrokeErase = [];
+                d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'auto')
+            }
+        }) 
+        .on('pointermove', function(){
+            if (that.erasing){
+                var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                that.tempArrayStrokeErase.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+                that.tempArrayStrokeErase = that.tempArrayStrokeErase.slice(-10);
+                that.eraseStroke(id);
+                // console.log('MOVE')
+            }
+        })
+        .on('pointerup', function(){
+            // console.log()
+            if (that.erasing) {
+                that.erasing = false;
+                that.tempArrayStrokeErase = [];
+                d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'none')
+            }
+        })  
+    }
+    /** TO ERASE THE STROKE IN THE CANVAS ON THE RIGHT */
+    eraseStroke(name){
+
+        var lastPoint = JSON.parse(JSON.stringify(this.tempArrayStrokeErase[this.tempArrayStrokeErase.length-1]));
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+        lastPoint[0] += transform.translateX;
+        lastPoint[1] += transform.translateY;
+        // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
+        var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
+        // console.log(element)
+        if (element.tagName == 'path' && element.className.baseVal == "fake"){
+            var id = element.id.split('-')[1];
+
+            this.props.removePaletteLine(id);
+        }
     }
     selectItem(element){
         // d3.select('#'+element).select('.nonfake').attr('stroke', 'red')
-        console.log( d3.select('#'+element).select('.nonfake').attr('stroke-width'))
+        // console.log( d3.select('#'+element).select('.nonfake').attr('stroke-width'))
         d3.selectAll('.fake').attr('stroke-opacity', "0")
         d3.select('#'+element).select('.fake')
-                        .attr('stroke-opacity', "0.1")
-                        .attr('stroke-width', function(d, i){
-                            var strokeSize = parseFloat(d3.select('#'+element).select('.nonfake').attr('stroke-width'))
-                            if (parseFloat(d3.select('#'+element).select('.nonfake').attr('stroke-width')) > 10){
-                                return strokeSize *2
-                            } else {
-                                return strokeSize * 5
-                            }
-                        }) 
-                        .attr('stroke', 'grey')
+            .attr('stroke-opacity', "0.1")
+            .attr('stroke-width', function(d, i){
+                var strokeSize = parseFloat(d3.select('#'+element).select('.nonfake').attr('stroke-width'))
+                if (parseFloat(d3.select('#'+element).select('.nonfake').attr('stroke-width')) > 10){
+                    return strokeSize *2
+                } else {
+                    return strokeSize * 5
+                }
+            }) 
+            .attr('stroke', 'black')
 
         // console.log(d3.select('#'+element).select('.fake').node())
 
@@ -252,10 +303,11 @@ class Picker extends Component {
             d3.select(this).transition().duration(500).style('right', '0px');
         })
 
-        // console.log(d3.select('#'+element).select('.nonfake').attr('stroke-width'))
+        // var size = d3.select('#'+element).select('.nonfake').attr('stroke-width');
+        // // console.log(d3.select('#'+element).select('.nonfake').attr('stroke-width'))
         this.props.selectColorSize({
-            'size':d3.select('#'+element).select('.nonfake').attr('stroke-width'),
-            'color':d3.select('#'+element).select('.nonfake').attr('stroke')
+            'size': d3.select('#'+element).select('.nonfake').attr('stroke-width'),
+            'color': d3.select('#'+element).select('.nonfake').attr('stroke')
         })
         this.size = parseFloat(d3.select('#'+element).select('.nonfake').attr('stroke-width'))
         this.color = d3.select('#'+element).select('.nonfake').attr('stroke')
@@ -300,18 +352,13 @@ class Picker extends Component {
         
     }
     componentDidUpdate(nextProps){
-        // console.log(this.props)
         this.color = this.props.colorStroke;
         this.size = this.props.sizeStroke;
-        // if (nextProps.isHoldingCanvas != this.props.isHoldingCanvas){
-            
-            if (this.props.isHoldingCanvas){
-                this.size = this.props.isHoldingCanvas.size;
-                this.color = this.props.isHoldingCanvas.color;
-            } 
-        // } 
-        // console.log(this.props.isHoldingCanvas, this.size, this.color)
-       
+
+        if (this.props.isHoldingCanvas){
+            this.size = this.props.isHoldingCanvas.size;
+            this.color = this.props.isHoldingCanvas.color;
+        }    
     }
     drawBG(){
         var that = this;
@@ -394,7 +441,7 @@ class Picker extends Component {
                     </g>
                 <g className="templinesPalette"><path id="pathPalette" /></g>
                 <g className="linesPalette">{listItems}</g>
-                <rect id='overlayGestures' width={0} height={0} x={-X} y={-Y} fill={'red'} opacity={0}/>
+                <rect id='overlayGestures' width={0} height={0} x={-X} y={-Y} fill={'black'} opacity={0}/>
                
             </g>
            

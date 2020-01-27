@@ -23,14 +23,14 @@ class LinePlaceHolder extends Component {
                 var line = d3.line()
     
                 d3.select('#item-'+that.props.stroke.id)
-                .attr("d", line(that.props.stroke.data))
-                .attr('stroke', that.props.stroke.colorStroke)
-                .attr('stroke-width', that.props.stroke.sizeStroke)
-                // .attr('stroke', that.props.colorStroke)
-                // .attr('stroke-width', that.props.sizeStroke)
-                .attr('fill', 'none')
-                .attr('opacity', 0)
-                .attr('stroke-linejoin', "round")
+                    .attr("d", line(that.props.stroke.data))
+                    .attr('stroke', that.props.stroke.colorStroke)
+                    .attr('stroke-width', that.props.stroke.sizeStroke)
+                    // .attr('stroke', that.props.colorStroke)
+                    // .attr('stroke-width', that.props.sizeStroke)
+                    .attr('fill', 'none')
+                    .attr('opacity', 0)
+                    .attr('stroke-linejoin', "round")
         
                 var step = that.props.stroke.pattern.BBox.width;
                 var path = d3.select('#item-'+that.props.stroke.id).node()

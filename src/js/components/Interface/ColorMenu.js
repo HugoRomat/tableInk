@@ -23,7 +23,7 @@ import {
     setWorkspace,
     addTag
 } from '../../actions';
-import { guid, _getBBoxPromise } from "../Helper";
+import { guid, _getBBoxPromise, getTransformation, drawCircle } from "../Helper";
 import Lines from "./Lines";
 import { SpeechRecognitionClass } from "../SpeechReognition/Speech";
 import Tags from "../Tags/Tags";
@@ -46,6 +46,7 @@ class ColorsMenu extends Component {
         super(props);
         this.handedness = 'right';
         this.state = {
+            'stretchLines': [],
             'patternLines': [],
             'tagLines':[]
         }
@@ -165,6 +166,14 @@ class ColorsMenu extends Component {
             }
         })
 
+        d3.select('#stretch').on("pointerdown", function(d, index){
+            if (d3.event.pointerType == 'touch'){
+                that.props.selectPen({'type': "stretch"})
+                that.selectThisPen(this);
+                that.movePens();
+            }
+        })
+
 
         var el = document.getElementById('function');
         this.mc = new Hammer.Manager(el);
@@ -224,6 +233,7 @@ class ColorsMenu extends Component {
 
 
         this.drawSVGPattern();
+        this.drawSVGStretch();
         this.moveTagStock();
         this.drawTag();
 
@@ -299,6 +309,61 @@ class ColorsMenu extends Component {
           })
       
 
+        this.addErase('patternSVG');
+          
+    }
+    
+    drawSVGStretch = async() => {
+        var that = this;
+        this.tempArrayStroke = [];
+        this.positionBoxStretch = await _getBBoxPromise('stretchSVG');
+        var el = document.getElementById("stretchSVG");
+        this.mc = new Hammer.Manager(el);
+        var pan = new Hammer.Pan({'pointers':1, threshold: 1});
+
+        this.mc.add(pan);
+
+        _getBBoxPromise('stretchSVG').then((d)=>{
+            that.positionBoxStretch = d;
+        })
+
+        this.mc.on("panstart", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){console.log('GO')
+                that.tempArrayStroke = [];
+                _getBBoxPromise('stretchSVG').then((d)=>{ that.positionBoxStretch = d; })
+            }
+          })
+          this.mc.on("pan", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                // console.log(that.positionBox)
+                var X = ev.srcEvent.x - that.positionBoxStretch.x;
+                var Y = ev.srcEvent.y - that.positionBoxStretch.y;
+                that.tempArrayStroke.push([X, Y]);
+                that.drawTempStrokeStretch();
+            }
+          })
+          this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen'){
+                var firstPoint = JSON.parse(JSON.stringify(that.tempArrayStroke[0]))
+                var arrayPoints = JSON.parse(JSON.stringify(that.tempArrayStroke));
+                arrayPoints.forEach((d)=>{
+                    d[0] = d[0] - firstPoint[0];
+                    d[1] = d[1] - firstPoint[1]
+                })
+                var data = {
+                    'points': arrayPoints, 
+                    'data': {'class':[], 'sizeStroke': that.props.sizeStroke, 'colorStroke': that.props.colorStroke}, 
+                    'id': guid() , 
+                    'position': [firstPoint[0],firstPoint[1]]
+                }
+                that.setState({'stretchLines': [...that.state.stretchLines, data]});
+                that.props.setStretchPen(that.state.stretchLines)
+                d3.select('#penTempStretch').attr("d", [])
+            }
+          })
+        
+        this.addErase('stretchSVG');
+
     }
     /** POUR BOUGER LE TAG SUR L'INTERFACE */
     drawTag = async() => {
@@ -349,7 +414,53 @@ class ColorsMenu extends Component {
                 d3.select('#penTempTag').attr("d", [])
             }
           })
-      
+          this.addErase('tagSVG');
+    }
+    addErase(id){
+        var that = this;
+        d3.select('#' + id).on('pointerdown', function(){
+            if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+                that.erasing = true;
+                d3.selectAll('#' + id).selectAll('path').style('pointer-events', 'auto')
+            }
+        }) 
+        .on('pointermove', function(){
+            if (that.erasing){
+                var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+                that.tempArrayStroke = that.tempArrayStroke.slice(-10);
+                that.eraseStroke(id);
+            }
+        })
+        .on('pointerup', function(){
+            // console.log()
+            if (that.erasing) {
+                that.erasing = false;
+                that.tempArrayStroke = [];
+                d3.selectAll('#' + id).selectAll('path').style('pointer-events', 'none')
+            }
+        })  
+    }
+    /** TO ERASE THE STROKE IN THE CANVAS ON THE RIGHT */
+    eraseStroke(name){
+
+        var lastPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[this.tempArrayStroke.length-1]));
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+        lastPoint[0] += transform.translateX;
+        lastPoint[1] += transform.translateY;
+        // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
+        var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
+
+        if (element.tagName == 'path' && element.className.baseVal == "pathPens"){
+            
+            var id = element.id;
+            
+            if (name == 'patternSVG') this.setState({patternLines: this.state.patternLines.filter(function(pattern) { return pattern.id !== id })});
+            if (name == 'stretchSVG') this.setState({stretchLines: this.state.stretchLines.filter(function(pattern) { return pattern.id !== id })});
+            if (name == 'tagSVG') this.setState({tagLines: this.state.tagLines.filter(function(pattern) { return pattern.id !== id })});
+
+        }
     }
     /** POUR BOUGER LE TAG SUR L'INTERFACE */
     moveTagStock(){
@@ -447,6 +558,18 @@ class ColorsMenu extends Component {
             .attr("stroke-dasharray", 'none')
             .attr('stroke-linejoin', "round")
     }
+    drawTempStrokeStretch(){
+        var that = this;
+        var line = d3.line()
+        // console.log(that.props)
+        d3.select('#penTempStretch')
+            .attr("d", line(that.tempArrayStroke))
+            .attr('fill', 'none')
+            .attr('stroke', that.props.colorStroke)
+            .attr('stroke-width', that.props.sizeStroke)
+            .attr("stroke-dasharray", 'none')
+            .attr('stroke-linejoin', "round")
+    }
     drawTempStroke(){
         var that = this;
         var line = d3.line()
@@ -506,16 +629,30 @@ class ColorsMenu extends Component {
                         <div id='containerFunction'> AVG </div>
                     </div>
                     {/* <div className="pen" id="highlighting"><img src={highlighter} /></div> */}
-                    <div className="pen" id="pattern"><img src={pattern} />
-                        <svg id="patternSVG">
+                        <div className="pen" id="pattern"><img src={pattern} />
+                            <svg id="patternSVG">
                             <g id="options"></g>
                             
                                 <Lines 
+                                    id = {'linesPattern'}
                                     sketchLines = {this.state.patternLines}
                                 />
                                 <path id="penTempPattern"></path>
                             </svg>
                         </div>
+
+                        <div className="pen" id="stretch"><img src={pattern} />
+                             <svg id="stretchSVG">
+                                <g id="options"></g>
+                                    <line id="redLineStretch" x1={0} y1={41.5} x2={200} y2={41.5} stroke={'red'} opacity={0.1}/>
+                                    <Lines 
+                                        id = {'linesStretch'}
+                                        sketchLines = {this.state.stretchLines}
+                                    />
+                                <path id="penTempStretch"></path>
+                            </svg>
+                        </div> 
+
 
                         <div className="pen" id="tagMenu"><img src={pageFlags} />
                             <svg id="tagSVG">

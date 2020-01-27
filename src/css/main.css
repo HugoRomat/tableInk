@@ -208,7 +208,7 @@ path{
 
 #pens{
     position: absolute;
-    top: 50px;
+    top: 0px;
     display: flex;
     flex-direction: column;
     right: 90px;
@@ -223,7 +223,7 @@ path{
     
 }
 
-#pattern{
+#pattern, #stretch{
     height: 120px;
     /* transform: rotate(180deg); */
 }
@@ -255,16 +255,14 @@ path{
     border: 2px solid grey; */
 }
 
-#patternSVG{
+#patternSVG, #stretchSVG{
     border: solid grey 1px;
     position: absolute;
     top: 22px;
     height: 83px;
     width: 200px;
     right: -180px;
-    /* right:-111px; */
 }
-
 
 .postit{
     pointer-events: none;

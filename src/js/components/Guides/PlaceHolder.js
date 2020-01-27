@@ -108,8 +108,9 @@ class PlaceHolder extends Component {
         var that = this;
         if (that.props.penType == 'normal'){
             // console.log('#item-' + that.props.parent.id)
+            var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
             var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-            that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY])
+            that.tempArrayStroke.push([event.x - transform.translateX - transformPan.translateX, event.y - transform.translateY - transformPan.translateY])
             that.drawLine();
         } 
         else {

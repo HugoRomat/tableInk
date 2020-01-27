@@ -97,7 +97,7 @@ class Tag extends Component {
             if (ev.pointers[0].pointerType == 'touch'){
                 if (that.down){
                     // console.log(that.down)
-                    // that.findIntersection(that.allBoundingBox, ev);
+                    if (that.props.holdTag != undefined) that.findIntersection(that.allBoundingBox, ev);
                     that.dragged(ev);
 
                     if ( $('#item-'+that.props.stroke.id).hasClass( "saveRight" )){

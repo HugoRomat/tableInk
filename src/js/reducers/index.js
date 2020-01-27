@@ -36,7 +36,7 @@ const initialState = {
     'tables': [],
     'grid': false,
     'voiceQueries': [],
-    // 'tagsInterface': [],
+    // 'tagsInterface': [], 
     'colorPalette':  {'lines':[]},
     'imagesCanvas': []
     ,
@@ -59,7 +59,7 @@ initialState.galleryItems = galleryData;
 initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-// initialState.groupLines = group
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 initialState.voiceQueries = voice;
@@ -68,6 +68,8 @@ initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [5
 
 initialState.sketchLines = strokes;
 initialState.colorPalette.lines = strokesPalette;
+
+console.log(initialState)
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
@@ -402,10 +404,7 @@ initialState.colorPalette.lines = strokesPalette;
         state = update(state, { imagesCanvas:{$push: [action.data]}})
         return state;
 
-      case 'ADD_PALETTE_LINE':  
-        // return { ...state, colorPalette[lines]: [ action.data, ...state.sketchLines] };
-         state = update(state, { colorPalette: {lines :  {$push: [action.data]}}})
-         return state;
+
 
         
       case 'CHANGE_MODEL_GROUP_LINES':
@@ -578,7 +577,19 @@ initialState.colorPalette.lines = strokesPalette;
           // console.log(state.sketchLines)
           return state;
 
-        
+          case 'ADD_PALETTE_LINE':  
+          // return { ...state, colorPalette[lines]: [ action.data, ...state.sketchLines] };
+           state = update(state, { colorPalette: {lines :  {$push: [action.data]}}})
+           return state;
+
+          case 'REMOVE_PALETTE_LINE':
+              var idToDelete = action.data;
+              // console.log(state.colorPalette)
+              var index = state.colorPalette.lines.indexOf(state.colorPalette.lines.find(x => x.id == idToDelete))
+              if (index > -1) state = update(state, { colorPalette: { lines: {$splice: [[index, 1]]}} })
+
+              return state;
+          
         
       default:
         return state;

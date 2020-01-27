@@ -143,6 +143,7 @@ class Document extends Component {
         this.gridSize = [10 ,10]    ;
         
         this.isPatternPen = false;
+        this.isStretchPen = false;
         this.isFunctionPen = false;
         this.commandFunction = {'command': 'AVG', 'args': []};
         
@@ -155,6 +156,7 @@ class Document extends Component {
         this.init();
 
         this.positionTag = [];
+        this.lastStepTagPattern = 0;
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
@@ -409,11 +411,12 @@ class Document extends Component {
 
         var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
-        var pan = new Hammer.Pan({'pointers':0, threshold: 100});
-        var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.01});
+        var pan = new Hammer.Pan({'pointers':0, threshold: 0});
+        // var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.01});
 
         this.mc.add(press);
-        this.mc.add(swipe);
+        // this.mc.add(swipe);
+
         this.mc.add(pan);
         this.mc.add(tap);
         pan.recognizeWith(press);
@@ -421,28 +424,28 @@ class Document extends Component {
         // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
         // pan.recognizeWith(swipe);
-        pan.requireFailure(swipe);
+        // pan.requireFailure(swipe);
 
-        this.mc.on("swipe", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch'){
-                var x = ev.pointers[0]['x'];
-                var y = ev.pointers[0]['y'];
-                var element = whereIsPointer(x, y)
-                var id = element.id;
-                    console.log('SWIPE', id)
-                if (id == null){
-                // OPEN GALLERY
-                } else {
+        // this.mc.on("swipe", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'pen'){
+        //         var x = ev.pointers[0]['x'];
+        //         var y = ev.pointers[0]['y'];
+        //         var element = whereIsPointer(x, y)
+        //         var id = element.id;
+        //             console.log('SWIPE', id)
+        //         if (id == null){
+        //         // OPEN GALLERY
+        //         } else {
 
-                    var group = that.props.groupLines.find(x => x.id==id)
-                    if (group != null ) {
-                        // console.log(group.swipe)
-                        /** FIND PARENT ELEMENT */
-                        that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe})
-                    }
-                }
-            }
-        })
+        //             var group = that.props.groupLines.find(x => x.id==id)
+        //             if (group != null ) {
+        //                 // console.log(group.swipe)
+        //                 /** FIND PARENT ELEMENT */
+        //                 that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe})
+        //             }
+        //         }
+        //     }
+        // })
         
         this.mc.on("panstart", function(ev) {
            
@@ -452,6 +455,7 @@ class Document extends Component {
                 that.panGroup = that.props.groupLines.find(x => x.id==id)
                 that.panStroke = that.props.sketchLines.find(x => x.id==id)
                 
+                // console.log(element)
 
                 if (that.panGroup) that.panStartGroup(ev);
                 else if ( that.panStroke) that.panStartStroke(ev);
@@ -575,7 +579,7 @@ class Document extends Component {
         })
         this.mc.on("tap", function(ev) {
             if (ev.pointers[0]['pointerType'] == 'touch' ){
-
+                // console.log('TAP')
                 var x = ev.pointers[0]['x'];
                 var y = ev.pointers[0]['y'];
                 var element = whereIsPointer(x, y)
@@ -941,7 +945,7 @@ class Document extends Component {
 
             that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY]);
 
-            // console.log(that.state.tagHold)
+            // console.log(that.isStretchPen)
 
             if (that.tapGuide){
                 that.drawTempStroke();
@@ -949,17 +953,22 @@ class Document extends Component {
             if (that.straightLine != false){
                 that.drawTempStrokeStraightLine();
             }
+            
+            
+            else if (that.isPatternPen){
+                that.drawPattern(event);
+                that.drawTempStroke();
+            }
+            else if (that.isStretchPen){
+                that.drawStretch(event);
+                that.drawTempStroke();
+            }
             else if (that.state.tagHold){
                 that.drawTag(event);
             }
             else if (that.drawing){
                 that.drawTempStroke();
             }
-            
-            else if (that.isPatternPen){
-                that.drawPattern(event);
-            }
-            
             else if (that.sticky){
                 that.drawTempStroke();
             }
@@ -998,8 +1007,20 @@ class Document extends Component {
             //     that.selecting = false;
             // }
 
-            // console.log(that.straightLine)
-            if (that.press){
+            // console.log(that.isFlick)
+            if (that.isFlick){
+                
+            }
+            else if (that.isPatternPen){
+                that.addStrokePattern();
+                that.removeTempGroup();
+                // that.drawPattern(event);
+            }
+            else if (that.isStretchPen){
+                that.addStrokeStretch();
+                that.removeTempGroup();
+            }
+            else if (that.press){
 
             }
             else if (that.state.tagHold){
@@ -1122,6 +1143,7 @@ class Document extends Component {
         that.objectIn = [];
         that.sticky = false;
         that.tapGuide = false;
+        that.isFlick = false;
     }
     listenEvents(){
         var that = this;
@@ -1143,16 +1165,29 @@ class Document extends Component {
             // })
     }
     detectingFlick(event){
+        var that = this;
         // that.pointerDownPoperties = {'time': Date.now(), 'position':[d3.event.x, d3.event.y]};
         // console.log(Date.now() -  this.pointerDownPoperties['time'])
-        var time = Date.now() -  this.pointerDownPoperties['time'];
-        var dist = distance(this.pointerDownPoperties['position'][0], event.x, this.pointerDownPoperties['position'][1], event.y)
-
+        var time = Date.now() - this.pointerDownPoperties['time'];
+        var dist = distance(this.pointerDownPoperties['position'][0], event.x, this.pointerDownPoperties['position'][1], event.y);
+        this.isFlick = false;
         //Setup for the flick
-        if (time < 200 && dist < 200 && dist > 50){
-            console.log('FLICK')
-            this.isFlick = true;
-        }
+        if (time < 200 && dist < 200 && dist > 30){
+            var x = event['x'];
+            var y = event['y'];
+            d3.select('#penTemp').style('pointer-events', 'none');
+            var element = whereIsPointer(x, y);
+            var id = element.id;
+            if (id == null){
+                // OPEN GALLERY
+            } else {
+                var group = that.props.groupLines.find(x => x.id==id);
+                if (group != null ) {
+                    this.isFlick = true;
+                    that.props.swipeGroup({'id': group.id, 'swipe': !group.swipe});
+                }
+            }
+        } 
     }
     /*duplicateSticky(groupOfLines){
         console.log(groupOfLines)
@@ -1580,6 +1615,141 @@ class Document extends Component {
         //     d3.select('#item-'+that.objectIn[i]).classed('sticky-'+id, true);
         // }
     }
+    addStrokeStretch(){
+        if (this.tempArrayStroke.length > 1){
+            // To have everything in 0,0
+            var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+            var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
+            arrayPoints.forEach((d)=>{ d[0] = d[0] - firstPoint[0]; d[1] = d[1] - firstPoint[1] })
+            var data = {
+                'points': arrayPoints, 
+                'data': {'class':[], 'sizeStroke': this.sizePen, 'colorStroke': this.colorPen}, 
+                'id': guid() , 
+                // 'device':this.props.UIid,
+                'stretch':this.stretchPen,
+                'isAlphabet': false,
+                'position': [firstPoint[0],firstPoint[1]]
+            }
+            this.props.addSketchLine(data);
+        }
+    }
+    addStrokePattern(){
+        if (this.tempArrayStroke.length > 1){
+            // To have everything in 0,0
+            var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+            var arrayPoints = JSON.parse(JSON.stringify(this.tempArrayStroke));
+            arrayPoints.forEach((d)=>{ d[0] = d[0] - firstPoint[0]; d[1] = d[1] - firstPoint[1] })
+            var data = {
+                'points': arrayPoints, 
+                'data': {'class':[], 'sizeStroke': this.sizePen, 'colorStroke': this.colorPen}, 
+                'id': guid() , 
+                // 'device':this.props.UIid,
+                'pattern':this.patternPen,
+                'patternBBox': this.patternBBOX,
+                'isAlphabet': false,
+                'position': [firstPoint[0],firstPoint[1]]
+            }
+            this.props.addSketchLine(data);
+        }
+    }
+    removeTempGroup(){
+        d3.select('#tempGroup').selectAll('*').remove()
+    }
+
+    /**
+     * PATTERN
+     */
+    drawPattern(event){
+        var that = this;
+        var line = d3.line()
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
+        var step = that.patternBBOX.width;
+        var path = d3.select('#penTemp').node()
+        var length = path.getTotalLength();
+        if (length - this.lastStepTagPattern > step){
+            this.lastStepTagPattern = length;
+            for (var i = 0; i < length; i += step){
+                var point = path.getPointAtLength(i);
+
+                this.patternPen.forEach((d)=>{
+
+                    var X = point['x']+ d.position[0] - transformPan.translateX - that.patternBBOX.width/2;
+                    var Y = point['y']+ d.position[1] - transformPan.translateY  - that.patternBBOX.height/2;
+                    d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
+                        .append('path')
+                        .attr('d', (f)=>  line(d.points))
+                        .attr('fill', 'none')
+                        .attr('stroke', d.data.colorStroke)
+                        .attr('stroke-width', d.data.sizeStroke)
+                        .attr("stroke-dasharray", 'none')
+                        .attr('stroke-linejoin', "round")
+                })
+            }
+        }
+    }
+    drawStretch(event){
+        // 
+        var path = d3.select('#penTemp').node();
+        var line = d3.line(d3.curveCardinal);
+        var length = path.getTotalLength();
+
+        var dataPoints = this.stretchPen[0].points
+        var lengthStretch = dataPoints.length;
+
+        var step = 20//length/lengthStretch;
+
+
+
+        var diff = this.stretchPen.map((d, i)=>{ 
+            var points = d.points;
+            return distance(this.stretchPen[0].points[0][0], points[0][0], this.stretchPen[0].points[0][1], points[0][1]);
+        })
+
+
+        // console.log('===============', diff)
+
+        if (length - this.lastStepTagPattern > step){
+            this.removeTempGroup();
+            this.lastStepTagPattern = length;
+
+            this.stretchPen.forEach((d, k)=>{
+                // var dataPoints = this.stretchPen[k].points
+                var allPoints = []
+                var j = 0;
+                for (var i = 0; i < length; i += step){
+                    var point = path.getPointAtLength(i);
+                    
+                    // if ( dataPoints[j] != undefined) {
+
+                        // console.log(dataPoints[j][1])
+                        // console.log(dataPoints[j][1] - point['y'])
+                    var pointBefore = path.getPointAtLength(i-1);
+                    var angle = Math.atan2(point.y-pointBefore.y, point.x-pointBefore.x) //* 180 / Math.PI;
+                    // console.log(angle)
+                    var newPointCos = createPositionAtLengthAngle(point, angle - (Math.PI/2), diff[k])
+                    // drawCircle(newPoint['x'], newPoint['y'], 10, 'red')
+                    var newPoint = [newPointCos['x'], newPointCos['y']];
+
+                    // var newPoint = [point['x'], point['y'] + dataPoints[j][1]];
+                    allPoints.push(newPoint)
+                    // }
+                    j++;
+                }
+                d3.select('#tempGroup').append('g')
+                    .append('path')
+                    .attr('d', (f)=>  line(allPoints))
+                    .attr('fill', 'none')
+                    .attr('stroke', d.data.colorStroke)
+                    .attr('stroke-width', d.data.sizeStroke)
+                    .attr("stroke-dasharray", 'none')
+                    .attr('stroke-linejoin', "round")
+            })
+            // console.log(allPoints)
+        }
+
+
+    }
     duplicateGuide(){
         var that = this;
         var line = d3.line()
@@ -1596,34 +1766,7 @@ class Document extends Component {
             that.makingGroup([], this.guidHoldObject.id, newGuide);
         }
     }
-    /**
-     * PATTERN
-     */
-    drawPattern(event){
-        var that = this;
-        var line = d3.line()
-        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
 
-        var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
-        if (dist > that.patternBBOX.width){
-            that.lastMovePosition = {'x': event['x'],'y': event['y']};
-
-            // console.log(this.patternPen)
-            this.patternPen.forEach((d)=>{
-
-                var X = event['x']+ d.position[0] - transformPan.translateX - that.patternBBOX.width/2;
-                var Y = event['y']+ d.position[1] - transformPan.translateY  - that.patternBBOX.height/2;
-                d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
-                    .append('path')
-                    .attr('d', (f)=>  line(d.points))
-                    .attr('fill', 'none')
-                    .attr('stroke', d.data.colorStroke)
-                    .attr('stroke-width', d.data.sizeStroke)
-                    .attr("stroke-dasharray", 'none')
-                    .attr('stroke-linejoin', "round")
-            })
-        }
-    }
     drawTag(event){
         var that = this;
         var line = d3.line()
@@ -1863,11 +2006,11 @@ class Document extends Component {
         lastPoint[1] += transform.translateY;
         // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
         var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
-
+        // console.log(element)
         if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
             
             var id = element.id.split('-')[1];
-            console.log(id)
+            // console.log(id)
             this.props.removeSketchLines([id]);
         }
     }
@@ -2080,16 +2223,26 @@ class Document extends Component {
         if (d.type == "function"){
             this.isFunctionPen = true;
             this.isPatternPen = false;
+            this.isStretchPen = false;
             this.setState({'penType': 'function'})
         }
         else if (d.type == "pattern"){
             this.isPatternPen = true;
             this.isFunctionPen = false;
+            this.isStretchPen = false;
             this.setState({'penType': 'pattern'})
+        }
+        else if (d.type == "stretch"){
+            // console.log('HEY')
+            this.isPatternPen = false;
+            this.isFunctionPen = false;
+            this.isStretchPen = true;
+            this.setState({'penType': 'stretch'})
         }
         else {
             this.isPatternPen = false;
             this.isFunctionPen = false;
+            this.isStretchPen = false;
             this.setState({'penType': 'normal'})
             var sizePen = 2;
             if (d.type == "highlighter") {
@@ -2130,9 +2283,8 @@ class Document extends Component {
         this.setState({'colorStroke': d.color})
     }
     setPatternPen = (old) => {
-
+        console.log(old)
         var d = JSON.parse(JSON.stringify(old))
-        
         _getBBoxPromise('linesPattern').then((e)=> {
             this.patternBBOX = e
 
@@ -2140,9 +2292,6 @@ class Document extends Component {
             this.patternBBOX.y -= 5;
             this.patternBBOX.width += 10;
             this.patternBBOX.height += 10;
-
-            // showBboxBB(this.patternBBOX, 'red')
-            // console.log(e)
             /**
              * JUST REMOVE EXTRA SPACE
              */
@@ -2156,26 +2305,36 @@ class Document extends Component {
                 })
                 this.patternPen = d;
                 // console.log(offsetX, offsetY)
-            })
-            // console.log(old, this.patternBBOX)
-            // var position = [d[0].position[0], d[0].position[1]];
-            // var distance1 = distance(0, position[0], 0, position[1]);
-            // d.forEach((f)=>{
-            //     var dist = distance(0, f.position[0], 0, f.position[1]);
-            //     if (dist < distance1){
-            //         position =  [f.position[0], f.position[1]];
-            //         distance1 = dist
-            //     }
-            // })
-            // drawCircle(position[0], position[1], 10, 'red')
-            // console.log(position)
-            
-
-            
+            })            
         })
+    }
+    setStretchPen = (strecth) => {
+        var newStretch = JSON.parse(JSON.stringify(strecth));
+
+        _getBBoxPromise('linesStretch').then((e)=> {
+            this.patternBBOXStretch = e
+            /**
+             * JUST REMOVE EXTRA SPACE
+             */
+            _getBBoxPromise('stretchSVG').then((f)=> {
+                var offsetX = this.patternBBOXStretch.x - f.x;
+                var offsetY = this.patternBBOXStretch.y - f.y;
+                // console.log(offsetX, offsetY)
+                newStretch.forEach((f)=>{
+                    f.position[0] -= offsetX;
+                    f.position[1] -= offsetY;
+
+                    f.points = f.points.map((d)=> [d[0] + f.position[0], d[1] + f.position[1]])
+                })
+                
+                this.stretchPen = newStretch;
+            })            
+        })
+
         
-        
-        // patternBBOX
+        // var myImaginaryLine
+       
+        // console.log(strecth)
     }
     setGrid = (d) => {
         console.log(d)
@@ -2348,6 +2507,8 @@ class Document extends Component {
                     selectThisColor={this.selectColor}
                     colorStroke = {this.state.colorStroke}
                     sizeStroke = {this.state.sizeStroke}
+                    
+                    setStretchPen = {this.setStretchPen}
 
                     setPatternPen = {this.setPatternPen}
                     setCommandFunction = {this.setCommandFunction}

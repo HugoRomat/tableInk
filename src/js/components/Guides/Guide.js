@@ -415,7 +415,7 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(0.3)`}>
+            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(1)`}>
                 
                 
                 {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}

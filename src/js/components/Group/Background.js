@@ -21,12 +21,14 @@ class Background extends Component {
     }
     componentDidMount(){
         var that = this;
-        this.BBox = this.getBoundinxBoxEveryone();
-
-        // this.getBoundinxBoxEveryone().then((d)=>{  
-        //     this.BBox = d;
-        //     this.addPlaceHolder();
+        // this.BBox = this.getBoundinxBoxEveryone().then((d)=>{
+            
         // })
+
+        this.getBoundinxBoxEveryone().then((d)=>{  
+            this.BBox = d;
+            this.addPlaceHolder();
+        })
         // this.movePoints();
         // console.log('HELLO BG')
     }
@@ -44,9 +46,10 @@ class Background extends Component {
             
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            // console.log('Update sketchlines')
+            console.log('Update sketchlines')
             this.getBoundinxBoxEveryone().then((d)=>{
-                // console.log(JSON.stringify(d))
+                // console.log(JSON.stringify(d));
+                // showBboxBB(d, 'red');
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -73,9 +76,10 @@ class Background extends Component {
         for (let i = 0; i < this.props.group.lines.length; i++) {
             var line = this.props.group.lines[i];
             // line.forEach(strokeId => {
-            
+                // console.log(line)
                 for (let index = 0; index < line.length; index++) {
                     var strokeId = line[index];
+                    
                     var BB = await _getBBoxPromise('item-'+strokeId);
                     
                     if (rectangle == null) rectangle = BB;
@@ -111,7 +115,8 @@ class Background extends Component {
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
-        var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+        var transform = {"translateX":0, "translateY" :0};
+        transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
         var offsetX = 0;
         var offsetY = 0;
         var totalHeight = 0;
@@ -120,7 +125,7 @@ class Background extends Component {
         var offsetHeight = 25 + transform.translateY;
 
      
-
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
         // d3.select('#placeHolderBGLine-'+that.props.id).selectAll('g').remove()
         // d3.select('#placeHolderText-'+that.props.id).selectAll('g').remove();
         
@@ -139,9 +144,9 @@ class Background extends Component {
                 // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
                 // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
 
-
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 90, that.BBox.x + that.BBox.width + 150]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 , that.BBox.y + that.BBox.height + 50]);
+                // showBboxBB(that.BBox, 'red');
+                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 90 + transformPan.translateX, that.BBox.x + that.BBox.width + 150 +transformPan.translateX]);
+                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 + transformPan.translateY, that.BBox.y + that.BBox.height + 50 + transformPan.translateY]);
 
 
                 // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
@@ -160,6 +165,7 @@ class Background extends Component {
                     var lines = JSON.parse(JSON.stringify(scale))
                     lines.forEach((line)=>{
                         line.data = line.data.map((e)=> {
+                            // showBboxBB(d.BBox, 'red');
                             return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
                         })
                     })

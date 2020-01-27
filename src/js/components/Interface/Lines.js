@@ -24,7 +24,7 @@ class Lines extends Component {
         });
        
         return (
-            <g id="linesPattern">{listItems}</g>
+            <g id={this.props.id}>{listItems}</g>
         );
         
     }
@@ -45,14 +45,23 @@ class Line extends Component {
             .attr('stroke-width', that.props.stroke.data.sizeStroke)
             .attr('stroke-linejoin', "round")
     } 
-    
+    componentDidUpdate(){
+        var that = this;
+        var line = d3.line()
+        d3.select('#'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+            .attr('stroke', that.props.stroke.data.colorStroke)
+            .attr('stroke-width', that.props.stroke.data.sizeStroke)
+            .attr('stroke-linejoin', "round")
+    } 
     render() {
        
         
        
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
-                <path style={{'pointerEvents': 'none' }} id={this.props.stroke.id}></path>
+            <g id={'item-'+this.props.stroke.id}  transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+                <path style={{'pointerEvents': 'none' }} className={'pathPens'} id={this.props.stroke.id}></path>
               
             </g>
         );

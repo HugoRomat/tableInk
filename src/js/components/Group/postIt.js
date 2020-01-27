@@ -8,7 +8,7 @@ export class postIt {
     constructor(group) { 
         this.group = group;
         this.groupId = this.group.props.group.id
-        this.init();
+        // this.init();
         
         this.offsetX = 80;
         this.allBoundingBox = null;
@@ -134,36 +134,40 @@ export class postIt {
     }
     init() { 
         var that = this;
-        this.group.getAllBoundingBox(this.group.props.group.id).then((BB)=> {
-            // d3.select('#rectAllBB-' + that.group.props.group.id)
-            //         .attr('width', BB.width + that.offsetX)
-            //         .attr('height', BB.height)
-            //         .attr('x', BB.x)
-            //         .attr('y', BB.y)
-            //         .attr('fill', 'rgba(0,0,255,0.1)')
+        return new Promise((resolve, reject) => {
+            this.group.getAllBoundingBox(this.group.props.group.id).then((BB)=> {
+                // d3.select('#rectAllBB-' + that.group.props.group.id)
+                //         .attr('width', BB.width + that.offsetX)
+                //         .attr('height', BB.height)
+                //         .attr('x', BB.x)
+                //         .attr('y', BB.y)
+                //         .attr('fill', 'rgba(0,0,255,0.1)')
 
-            // d3.select('#postIt-' + that.group.props.group.id).select('image')
-            //     .attr('x', BB.x +  BB.width +80 - 100)
-            //     .attr('y', BB.y +  BB.height - 100)
-            //     .attr('width', 100)
-            //     .attr('height', 100)
-            //     .attr("xlink:href", flip)
-                
+                // d3.select('#postIt-' + that.group.props.group.id).select('image')
+                //     .attr('x', BB.x +  BB.width +80 - 100)
+                //     .attr('y', BB.y +  BB.height - 100)
+                //     .attr('width', 100)
+                //     .attr('height', 100)
+                //     .attr("xlink:href", flip)
+                    
 
-            // this.colors.forEach((d)=>{
-            BB.y -= 50;
-            BB.x -= 90;
-            BB.width += 150;
-            BB.height += 100;
+                // this.colors.forEach((d)=>{
+                BB.y -= 50;
+                BB.x -= 90;
+                BB.width += 150;
+                BB.height += 100;
 
-            this.createFlipPage(BB);
-            // this.initEvent();
-            // newNode.select('.rectangle').attr('width', BB.width + 80)
-            // .attr('height', BB.height)
-            // .attr('x', BB.x)
-            // .attr('y', BB.y)
-            // })
+                this.createFlipPage(BB);
 
+                resolve(true);
+                // this.initEvent();
+                // newNode.select('.rectangle').attr('width', BB.width + 80)
+                // .attr('height', BB.height)
+                // .attr('x', BB.x)
+                // .attr('y', BB.y)
+                // })
+
+            })
         })
     }
     createFlipPage(BB){
@@ -223,7 +227,7 @@ export class postIt {
         
         var data = parser(path2)
 
-        console.log(data)
+        // console.log(data)
         data.splice(3, 0, data.splice(1, 1)[0]);
 
         
@@ -253,11 +257,11 @@ export class postIt {
             .attr('d',path)
             
         // console.log(d3.select('#postItImage-' + that.group.props.group.id).select('.path2').node())
-        d3.select('#postItImage-' + that.group.props.group.id).select('.rectangle')
+        /*d3.select('#postItImage-' + that.group.props.group.id).select('.rectangle')
             .attr('x',BB.x )
             .attr('y',BB.y )
             .attr('width',BB.width + that.offsetX)
-            .attr('height',BB.height )
+            .attr('height',BB.height )*/
 
         // d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
 
@@ -367,10 +371,6 @@ export class postIt {
         path = path.join('')
 
         d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
-
-
-
-
 
         dataPath1[0] = {...dataPath1[0], 'x': BB.x, 'y': BB.y}
         dataPath1[1] = {...dataPath1[1], 'x': BB.x, 'y': BB.y + BB.height}

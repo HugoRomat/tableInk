@@ -275,6 +275,7 @@ class Group extends Component {
             
         })
     }
+    
     getAllIntersectsForGroup (){
        
     }
@@ -284,6 +285,10 @@ class Group extends Component {
         this.updateLine();   
         this.createStroke();
         this.postIt = new postIt(this);
+        this.postIt.init().then(()=>{
+           
+        })
+       
 
         d3.select('#postItImage-' + this.props.group.id).style('opacity', 0)
     }
@@ -380,22 +385,23 @@ class Group extends Component {
 
         var transform = {'translateX': 0, 'translateY': 0}
         transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
-        var oldScale = transform.scaleX;
+        // var oldScale = transform.scaleX;
+        // console.log(transform.translateX, transform.translateY)
         d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)');
 
         // console.log(that.props.group.model.id)
         var nodeId = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id');
         var BB = await _getBBoxPromise(nodeId);
-        
-
+        showBboxBB(JSON.parse(JSON.stringify(BB)), 'red')
+        console.log(d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).node())
         /** APPLY THE SCALE OF THE GUIDE */
         // BB.width *= 1/transform.scaleX;
         // BB.height *= 1/transform.scaleX;
         // console.log(transform)
-        BB.x = BB.x - transform.translateX;
-        BB.y = BB.y - transform.translateY;
+        // BB.x = BB.x - transform.translateX;
+        // BB.y = BB.y - transform.translateY;
         arrayBBox.push(BB);
-      
+        
         // SERT A TROUVER LE COIN EN HAUT A GAUCHE
         var polygon;
         if (arrayBBox.length > 1){
@@ -404,7 +410,9 @@ class Group extends Component {
                 polygon = mergeRectangles(polygon, arrayBBox[i])
             }
         } else polygon = arrayBBox[0]
-        // showBboxBB(polygon, 'red')
+
+        console.log(lines)
+        
         //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
         lines.forEach((d)=>{
             d.data = d.data.map((f)=> [f[0] - polygon.x, f[1] - polygon.y])
@@ -413,7 +421,7 @@ class Group extends Component {
 
 
         // transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
-        d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale('+oldScale+')');
+        d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)');
 
     }
     sleep = () => {
@@ -608,19 +616,12 @@ class Group extends Component {
             var modelId = this.props.group.model.id;
 
             if (this.props.group.swipe == false){
-                // d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)');
-
-                // d3.select('#'+that.props.group.id).attr('opacity', '0.0');
-                // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.0').attr('stroke-width', '1');
 
                 d3.select('#postItImage-' + that.props.group.id).select('.path2').style('opacity',1);
                 d3.select('#postItImage-' + that.props.group.id).select('.path1').style('opacity',1);
 
-
                 d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 0);
                 this.postIt.reverseTransition();
-
-
 
                 d3.select('#item-'+modelId).transition().duration(1000).style('opacity', 0);
                 setTimeout(function(){ that.hideStyleGuide();  }, 1000);
@@ -638,27 +639,20 @@ class Group extends Component {
                 setTimeout(function(){ 
                     d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',0);
                     d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
+                    d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
                 }, 1000)
 
-              
-            
 
+                // d3.select('#item-'+modelId).style('opacity', 0);
 
-
-
-                d3.select('#item-'+modelId).style('opacity', 0);
-
-                setTimeout(function(){ 
-                    that.showStyleGuide(); 
-                }, 1000)
+                //MONTRE LES LIGNES DU GUIDE
+                setTimeout(function(){  that.showStyleGuide();  }, 1000)
 
                 /** HIDE THE STROKE */
                 d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
                 d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
-                // console.log('swipe')
-                // d3.select('#'+that.props.group.id).attr('opacity', '0.4');
-                // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.4').attr('stroke-width', '50');
-                // d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+
+
             }
         }
         if (this.props.group.tap != prevProps.group.tap){
@@ -666,16 +660,20 @@ class Group extends Component {
             var modelId = this.props.group.model.id;
             if (this.props.group.tap == false){
                 d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)')
+                d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.0')
+                d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.0').attr('stroke-width', '1')
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 0)
 
-                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
-                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 0)
+                // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'none')
             }
             else if (this.props.group.tap){
-                
-                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.4')
-                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.4').attr('stroke-width', '50')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 1)
+                d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.4')
+                d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.4').attr('stroke-width', '50')
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 1);
+
+                // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'auto')
+
+
             }
         }
     }
@@ -803,7 +801,7 @@ class Group extends Component {
 
                    {/* { (this.props.group.lines > 0) ? */}
                     <Background
-                        sketchLines={this.state.sketchLines}
+                        sketchLines={this.props.sketchLines}
                         placeholders={this.state.placeholders}
                         stroke={this.props.group.stroke}
                         id={this.props.group.id}

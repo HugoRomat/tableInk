@@ -71,13 +71,14 @@ class LinesGrouping extends Component {
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
 
-            // showBboxBB(this.BBox, 'red');
+           
             // this.addPlaceHolder();
 
             setTimeout(function(){
                 getBoundinxBoxLines(that.props.line).then((d)=>{
                     // console.log('=================== GO', that.props.line)
                     that.BBox = d;
+                    // showBboxBB(d, 'red');
                     // d3.selectAll('.BB').remove()
                     // showBboxBB(d, 'red')
                     that.addContainer();
@@ -142,7 +143,7 @@ class LinesGrouping extends Component {
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
-            .attr('fill', 'rgba(255,0,0,0.0)')
+            .attr('fill', 'rgba(255,0,0,0.3)')
     
             
     }
@@ -324,6 +325,8 @@ class LinesGrouping extends Component {
         if (placeHolderLine.lines.length > 0){
             // console.log(placeHolderLine.lines[0].tag)
             if (placeHolderLine.lines[0].tag == undefined){
+
+                // console.log(placeHolderLine.lines)
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('path')
                     .data(placeHolderLine.lines).enter()
                     .append('path')
@@ -335,7 +338,7 @@ class LinesGrouping extends Component {
                 // showBboxBB(placeHolderLine.BBox, 'red')
                 var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
                 var X = this.BBox.x - transformDrag.translateX - 80; 
-                var Y = this.BBox.y - transformDrag.translateY - 15;
+                var Y = this.BBox.y - transformDrag.translateY;
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
 
             } else {
@@ -358,9 +361,9 @@ class LinesGrouping extends Component {
             // console.log(this.props.placeholders)
         }
 
-        
 
         var placeHolderText = this.props.placeholders.find(x => x.id == 'backgroundText');
+
         if (placeHolderText != null && placeHolderText.lines.length > 0){
             var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
             const grouped = groupBy(placeHolderText.lines, line => line.type);
@@ -370,7 +373,7 @@ class LinesGrouping extends Component {
             var myScaleX = d3.scaleLinear().domain([placeHolderText.BBox.x, placeHolderText.BBox.x + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
             var myScaleY = d3.scaleLinear().domain([placeHolderText.BBox.y, placeHolderText.BBox.y + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
 
-            showBboxBB(placeHolderText.BBox, 'red')
+            // showBboxBB(placeHolderText.BBox, 'red')
             if (scale != undefined && scale.length > 0){
                 // console.log('GOO')
                 var lines = JSON.parse(JSON.stringify(scale))
@@ -383,10 +386,10 @@ class LinesGrouping extends Component {
                 for (var i = 0; i < lines.length; i += 1){
                     var myLine = lines[i]
                     d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('path')
-                    .attr('d', ()=>line(myLine.data))
-                    .attr('fill', 'none')
-                    .attr('stroke', ()=> myLine.colorStroke )
-                    .attr('stroke-width', (e)=>{return myLine.sizeStroke + (that.BBox.width / placeHolderText.BBox.width);})
+                        .attr('d', ()=>line(myLine.data))
+                        .attr('fill', 'none')
+                        .attr('stroke', (d)=>myLine.colorStroke)
+                        .attr('stroke-width', (d)=>myLine.sizeStroke)
                 }
             }
             if (pattern != undefined && pattern.length > 0){

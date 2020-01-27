@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation } from "./Helper";
+import { getNearestElement, getTransformation, distance, createPositionAtLengthAngle } from "./Helper";
 import reducers from "../reducers";
 
 class Line extends Component {
@@ -10,7 +10,7 @@ class Line extends Component {
         
     }
     componentDidMount(){
-        // console.log(this.props.stroke.device)
+        // console.log(this.props.stroke)
         var line = d3.line()
         var that = this;
 
@@ -31,19 +31,14 @@ class Line extends Component {
             .attr('stroke-width', '10')
             .attr('stroke-opacity', '0')
             
-           
-        // if (this.props.stroke.device != undefined){
-        //     // var scale = d3.scaleOrdinal(d3.schemeCategory10);
-        //     var scale = d3.scaleOrdinal(d3.schemeCategory10)
-
-        //     // console.log(scale(1), scale(2), scale(3));
-        //     // console.log(that.props.stroke.device)
-        //     // console.log(that.props.stroke.device)
-        //     // var color = 'green';
-        //     // if (that.props.stroke.device == 1) color = 'red';
-        //     // else color = 'blue'
-        //     d3.select('#'+that.props.stroke.id).attr('stroke', scale(that.props.stroke.device +1))
-        // }
+        
+            
+        if (this.props.stroke.pattern != undefined){
+            this.drawPattern();
+        }
+        if (this.props.stroke.stretch != undefined){
+            this.drawStretch();
+        }
 
 
         d3.select('#item-'+that.props.stroke.id)
@@ -51,6 +46,67 @@ class Line extends Component {
                 d3.event.preventDefault();
             })
     
+    }
+    drawPattern(){
+        var line = d3.line()
+        var that = this;
+        d3.select('#'+that.props.stroke.id).attr('opacity', 0)
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        var step = that.props.stroke.patternBBox.width;
+        var path = d3.select('#'+that.props.stroke.id).node()
+        var length = path.getTotalLength();
+        for (var i = 0; i < length; i += step){
+            var point = path.getPointAtLength(i);
+
+            this.props.stroke.pattern.forEach((d)=>{
+
+                var X = point['x']+ d.position[0] - transformPan.translateX - that.props.stroke.patternBBox.width/2;
+                var Y = point['y']+ d.position[1] - transformPan.translateY  - that.props.stroke.patternBBox.height/2;
+                d3.select('#tempGroup-'+ that.props.stroke.id).append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
+                    .append('path')
+                    .attr('d', (f)=>  line(d.points))
+                    .attr('fill', 'none')
+                    .attr('stroke', d.data.colorStroke)
+                    .attr('stroke-width', d.data.sizeStroke)
+                    .attr("stroke-dasharray", 'none')
+                    .attr('stroke-linejoin', "round")
+            })
+        }
+    }
+    drawStretch(event){
+        var that = this;
+        var path = d3.select('#'+that.props.stroke.id).node()
+        var line = d3.line(d3.curveCardinal);
+        var length = path.getTotalLength();
+        var step = 20;
+        // console.log(that.props.stroke)
+        var diff = that.props.stroke.stretch.map((d, i)=>{ 
+            var points = d.points;
+            return distance(that.props.stroke.stretch[0].points[0][0], points[0][0], that.props.stroke.stretch[0].points[0][1], points[0][1]);
+        })
+
+        that.props.stroke.stretch.forEach((d, k)=>{
+            // var dataPoints = this.stretchPen[k].points
+            var allPoints = []
+            var j = 0;
+            for (var i = 0; i < length; i += step){
+                var point = path.getPointAtLength(i);
+                var pointBefore = path.getPointAtLength(i-1);
+                var angle = Math.atan2(point.y-pointBefore.y, point.x-pointBefore.x) //* 180 / Math.PI;
+                var newPointCos = createPositionAtLengthAngle(point, angle - (Math.PI/2), diff[k])
+                var newPoint = [newPointCos['x'], newPointCos['y']];
+                allPoints.push(newPoint)
+                j++;
+            }
+            d3.select('#tempGroup-'+ that.props.stroke.id).append('g')
+                .append('path')
+                .attr('d', (f)=>  line(allPoints))
+                .attr('fill', 'none')
+                .attr('stroke', d.data.colorStroke)
+                .attr('stroke-width', d.data.sizeStroke)
+                .attr("stroke-dasharray", 'none')
+                .attr('stroke-linejoin', "round")
+        })
     }
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
@@ -84,10 +140,12 @@ class Line extends Component {
         // getTransformation()
         // console.log(this.props.stroke.position[0])
         return (
-            <g id={'item-'+this.props.stroke.id} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
+            <g id={'item-'+this.props.stroke.id} className={'parentLine'} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path style={{'pointerEvents': 'none' }} className="realStroke" id={this.props.stroke.id}></path>
                 <path style={{'pointerEvents': 'none' }} className="fakeStroke" id={'fake-'+this.props.stroke.id}></path>
-                
+                <g id={"tempGroup-"+this.props.stroke.id} style={{'pointerEvents': 'none' }} >
+
+                </g>
             </g>
         );
         

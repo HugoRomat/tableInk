@@ -36,23 +36,23 @@ class LinePalette extends Component {
         })
     }
     componentDidUpdate(){
-        // console.log('Update')
-        // console.log(this.props.stroke.data.class)
-        // var line = d3.line()
-        // var that = this;
-        // d3.select('#'+that.props.stroke.id)
-        //     .attr("d", line(that.props.stroke['points']))
-        //     .attr('fill', 'none')
-        //     .attr('stroke', that.props.stroke.data.colorStroke)
-        //     .attr('stroke-width', that.props.stroke.data.sizeStroke)
-        //     .attr('stroke-linejoin', "round")
+        var that = this;
+        var line = d3.line()
+        // console.log(that.props.stroke)
+        d3.select('#'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+            .attr('stroke', that.props.stroke.data.colorStroke)
+            .attr('stroke-width', that.props.stroke.data.sizeStroke)
+            .attr('stroke-linejoin', "round")
 
-        // d3.select('#fake-'+that.props.stroke.id)
-        //     .attr("d", line(that.props.stroke['points']))
-        //     .attr('fill', 'none')
-        //     .attr('stroke', 'black')
-        //     .attr('stroke-width', '1')
-        //     .attr('stroke-opacity', '0')
+        d3.select('#fake-'+that.props.stroke.id)
+            .attr("d", line(that.props.stroke['points']))
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '30')
+            // .attr('stroke-opacity', '0')
+            .attr('stroke-linejoin', "round")
         
         // d3.select('#palette-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
     }
