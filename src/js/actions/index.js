@@ -133,6 +133,13 @@ export const addLineToStickyGroup = data => ({
     type: 'ADD_LINE_TO_STICKY_GROUP',
     data
 })
+
+export const updateModel = data => ({
+    type: 'UPDATE_MODEL',
+    data
+})
+
+
 export const addTag = data => ({
     type: 'ADD_TAG',
     data

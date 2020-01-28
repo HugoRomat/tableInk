@@ -59,22 +59,22 @@ initialState.galleryItems = galleryData;
 initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-initialState.groupLines = group
+// initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 initialState.voiceQueries = voice;
-initialState.stickyLines = sticky;
+// initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
 initialState.sketchLines = strokes;
 initialState.colorPalette.lines = strokesPalette;
 
-console.log(initialState)
+// console.log(initialState)
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
     // console.log(JSON.stringify(state.groupLines));
-    // console.log(JSON.stringify(state.stickyLines));
+    // console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
       
       case 'SET_GRID':
@@ -85,29 +85,49 @@ console.log(initialState)
         
       //Add line to placeholder
       case 'ADD_LINE_TO_STICKY_GROUP':
-        var id = action.data.idGuide;
+        var id = action.data.idGroup;
         var where = action.data.where;
         var data = action.data.data;
-        var index = state.stickyLines.indexOf(state.stickyLines.find(x => x.id == id))
+        var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
         if (index > -1){
 
-          var indexLine = state.stickyLines[index]['placeHolder'].indexOf(state.stickyLines[index]['placeHolder'].find(x => x.id == where))
+          var indexLine = state.groupLines[index]['model']['placeHolder'].indexOf( state.groupLines[index]['model']['placeHolder'].find(x => x.id == where))
           if (indexLine > -1){
 
-          // console.log(index, indexLine)
+          
             state = update(state, { 
-              stickyLines: {
+              groupLines: {
                 [index] : {
-                  placeHolder: {
-                    [indexLine]: { 
-                      lines: {$push: data}
+                  model: {
+                    placeHolder : {
+                      [indexLine]: {
+                          lines: {$push: data}
+                        }
                     }
                   }
-                  
                 }
               }
             })
+            // console.log(state.groupLines[index]['model']['placeHolder'][indexLine])
           }
+        }
+        return state;
+
+
+        case 'UPDATE_MODEL':
+        var id = action.data.idGroup;
+        // console.log( action.data.model)
+        var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
+        // console.log(index)
+        if (index > -1){
+            state = update(state, { 
+              groupLines: {
+                [index] : {
+                  model:  {$set: action.data.model}
+                }
+              }
+            })
+         
         }
         return state;
 

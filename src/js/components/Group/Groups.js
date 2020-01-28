@@ -136,6 +136,16 @@ class Groups extends Component {
                 tagHold={this.props.tagHold}
                 holdGuide={this.holdGroup}
                 addToSelection={this.addToSelection}
+
+                colorStroke = {this.props.colorStroke}
+                sizeStroke = {this.props.sizeStroke}
+                penType = {this.props.penType}
+                tagHold={this.props.tagHold}
+
+                patternPenData={this.props.patternPenData}
+
+                setGuideTapped={this.props.setGuideTapped}
+                guideTapped={this.props.guideTapped}
                 // createTable={this.createTable}
                 // addToTable={this.addTable}
                 // computeTables={this.computeTables}

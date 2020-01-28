@@ -30,7 +30,6 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 
-
 class Guide extends Component {
     constructor(props) {
         super(props);
@@ -93,26 +92,6 @@ class Guide extends Component {
 
 
         pan.recognizeWith(press);
-
-
-    //    this.mc.add(pan);
-    //    this.mc.on("panstart", function(ev) {
-    //         if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen' ){
-    //             that.startPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y,  'time': Date.now()};
-    //             that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
-    //             that.dragstarted(ev);
-    //         }
-    //     })
-    //     this.mc.on("panmove", function(ev) {
-    //         if (ev.pointers[0].pointerType == 'touch'){
-    //             that.dragged(ev);
-    //         }
-    //     })
-    //     this.mc.on("panend", function(ev) {
-    //         if (ev.pointers[0].pointerType == 'touch' ){
-    //             that.dragended(ev);
-    //         }
-    //     })
         this.mc.on("press", function(event){
             if (event.pointers[0].pointerType == 'touch'){
                 that.props.dragItem(false);
@@ -130,98 +109,40 @@ class Guide extends Component {
 
         this.mc.on("tap", function(event){
             // console.log(event)
-            // console.log('GO',that.props.stroke.id)
+            console.log('GO',that.props)
             // clearTimeout(that.timerPress);
             if (event.changedPointers[0].pointerType == 'touch'){
-                that.props.setGuideTapped(that.props.stroke.id);
-                that.colorForHolding(true);
-                setTimeout(function(){
-                    that.props.setGuideTapped(false);
-                    that.colorForHolding(false);
-                }, 2000)
+                console.log(that.props.guideTapped)
+                if (that.props.guideTapped == false){
+                    that.props.setGuideTapped(that.props.stroke.child);
+                    that.colorForHolding(true);
+                    setTimeout(function(){
+                        that.props.setGuideTapped(false);
+                        that.colorForHolding(false);
+                    }, 2000)
+                } else {
+                    that.props.updatePlaceHolderGroup({'idGroup': that.props.stroke.child, 'model':that.props.guideTapped})
+                }
+                
             }
-            // console.log('Thats a tap')
-            // var BBox = _getBBox('item-'+env.props.stroke.id)
-            // that.props.shouldOpenMenu({
-            //     'id': guid(),
-            //     'shouldOpen': true,
-            //     'position': [BBox.x, BBox.y],
-            //     'idGuide': env.props.stroke.id,
-            //     'idLines': []//env.props.stroke.data.linesAttached
-            // })
+         
         })
 
-        // this.mc.on("pinchstart", function(event){
-        //     console.log('PINCH')
-        //     if (event.changedPointers[0].pointerType == 'touch'){
-        //         // that.expandGuide();
-                
-
-        //         if (that.isExpand == false) {
-        //             d3.select('#panItems').style('opacity', 0.2);
-        //             var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
-        //             d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)')
-
-        //             that.isExpand = true;
-        //         }
-        //         else {
-        //             d3.select('#panItems').style('opacity', 1);
-
-        //             var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
-        //             d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(0.3)')
-
-                  
-        //             that.isExpand = false;
-
-        //             // that.computeLines();
-        //         }
-        //     }
-        // })
 
 
-            
-       
-            
-        //     .on('pointermove', function(d){
-        //         if (d3.event.pointerType == 'touch'){
-        //             var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-        //             var differenceTime = that.startPosition.time - Date.now();
-                    
-        //             if (dist > 10 ){
-        //                 that.dragged(that);
-        //             }
-        //         }
-        //     })
-        //     .on('pointerup', function(d){
-        //         if (d3.event.pointerType == 'touch'){
-        //             that.dragended(that);
-        //         }
-        //     })
         d3.select('#item-'+that.props.stroke.id)
             .on('contextmenu', function(){
                 d3.event.preventDefault();
             })
             
-            
-            
-        // console.log('GUIDE', this.props.stroke.id)
-        // var BBox = _getBBox(this.props.stroke.id);
-        // console.log(BBox)
-        // this.setState({'BBox': BBox})
-       
-    
+          
     }
     
     expandGuide(){
 
     }
     dragstarted(event) {
-     
         var that = this;
-
-       
-        // if (that.props.isGallery == false) that.props.dragItem(true);
-
     }
 
     dragged(event) {  
@@ -240,22 +161,15 @@ class Guide extends Component {
 
 
             
-            var linesAttached = that.props.stroke.linesAttached;
-            for (var i in linesAttached){
-                var line = linesAttached[i];
-                var identifier = 'item-'+line;
-                var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
-                var X = offsetX + transform.translateX;
-                var Y = offsetY + transform.translateY;
-                d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
-            }
-            
-        // }
-        
-        // d3.select('svg').append('circle')
-        //     .attr('cx', X)
-        //     .attr('cy', Y)
-        //     .attr('r', 10)
+        var linesAttached = that.props.stroke.linesAttached;
+        for (var i in linesAttached){
+            var line = linesAttached[i];
+            var identifier = 'item-'+line;
+            var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+            var X = offsetX + transform.translateX;
+            var Y = offsetY + transform.translateY;
+            d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
+        }
         that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
     }
@@ -307,12 +221,11 @@ class Guide extends Component {
     }
     addLine = (d) => {
         console.log('DOOO',d)
-       this.props.addLineToStickyGroup({
-           'idGuide': d.idGuide,
-           'where':d.where,
-           'data': d.data
-       })
-
+        this.props.addLineToStickyGroup({
+            'idGroup': this.props.stroke.child,
+            'where':d.where,
+            'data': d.data
+        })
     }
     /**
      * WHEN SELECTED ITEM
@@ -320,30 +233,20 @@ class Guide extends Component {
      */
     colorForHolding(isIt){
         var that = this;
-        // console.log('GO')
+
         d3.select('#rect-'+this.props.stroke.id)
             .attr('width', 0)
             .attr('height', 0)
         
-        
         if (isIt == true){
-            var transform = getTransformation(d3.select('#item-'+this.props.stroke.id).attr('transform'))
-            // console.log(this.props)
-            // _getBBoxPromise('item-'+this.props.stroke.id).then((BBox)=>{
-                // var x = transform.x - 100;
-                // var y = transform.y - 50;
-                // console.log(transform)
-
-                d3.select('#rect-'+that.props.stroke.id)
-                    .attr('x', - 50)
-                    .attr('y', -25)
-                    .attr('width', that.props.stroke.width + 50)
-                    .attr('height',  that.props.stroke.height + 50)
-
-                    // .attr('fill', '#9C9EDEDF')
-                    .attr('opacity', '0.2')
-            // })
-            
+            var getData = d3.select('#group-'+ that.props.stroke.child).select('#rect-outerBackground');
+            // console.log(getData)
+            d3.select('#rect-'+that.props.stroke.id)
+                .attr('x', getData.attr('x'))
+                .attr('y', getData.attr('y'))
+                .attr('width', getData.attr('width'))
+                .attr('height',  getData.attr('height'))
+                .attr('opacity', '0.2')
         }
     }
     resize(){
@@ -376,20 +279,10 @@ class Guide extends Component {
        console.log(this.props.stroke)
     }
     render() {
-        // console.log(this.props.stroke);
-        var BB = calculateBB(this.props.stroke.points);
-        // console.log(this.props.stroke);
-        // var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
-        // var scale = 1;
-        // if (window.innerWidth < 769){
-        //     var BB = calculateBB(this.props.stroke.points);
-        //     translate[0] = 50;
-        //     scale = this.resize()
-        // }
 
-        // console.log(this.props.stroke)
-        // var height = 
-        
+        // console.log(this.props.stroke.placeHolder)
+        var BB = calculateBB(this.props.stroke.points);
+
 
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
@@ -416,26 +309,14 @@ class Guide extends Component {
 
         return (
             <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(1)`}>
-                
-                
-                {/* { (window.innerWidth < 769) ? <circle cx={10} cy={35} r={120} fill={'white'} stroke={'black'}/> : null } */}
-
-
                 <rect id={'rect-'+this.props.stroke.id} />
                 <path id={this.props.stroke.id}></path>
-                {/* <path id={'fake-'+this.props.stroke.id}></path> */}
                 {listPlaceHolder}
-                {/* <PlaceHolderText 
-                    data={this.props.stroke.textPosition}
-                    dataParent={this.props.stroke} 
-                /> */}
-                
-
-                
-                
             </g>
         );
         
     }
 }
+
 export default connect(mapStateToProps, mapDispatchToProps)(Guide);
+

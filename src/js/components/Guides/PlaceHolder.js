@@ -84,6 +84,7 @@ class PlaceHolder extends Component {
         }) 
         
     }
+
     pointerDown(event){
         this.lastMovePosition = {'x':0, 'y':0};
 
@@ -107,15 +108,18 @@ class PlaceHolder extends Component {
     pointerMove(event){
         var that = this;
         if (that.props.penType == 'normal'){
-            // console.log('#item-' + that.props.parent.id)
+            
             var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
-            var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
+            var transform = getTransformation(d3.select('#group-' + that.props.parent.child).attr('transform'))
+            // console.log(transformPan)
+            // console.log()
             that.tempArrayStroke.push([event.x - transform.translateX - transformPan.translateX, event.y - transform.translateY - transformPan.translateY])
             that.drawLine();
         } 
         else {
-            var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-            that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY])
+            var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
+            var transform = getTransformation(d3.select('#group-' + that.props.parent.child).attr('transform'))
+            that.tempArrayStroke.push([event.x - transform.translateX - transformPan.translateX, event.y - transform.translateY - transformPan.translateY])
             that.drawLinePattern ();
             /*var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
 
@@ -146,12 +150,13 @@ class PlaceHolder extends Component {
     }
     pointerUp(event){
         var that = this;
-        // console.log('GOOO') ;
+        console.log('GOOO', this.isTag) ;
 
         if (this.isTag){
 
             /** JUST TO REMOVE IDS AND MAKE A NEW ONE */
-            var firstPoint = [that.tempArrayStroke[0][0], that.tempArrayStroke[0][1]];
+            var firstPoint = [that.tempArrayStroke[0][0], that.tempArrayStroke[0][1]]; 
+            // var firstPoint = [0,0];
             var dataNewTag = JSON.parse(JSON.stringify(this.isTag));
             dataNewTag.id = guid();
             dataNewTag.position = firstPoint;
@@ -318,147 +323,48 @@ class PlaceHolder extends Component {
                     
             } 
         }
+
+        this.drawPlaceHolder();
     }
     drawPlaceHolder(){
-        
-        // console.log(sketch, rec)
 
-        var widthTotal = this.props.parent.width;
-        var heightTotal = this.props.parent.height;
-        // console.log(this.props.parent.width)
         var that = this;
-
-        var widthContainer = 25;
-        //Si j'udpate la BBox
-        // if (this.props.BBoxParent != prevProps.BBoxParent){
-            // console.log('UPDATE BOX', that.props.data.id);
-        // var height = 70;//this.props.BBoxParent.height;
-        var size = 50;
-        // var width = 5//this.props.BBoxParent.width;
         var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
         var rect = null;
         var sketch = d3sketchy()
-
+        // console.log(this.props.data)
         if (this.props.data.id == 'backgroundLine'){
-            // var rec = sketch.rectStroke({ x:100, y:300, width:widthTotal - 300, height:heightTotal - 600, density: 3, sketch:2});
-            // var flattened = [].concat(...rec)
-
-            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-            //     .data(flattened).enter()
-            //     .append('path')
-            //     .attr('d', (d)=>{ return d })
-            //     .attr('fill', 'none')
-            //     .attr('stroke', 'black')
-            //     .attr('stroke-width', '0.3')
-            //     .style('stroke-linecap', 'round')
-            //     .style('stroke-linejoin', 'round')
-            //     .style('opacity', 0.1)
-
-            // rect = element
-            //     .attr('width', 130)
-            //     .attr('height', 80)
-            //     .attr('x', 35)
-            //     .attr('y',35)
-            //     .attr('fill', 'rgba(252, 243, 242,  0.4)')
-            //     .style("filter", "url(#drop-shadow)")
 
                 rect = element
-                .attr('width', widthTotal - 300)
-                .attr('height', heightTotal - 600)
-                .attr('x', 100)
-                .attr('y',300)
+                .attr('width', this.props.data.width)
+                .attr('height',  this.props.data.height)
+                .attr('x', this.props.data.x)
+                .attr('y',this.props.data.y)
                 .attr('fill', 'rgba(247, 247, 247, 0.0)')
                 .style("filter", "url(#drop-shadow)")
-
-            // if (this.props.parent.tag){
-            //     d3.select('#tag-' + that.props.data.id + '-' + that.props.parent.id)
-            //         .attr('width', 50)
-            //         .attr('height', 50)
-            //         .attr('x', 0)
-            //         .attr('y',0)
-            //         .attr('fill', 'rgba(247, 247, 247, 0.4)')
-            // } 
 
         }
         else if (this.props.data.id == 'backgroundText'){
-            // var rec = sketch.rectStroke({ x:250, y:350, width:widthTotal - 500, height:heightTotal - 700, density: 3, sketch:2});
-            // var flattened = [].concat(...rec)
-            
-            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-            //     .data(flattened).enter()
-            //     .append('path')
-            //     .attr('d', (d)=>{ return d })
-            //     .attr('fill', 'none')
-            //     .attr('stroke', 'black')
-            //     .attr('stroke-width', '0.3')
-            //     .style('stroke-linecap', 'round')
-            //     .style('stroke-linejoin', 'round')
-            //     .style('opacity', 0.1)
 
+            // console.log(widthTotal)
             rect = element
-            .attr('width', widthTotal - 500)
-            .attr('height', heightTotal - 700)
-                .attr('x', 250)
-                .attr('y', 350)
+            .attr('width', this.props.data.width)
+            .attr('height', this.props.data.height)
+            .attr('x', this.props.data.x)
+            .attr('y',this.props.data.y)
                 .attr('fill', 'rgba(247, 247, 247, 0.0)')
                 .style("filter", "url(#drop-shadow)")
 
-            // rect = element
-            //     .attr('width', 75)
-            //     .attr('height', 40)
-            //     .attr('x', 80)
-            //     .attr('y', 55 )
-            //     .attr('fill', 'rgba(166, 166, 166, 1)')
         }
         else if (this.props.data.id == 'outerBackground'){
-            
-            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            // var line = d3.line();
-
-            // var flattened = [].concat(...rec);
-
-            // var width = (this.props.shouldExpand) ? 800 : widthTotal;
-            // var height = (this.props.shouldExpand) ? 800 : heightTotal;
-
-            // console.log(flattened)
-
-            // d3.select('#background-' + that.props.data.id + '-' + that.props.parent.id).selectAll('path')
-            //     .data(flattened).enter()
-            //     .append('path')
-            //     .attr('d', (d)=>{ return d })
-            //     .attr('fill', 'none')
-            //     .attr('stroke', 'black')
-            //     .attr('stroke-width', '0.3')
-            //     .style('stroke-linecap', 'round')
-            //     .style('stroke-linejoin', 'round')
-
+    
             rect = element
-                .attr('width', widthTotal)
-                .attr('height', heightTotal)
-                .attr('x', 0)
-                .attr('y',0)
+                .attr('width', this.props.data.width)
+                .attr('height', this.props.data.height)
+                .attr('x', this.props.data.x)
+                .attr('y',this.props.data.y)
                 .attr('fill', 'rgba(247, 247, 247, 0.3)')
                 .style("filter", "url(#drop-shadow)")
-
-            
-			// var svg = d3.select("#svg");
-			// var sketchy = d3sketchy();
-			// sketchy.rectStroke({svg:svg, x:50, y:50, width:100, height:100, density:3, sketch:2});
-
-        
-            
-
-            /*for (var i in rec){
-                var path = rec[i];
-                console.log(path)
-            }
-            rect = element
-                .attr('width', widthTotal)
-                .attr('height', heightTotal)
-                .attr('x', 0)
-                .attr('y',0)
-                .attr('fill', 'rgba(94, 130, 237, 0.4)')
-                .style("filter", "url(#drop-shadow)")*/
         }
         
         if (rect != null){

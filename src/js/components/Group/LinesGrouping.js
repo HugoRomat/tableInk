@@ -72,7 +72,7 @@ class LinesGrouping extends Component {
         else if (this.props.sketchLines != prevProps.sketchLines){
 
            
-            // this.addPlaceHolder();
+            this.addPlaceHolder();
 
             setTimeout(function(){
                 getBoundinxBoxLines(that.props.line).then((d)=>{
@@ -143,7 +143,7 @@ class LinesGrouping extends Component {
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
-            .attr('fill', 'rgba(255,0,0,0.3)')
+            .attr('fill', 'rgba(255,0,0,0.0)')
     
             
     }
@@ -278,6 +278,8 @@ class LinesGrouping extends Component {
         })
         // console.log(changePositionArraySketchLines)
         this.props.moveLines({'data':changePositionArraySketchLines, 'iteration': this.props.iteration});
+
+        
     }
     addTags(){
         var that = this;
@@ -325,7 +327,7 @@ class LinesGrouping extends Component {
         if (placeHolderLine.lines.length > 0){
             // console.log(placeHolderLine.lines[0].tag)
             if (placeHolderLine.lines[0].tag == undefined){
-
+                
                 // console.log(placeHolderLine.lines)
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('path')
                     .data(placeHolderLine.lines).enter()
@@ -334,11 +336,15 @@ class LinesGrouping extends Component {
                     .attr('fill', 'none')
                     .attr('stroke', (d)=>d.colorStroke)
                     .attr('stroke-width', (d)=>d.sizeStroke)
+                    .attr('stroke-linejoin', "round")
 
                 // showBboxBB(placeHolderLine.BBox, 'red')
                 var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-                var X = this.BBox.x - transformDrag.translateX - 80; 
-                var Y = this.BBox.y - transformDrag.translateY;
+                // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                var X = this.BBox.x - transformDrag.translateX  - 80; 
+                var Y = this.BBox.y - transformDrag.translateY  - 20;
+
+                // console.log(transformPan)
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
 
             } else {
@@ -355,7 +361,14 @@ class LinesGrouping extends Component {
                 var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
                 var X = this.BBox.x - transformDrag.translateX - 145; 
                 var Y = this.BBox.y - transformDrag.translateY - 100;
-                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+
+
+                var difference = 0;
+                for (var i = 0; i < that.props.iteration +1; i++){
+                    if (i != 0) difference += this.props.BBs[i]['y'] - this.props.BBs[i-1]['y']
+                }
+                // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate(0,'+difference+')')
             }
 
             // console.log(this.props.placeholders)
@@ -366,25 +379,52 @@ class LinesGrouping extends Component {
 
         if (placeHolderText != null && placeHolderText.lines.length > 0){
             var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+            var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
             const grouped = groupBy(placeHolderText.lines, line => line.type);
             var scale = grouped.get("normal");
             var pattern = grouped.get("pattern");
-            // console.log(pattern, placeHolderText)
-            var myScaleX = d3.scaleLinear().domain([placeHolderText.BBox.x, placeHolderText.BBox.x + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width]);
-            var myScaleY = d3.scaleLinear().domain([placeHolderText.BBox.y, placeHolderText.BBox.y + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + that.BBox.height]);
+            // console.log(placeHolderText)
+            // var myScaleX = d3.scaleLinear().domain([-transformPan.translateX, -transformPan.translateX + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width ]);
+            // var myScaleY = d3.scaleLinear().domain([-transformPan.translateY, -transformPan.translateY + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + 50 ]);
+
+            var myScaleX = d3.scaleLinear().domain([0, 0 + placeHolderText.BBox.width]).range([that.BBox.x, that.BBox.x + that.BBox.width ]);
+            var myScaleY = d3.scaleLinear().domain([0, 0 + placeHolderText.BBox.height]).range([that.BBox.y, that.BBox.y + 50 ]);
 
             // showBboxBB(placeHolderText.BBox, 'red')
+            // console.log( JSON.parse(JSON.stringify(scale)),placeHolderText.BBox)
+            // drawCircle(placeHolderText.BBox.width,0, 10, 'red');
+            // drawCircle( that.BBox.x + transformPan.translateX, that.BBox.y + transformPan.translateY, 10, 'red');
+
+            // d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('circle')
+            // .attr('cx', that.BBox.x)
+            // .attr('cy', that.BBox.y)
+            // .attr('r', 10)
+            // .attr('fill', 'green')
+
+            // d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('rect')
+            //     .attr('x', -transformPan.translateX)
+            //     .attr('y', -transformPan.translateY)
+            //     .attr('width', placeHolderText.BBox.width)
+            //     .attr('height', placeHolderText.BBox.height)
+            //     .attr('fill', 'red')
+
+            // d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('rect')
+            //     .attr('x', that.BBox.x)
+            //     .attr('y', that.BBox.y)
+            //     .attr('width', that.BBox.width)
+            //     .attr('height', that.BBox.height)
+            //     .attr('fill', 'green')
+
+
             if (scale != undefined && scale.length > 0){
-                // console.log('GOO')
+                
                 var lines = JSON.parse(JSON.stringify(scale))
-                lines.forEach((line)=>{
-                    line.data = line.data.map((e)=> {
-                        return [myScaleX(e[0] + placeHolderText.BBox.x) - transform.translateX, myScaleY(e[1] + placeHolderText.BBox.y) - transform.translateY]
-                    })
-                })
                 // console.log(lines)
+                lines.forEach((line, it)=>{ line.data = line.data.map((e)=> { return [myScaleX(e[0] ) , myScaleY(e[1] )] })})
                 for (var i = 0; i < lines.length; i += 1){
                     var myLine = lines[i]
+                    // console.log(i)
                     d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).append('path')
                         .attr('d', ()=>line(myLine.data))
                         .attr('fill', 'none')

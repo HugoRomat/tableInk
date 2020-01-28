@@ -8,7 +8,8 @@ import { connect } from 'react-redux';
 // import shallowCompare from 'react-addons-shallow-compare';
 import {
     addTagToGroup,
-    moveSketchLines
+    moveSketchLines,
+    updateModel
 } from './../../actions';
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
@@ -18,10 +19,12 @@ import Polygon from 'polygon'
 import Background from "./Background";
 import { boxBox } from "intersects";
 import { postIt } from "./postIt";
+import Guide from "../Guides/Guide";
 
 const mapDispatchToProps = { 
     moveSketchLines,
     addTagToGroup,
+    updateModel
 };
 const mapStateToProps = (state, ownProps) => {  
 
@@ -40,7 +43,9 @@ class Group extends Component {
             'placeholders':[],
             'sketchLines': this.props.sketchLines,
             'BBs': [],
-            'offsetY': []
+            'offsetY': [],
+            'guide': null,
+            'model': this.props.group.model
         }
 
         this.selected = false;
@@ -92,6 +97,20 @@ class Group extends Component {
         var line = d3.line()
         d3.select('#'+that.props.group.id).attr("d", line(that.strokePath))
         d3.select('#fake-'+that.props.group.id).attr("d", line(that.strokePath))
+        
+
+    }
+    updateBackground(){
+        var that = this;
+        // getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+        //     that.computeStyle(d).then((model)=>{
+        //         console.log('UPDATE MODEL')
+        //         that.props.updateModel({
+        //             'idGroup': that.props.group.id,
+        //             'model': model
+        //         })
+        //     })
+        // })
     }
     updateLine(){
         var that = this;
@@ -159,8 +178,11 @@ class Group extends Component {
                 }
             }
         })
-        // this.mc.on("panend", function(ev) {
-        // })
+        this.mc.on("panend", function(ev) {
+            if (ev.pointers[0].pointerType == 'pen' ){
+                that.updateBackground();
+            }
+        })
         // this.mc.on("press", function(ev) {
         //     // console.log('press')
         //     if (ev.pointers[0].pointerType == 'touch' ){
@@ -289,7 +311,7 @@ class Group extends Component {
            
         })
        
-
+        
         d3.select('#postItImage-' + this.props.group.id).style('opacity', 0)
     }
     drawBG(){
@@ -374,7 +396,7 @@ class Group extends Component {
             }
         };
         // console.log(JSON.parse(JSON.stringify(placeholder)))
-        // console.log('endPlaceHolder')
+        console.log('endPlaceHolder')
         this.setState({'placeholders': placeholder});
         // console.log(placeholder)
     }
@@ -384,16 +406,30 @@ class Group extends Component {
 
 
         var transform = {'translateX': 0, 'translateY': 0}
-        transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
-        // var oldScale = transform.scaleX;
-        // console.log(transform.translateX, transform.translateY)
-        d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)');
-
-        // console.log(that.props.group.model.id)
+        // console.log()
+        // transform = getTransformation(d3.select('#panItems').attr('transform'));
+        // transform = getTransformation(d3.select('#item-'+that.props.group.model.id).attr('transform'))
+        // // var oldScale = transform.scaleX;
+        // // console.log(transform.translateX, transform.translateY)
+        // d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)');
+        // console.log(lines)
+        
+        /*console.log(d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id'))
         var nodeId = d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).attr('id');
-        var BB = await _getBBoxPromise(nodeId);
-        showBboxBB(JSON.parse(JSON.stringify(BB)), 'red')
-        console.log(d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).node())
+        var BB = await _getBBoxPromise(nodeId);*/
+
+        var BBoxAll = await getBoundinxBoxLines(that.props.group.lines[0])
+        var model = await that.computeStyle(BBoxAll);
+        var BBox = model.placeHolder.find((d)=> d.id == element.id)
+        var BB = {'x': BBox.x, 'y': BBox.y, 'width': BBox.width, 'height': BBox.height};
+        // console.log(model, BBox)
+            // showBboxBB(d, 'red')
+            // var line = this.props.sketchLines.find((d)=> d.id == this.props.group.lines[0][0])
+            // drawCircle(line.position[0], line.position[1], 5, 'red')
+            // console.log(line)
+        
+        
+        // console.log(d3.select('#placeHolder-'+element.id +'-' + that.props.group.model.id).node())
         /** APPLY THE SCALE OF THE GUIDE */
         // BB.width *= 1/transform.scaleX;
         // BB.height *= 1/transform.scaleX;
@@ -410,8 +446,8 @@ class Group extends Component {
                 polygon = mergeRectangles(polygon, arrayBBox[i])
             }
         } else polygon = arrayBBox[0]
-
-        console.log(lines)
+        // showBboxBB(polygon, 'red')
+        // console.log(lines)
         
         //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
         lines.forEach((d)=>{
@@ -489,7 +525,7 @@ class Group extends Component {
 
         
         
-        console.log('GO',BBox)
+        // console.log('GO',BBox)
         // showBboxBB(BBox[0], 'red');
         this.BB = BBox;
 
@@ -545,13 +581,29 @@ class Group extends Component {
         // console.log('did update')
         // console.log('GOOOO', this.props.group.lines.join().split(','))
         // this.getAllIntersectsForGroup()
-        
+        // var shouldUpdatePlaceHolder =
         
 
         if (this.props.sketchLines != prevProps.sketchLines){
             // this.setState({'sketchLines': this.props.sketchLines})
             // this.getBoundinxBoxEveryone()
             
+            // getBoundinxBoxLines(this.props.group.lines[0]).then((d)=>{
+            //     console.log('GO compute styles', this.props.group.lines, d)
+            //     this.computeStyle(d);
+            // })
+            // setTimeout(function(){
+            //     getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+            //         that.computeStyle(d).then((model)=>{
+            //             console.log('UPDATE MODEL')
+            //             that.props.updateModel({
+            //                 'idGroup': that.props.group.id,
+            //                 'model': model
+            //             })
+            //         })
+            //     })
+            // }, 10)
+            // this.computeStyle();
         }
         /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME*/
         else if ([].concat(...this.props.group.lines).length != [].concat(...prevProps.group.lines).length ){
@@ -559,11 +611,12 @@ class Group extends Component {
             //NOUVELLE LIGNE
             // if (this.props.group.lines.length != prevProps.group.lines.length){
                 // console.log('GOOOO', this.props.group.lines)
-            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+            /*this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
                 this.computeLinesPlaceHOlder(this.placeholder);
-            })
+                
+            })*/
         }
         
         else if (this.props.shouldUnselect != prevProps.shouldUnselect){
@@ -573,10 +626,11 @@ class Group extends Component {
             d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
+            // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         }
         else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
-            console.log('gO')
+            // console.log('GO updateLines')
+            console.log('UpdatePlaceHolder')
             // console.log(JSON.parse(JSON.stringify(this.props.group.model.placeHolder)))
             this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
             this.getBoundinxBoxEveryone().then(()=> {
@@ -584,6 +638,8 @@ class Group extends Component {
                 this.computeLinesPlaceHOlder(this.placeholder);
                 
             })
+
+            
             // console.log('placeholder')
         }
         
@@ -646,7 +702,7 @@ class Group extends Component {
                 // d3.select('#item-'+modelId).style('opacity', 0);
 
                 //MONTRE LES LIGNES DU GUIDE
-                setTimeout(function(){  that.showStyleGuide();  }, 1000)
+                // setTimeout(function(){  that.showStyleGuide();  }, 1000)
 
                 /** HIDE THE STROKE */
                 d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
@@ -662,72 +718,66 @@ class Group extends Component {
                 d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)')
                 d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.0')
                 d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.0').attr('stroke-width', '1')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 0)
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 1)
 
                 // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'none')
             }
             else if (this.props.group.tap){
                 d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.4')
                 d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.4').attr('stroke-width', '50')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 1);
+                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 0);
 
+                setTimeout(function(){ }, 1000)
                 // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'auto')
 
 
             }
         }
-    }
-    showStyleGuide(){
-        var that = this;
-        var modelId = this.props.group.model.id;
         // console.log(this.props.group)
-        this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
-            // console.log('HEY', modelId);
-            // drawCircle(BBgroup.x, BBgroup.y, 10, 'red')
-            var X = BBgroup.x - 90;
-            var Y = BBgroup.y - 50;
-            var width = BBgroup.width + 240;
-            var height = BBgroup.height + 100;
+        
+        if (this.props.group.model != prevProps.group.model){
+            // console.log('CHANGE')
+        }
+    }
+    computeStyle(BBfirstLine){
+        var that = this;
+        return new Promise((resolve, reject) => {
+         
+            
+            var model = JSON.parse(JSON.stringify(this.props.group.model));
+            // console.log(model)
+            // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+            var transform = getTransformation(d3.select('#group-'+that.props.group.id).attr('transform'))
 
-            var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-        // BBLine.x = BBLine.x - transformPan.translateX;
-        // BBLine.y = BBLine.y - transformPan.translateY;
+            // console.log(transform)
+            this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
+                var width = BBgroup.width + 250;
+                var height = BBgroup.height + 170;
+                var X = BBgroup.x - 80 - transform.translateX;
+                var Y = BBgroup.y - 100 - transform.translateY;;
+                /** 1/OUter 2/Backgroundline 3/ BackgroundText */
 
-            // showBboxBB(BBgroup, 'red')
-            // console.log(this.props.group.id,this.props.group.tap)
-            /** BBOX DU GROUPE ENTIER */
-            _getBBoxPromise('item-'+modelId).then((BBguide)=>{
-                // var ratioX = BBguide.width/width;
-                // var ratioY = BBguide.height/height;
-                d3.select('#item-'+modelId).attr('transform', 'translate('+X+','+Y+')scale(1)')
-                d3.select('#item-'+modelId).select('#rect-outerBackground').attr('width', width).attr('height', height)
+                // _getBBoxPromise('containerBackground-0-' + that.props.group.id).then((BBfirstLine)=>{
 
-                var firstLineItem = d3.select('#containerBackground-0-' + that.props.group.id);
+                    // showBboxBB(BBfirstLine, 'red')
+                var widthLine = BBfirstLine.width + 120;
+                var heightLine = BBfirstLine.height + 40;
+                var xLine = BBfirstLine.x - 80 - transform.translateX;
+                var yLine = BBfirstLine.y - 20 - transform.translateY;
 
-                /** BBOX DE LA PREMIERE LIGNE ***/
-                _getBBoxPromise('containerBackground-0-' + that.props.group.id).then((BBfirstLine)=>{
+                var xText = BBfirstLine.x - transform.translateX;
+                var yText = BBfirstLine.y - transform.translateY;
 
-                    var widthLine = BBfirstLine.width + 40;
-                    var heightLine = BBfirstLine.height + 40;
-
-
-                    var xLine = BBfirstLine.x - X - 80 - transformPan.translateX;
-                    var yLine = BBfirstLine.y - Y - 20 - transformPan.translateY;
-                    
-                    // d3.select('#item-'+modelId).select('#placeHolder-backgroundLine-'+modelId).attr('transform', 'translate('+xLine+','+yLine+')scale(1)')
-                    d3.select('#item-'+modelId).select('#rect-backgroundLine').attr('width', widthLine).attr('height', heightLine).attr('x', xLine).attr('y', yLine)
-                    
-                    
-                    d3.select('#item-'+modelId).select('#rect-backgroundText')
-                        .attr('width', widthLine - 100)
-                        .attr('height', heightLine - 40)
-                        .attr('x',  xLine + 80)
-                        .attr('y', yLine + 20)
-
-                    d3.select('#item-'+modelId).transition().duration(1000).style('opacity', 1);
-                })
-
+                model.placeHolder[0] = { ...model.placeHolder[0], 'width': width, 'height': height, 'x': X, 'y': Y}
+                model.placeHolder[1] = { ...model.placeHolder[1], 'width': widthLine, 'height': heightLine, 'x': xLine, 'y': yLine}
+                model.placeHolder[2] = { ...model.placeHolder[2], 'width': BBfirstLine.width, 'height': BBfirstLine.height, 'x': xText, 'y': yText}
+                
+                // console.log(model)
+               
+                // })
             })
+               
+            resolve(model);
         })
     }
     hideStyleGuide(){
@@ -737,24 +787,32 @@ class Group extends Component {
     getBoundinxBoxEveryong(){
         // console.log(this.props)
     }
-    // moveSketchLines = (d) => {
-    //     // console.log('GO')
-    //     this.props.moveSketchLines(d);
-    // }
     moveLines = (d) => {
+        var that = this;
         this.props.moveSketchLines(d.data);
-        // console.log('start')
+        
 
+        if (d.iteration == this.BB.length - 1){
+            console.log('start')
+            setTimeout(function(){
+                getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+                    that.computeStyle(d).then((model)=>{
+                        // console.log('UPDATE MODEL')
+                        that.props.updateModel({
+                            'idGroup': that.props.group.id,
+                            'model': model
+                        })
+                        // that.setState({"model": model})
+                    })
+                })
+            }, 10)
+        }
+       
     }
    
     render() {
 
-        // console.log(this.props.group.lines)
-        // console.log('render')
-        // console.log(BB)
-        // var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped.item)
-        // console.log(this.props.group.lines)
-        //Pour chaque ligne reconnu dans mon groupe
+        
         var listItems = this.props.group.lines.map((d, i) => { return <g key={i} ></g>})
         if (this.state.placeholders.length > 0){
             listItems = this.props.group.lines.map((d, i) => {
@@ -786,7 +844,7 @@ class Group extends Component {
                 />
             });
         }
-    //    console.log(this.props.group.lines)
+    //    console.log(this.props)
         
         return (
             <g id={'group-'+this.props.group.id} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
@@ -798,6 +856,19 @@ class Group extends Component {
                
                 {/* <g>{this.state.placeholders.length > 0 ? : <g></g> }</g> */}
                 {listItems} 
+                {(this.props.group.swipe) ?
+                 <Guide 
+                        stroke={this.props.group.model} 
+                        colorStroke = {this.props.colorStroke}
+                        sizeStroke = {this.props.sizeStroke}
+                        penType = {this.props.penType}
+                        patternPenData = {this.props.patternPenData} 
+
+                        setGuideTapped={this.props.setGuideTapped}
+                        guideTapped={this.props.guideTapped}
+                        tagHold={this.props.tagHold}
+                    /> 
+                    : null}
 
                    {/* { (this.props.group.lines > 0) ? */}
                     <Background

@@ -125,7 +125,8 @@ class Document extends Component {
             tagHold: false,
             'penType': 'normal',
             'styleHolder': {'color': 'black', 'size': 15},
-            'isHoldingCanvas': false
+            'isHoldingCanvas': false,
+            'guideTapped': false
         }
 
         this.swipe = false;
@@ -911,10 +912,11 @@ class Document extends Component {
             //     that.sticky = true;
             // }
            
-            if (that.guideTapped){
-                that.tapGuide = that.guideTapped;
-            }
-            else if (that.isPatternPen){
+            // if (that.guideTapped){
+            //     that.tapGuide = that.guideTapped;
+            // }
+            // else 
+            if (that.isPatternPen){
 
             }
             else if(event.buttons == 1 && that.selecting != true){
@@ -1239,43 +1241,38 @@ class Document extends Component {
             d[0] = d[0] - firstPoint[0];
             d[1] = d[1] - firstPoint[1]
         })
-
-        
-        var modelData = this.props.stickyLines.find(x => x.id == model);
         var idChild = guid();
-        if (model == 'initial'){
-            var idNewGuide = guid()
-            modelData = JSON.parse(JSON.stringify(modelData));
-            modelData.id = idNewGuide;
-            modelData.child = idChild
 
-            this.addStrokeGuideCopy(modelData, {'x': 0, 'y': 0}); 
-           
+        /** Create the guide */
+        arrayPoints = simplify(arrayPoints, 2)
+        var data = {
+            'points': arrayPoints, 
+            'id': guid(),
+            "paddingBetweenLines": 50,
+            'child':idChild,
+            'placeHolder': [
+                {'id':'outerBackground', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
+                {'id':'backgroundLine', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
+                {'id':'backgroundText', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0}
+            ],
+            'position': [0,0]
         }
+        // this.props.addStickyLines(data);
 
-        
+
+        /** Create the group */
         var group = {
             'id': idChild, 
             'lines':lines, 
             'position': [0,0],
-            'model': modelData,
+            'model': data,
             'tap': false,
             'swipe': false,
             'stroke': {'points':arrayPoints, 'position': [firstPoint[0],firstPoint[1]]}
         };
-        // console.log(group)
-        // this.props.addLinesClass({'idLines':selection, 'class':['group-'+id]})
         this.props.createGroupLines(group);
         // this.props.removeSketchLines();
 
-        
-
-
-        // for (var i in selection){
-        //     d3.select('#item-'+selection[i]).classed('group-'+id, true);
-        // }
-
-        // console.log(selection)
     }
     findClosestElements(objects, idGuide, tempArrayStroke){
 
@@ -2371,20 +2368,26 @@ class Document extends Component {
     }
     setGuideTapped = (d) => {
 
-        console.log('tap', d)
+        // console.log('tap', d)
         // console.log(this.linesInselection)
-        this.guideTapped = d;
+        // this.guideTapped = d;
 
-        if (this.linesInselection.length != 0 && this.linesInselection.elements.length != 0 && this.guideTapped != false){
-            var sticky = this.props.stickyLines.find(x => x.id == this.guideTapped);
-            console.log(sticky)
-            var data = {
-                'idGroups': this.linesInselection.elements, 
-                'model': sticky
-            };
-            this.props.changeModelGroupLines(data);
-            this.guideTapped = false;
+        if (d != false){
+            var group = this.props.groupLines.find(x => x.id == d);
+            this.setState({'guideTapped': group.model})
+            // console.log(group)
+        } else {
+            this.setState({'guideTapped': d})
         }
+        // if (this.linesInselection.length != 0 && this.linesInselection.elements.length != 0 && this.guideTapped != false){
+        
+        // var data = {
+        //     'idGroups': this.linesInselection.elements, 
+        //     'model': sticky
+        // };
+        //     this.props.changeModelGroupLines(data);
+        //     this.guideTapped = false;
+        // }
     }
     render() {
         return (
@@ -2421,9 +2424,18 @@ class Document extends Component {
                             tagHold={this.state.tagHold}
                             getBBoxEachLine={this.getBBoxEachLine}
                             isGuideHold={this.isGuideHold}
-                            // holdGroup={this.holdGroup}
+
+                            colorStroke = {this.state.colorStroke}
+                            sizeStroke = {this.state.sizeStroke}
+                            penType = {this.state.penType}
+                            tagHold={this.state.tagHold}
+
+                            patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
+
+                            setGuideTapped={this.setGuideTapped}
+                            guideTapped={this.state.guideTapped}
                         />
-                        <Lines />
+                       <Lines />
                         <Textes />
                         {/* <TagsInterface
                             holdTag={this.holdTag} 
@@ -2435,7 +2447,7 @@ class Document extends Component {
                             sizeStroke = {this.state.sizeStroke}
                         /> 
                         <Images/>
-                        <Guides 
+                        {/* <Guides 
                             holdGuide={this.holdGuide} 
                             dragItem={this.dragItem}
                             setGuideTapped={this.setGuideTapped}
@@ -2446,7 +2458,7 @@ class Document extends Component {
                             tagHold={this.state.tagHold}
 
                             patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
-                        />
+                        /> */}
                         <g id="tempLines"><path id="penTemp"></path></g>
                         <g id="tempGroup">
 

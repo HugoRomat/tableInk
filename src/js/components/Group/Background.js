@@ -46,7 +46,7 @@ class Background extends Component {
             
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            console.log('Update sketchlines')
+            // console.log('Update sketchlines')
             this.getBoundinxBoxEveryone().then((d)=>{
                 // console.log(JSON.stringify(d));
                 // showBboxBB(d, 'red');
@@ -108,13 +108,14 @@ class Background extends Component {
 
     }
     addPlaceHolder(){
-        
+        var that = this;
+
+        console.log('GO', JSON.parse(JSON.stringify(that.BBox)))
         // console.log(this.props.placeholders)
         // showBboxBB(this.BBox, 'red');
         // console.log(this.BBox)
         var line = d3.line().curve(d3.curveBasis)
-        var that = this;
-
+        
         var transform = {"translateX":0, "translateY" :0};
         transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
         var offsetX = 0;
@@ -138,20 +139,9 @@ class Background extends Component {
         this.props.placeholders.forEach((d)=>{
             // console.log(d)
             if (d.id == 'outerBackground' && d.lines.length > 0){
-                // console.log('GO', that.BBox)
-                // console.log(d.BBox.x + d.BBox.width, that.BBox.x + that.BBox.width)
-                // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
-                // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
-                // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
 
-                // showBboxBB(that.BBox, 'red');
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 90 + transformPan.translateX, that.BBox.x + that.BBox.width + 150 +transformPan.translateX]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 50 + transformPan.translateY, that.BBox.y + that.BBox.height + 50 + transformPan.translateY]);
-
-
-                // if (that.BBox.width < 20) var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width +300]);
-                // else var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 100, that.BBox.x + that.BBox.width + 80]);
-                // var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 200, that.BBox.y + that.BBox.height + 200]);
+                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
+                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
 
                 const grouped = groupBy(d.lines, line => line.type);
                 
@@ -160,6 +150,8 @@ class Background extends Component {
 
                 // console.log(pattern)
                 /** For scale data */
+
+                showBboxBB(that.BBox, 'red')
                 if (scale != undefined && scale.length > 0){
                     // console.log('GOO')
                     var lines = JSON.parse(JSON.stringify(scale))
