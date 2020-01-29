@@ -29,7 +29,11 @@ const initialState = {
     "menuItems": [],
     "lettres": [],
     "textes":[],
-    'galleryItems': [],
+    'galleryItems': {
+      'isOpen': false,
+      'data': []
+
+    },
     'UIid': 0,
     'tags':[],
     'tagsGroup':[],
@@ -42,7 +46,7 @@ const initialState = {
     ,
   };
 
-    // console.log(alphabetPerso)
+    console.log(galleryData)
 
 
 
@@ -55,7 +59,7 @@ alphabet.forEach((d)=>{
 })
 
 // initialState.lettres = lettres; 
-initialState.galleryItems = galleryData;
+initialState.galleryItems.data = galleryData;
 initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
@@ -73,13 +77,32 @@ initialState.colorPalette.lines = strokesPalette;
 
   const rootReducer = (state = initialState, action) => {
     // console.log(action.type)
-    // console.log(JSON.stringify(state.groupLines));
+    
+
+    // var placeHolder = JSON.parse(JSON.stringify(state.groupLines)).forEach((d, i)=> { 
+    //   d.id = guid();
+    //   d.model.id = guid();
+    //   d.model.child = null;
+    //   d.model.placeHolder.forEach((f)=>{f.lines.forEach((l)=> l.id = guid()) })
+    //   console.log('=========================', i); 
+    //   console.log(JSON.stringify(d.model)) 
+    // })
+    // console.log(JSON.stringify(placeHolder));
     // console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
       
       case 'SET_GRID':
         state.grid = action.data.data;
         return state;
+
+        case 'CLOSE_GALLERY':
+          // console.log(action.data.isOpen)
+          state = update(state, {  
+            galleryItems: {
+              isOpen : {$set: action.data.isOpen}
+            }
+          })
+          return state;
 
       case 'ADD_TAG_CANVAS':return {  ...state, tagsInterface: [ ...state.tagsInterface, action.data] };
         

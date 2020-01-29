@@ -518,6 +518,7 @@ class Group extends Component {
            
             this.getBoundinxBoxEveryone().then(()=> {
                 if (this.props.group.lines.length > 0) this.computePosition();
+                // console.log('UPDATED')
             })
         }
         else if (this.props.groupHolded != prevProps.groupHolded){
@@ -778,6 +779,7 @@ class Group extends Component {
                     {/* : null } */}
                     {(this.props.group.swipe) ?
                  <Guide 
+                        // group = {this.props.group}
                         stroke={this.props.group.model} 
                         colorStroke = {this.props.colorStroke}
                         sizeStroke = {this.props.sizeStroke}

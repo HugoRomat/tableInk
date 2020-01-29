@@ -38,7 +38,8 @@ import {
     tapGroup,
     swipeGroup,
     moveSketchLines,
-    changeStrokesProperties
+    changeStrokesProperties,
+    closeGallery
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -75,7 +76,8 @@ const mapDispatchToProps = {
     tapGroup,
     swipeGroup,
     moveSketchLines,
-    changeStrokesProperties
+    changeStrokesProperties,
+    closeGallery
 };
 
 
@@ -175,6 +177,9 @@ class Document extends Component {
         this.listenHammer();
         // this.listenHammerRectangle();
         this.listenEvents();
+
+        d3.select('#abcd').style('top', (window.innerHeight-100) + 'px')
+        
         // d3.select('#canvasVisualization').style('width', '100%').style('height', '100%');
         // d3.select('#eventReceiver').style('width', '100%').style('height', '100%');
         // var zoom = d3.zoom().on("zoom", function () {
@@ -618,6 +623,8 @@ class Document extends Component {
                         that.props.swipeGroup({'id': d.id, 'swipe': false});
                         that.props.tapGroup({'id': d.id, 'tap': false})
                     })
+
+                    that.props.closeGallery({'isOpen': false})
                     
                     
 
@@ -2444,14 +2451,15 @@ class Document extends Component {
     }
     setGuideTapped = (d) => {
 
-        // console.log('tap', d)
+        console.log('tap', d)
         // console.log(this.linesInselection)
         // this.guideTapped = d;
 
         if (d != false){
-            var group = this.props.groupLines.find(x => x.id == d);
-            this.setState({'guideTapped': group.model})
-            // console.log(group)
+            // var group = this.props.groupLines.find(x => x.id == d);
+            // this.setState({'guideTapped': group.model})
+            this.setState({'guideTapped': d})
+            // console.log(group.model)
         } else {
             this.setState({'guideTapped': d})
         }
@@ -2579,7 +2587,9 @@ class Document extends Component {
                     {/* <rect id='swipeLayer'  x={0} y={0} fill='red' opacity='0' /> */}
                  
                    
-                    <GalleryItmes openGalleryModel={this.state.openGalleryModel} /> 
+                    <GalleryItmes 
+                        setGuideTapped={this.setGuideTapped}
+                    /> 
                    
 
                     {/* <rect id='swipeLayer'  x={0} y={0} fill='red' opacity='0' /> */}

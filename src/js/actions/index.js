@@ -57,6 +57,12 @@ export const tapGroup = data => ({
     data
 })
 
+export const closeGallery = data => ({
+    type: 'CLOSE_GALLERY',
+    data
+})
+
+
 export const moveSketchLines = data => ({
     type: 'MOVE_SKETCH_LINES',
     data

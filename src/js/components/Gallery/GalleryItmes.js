@@ -4,13 +4,15 @@ import { connect } from 'react-redux';
 import Items from './Items';
 
 import { 
-    addGuideToSticky
+    addGuideToSticky,
+    closeGallery
   } from '../../actions';
 import { guid } from "../Helper";
 import Guide from "../Guides/Guide";
 
 const mapDispatchToProps = { 
-    addGuideToSticky
+    addGuideToSticky,
+    closeGallery
 };
 const mapStateToProps = (state, ownProps) => {  
     return { 
@@ -27,18 +29,52 @@ class GalleryItmes extends Component {
         } 
     }
     componentDidMount(){
-        // d3.select('#canvasGallery').attr("viewBox", "0,0,2000,900")
-        // .style('width', '2000px') 
-        // .style('height', '900px')
-            
-        // .attr('preserveAspectRatio', 'xMinYMin');
+        var that = this;
+        d3.select('#menuOpener').attr('isOpen', 'false')
+        var el = document.getElementById('menuOpener');
+        console.log(el)
+        this.mc = new Hammer.Manager(el);
 
-        // console.log('HELLO');
+        var tap = new Hammer.Tap();
 
 
-        
+        // this.mc.add(pan);
+        this.mc.add(tap);
 
+        // console.log('HEY')
+        this.mc.on("tap", function(ev) {
+        // console.log('TAP')
+            if (ev.pointers[0].pointerType == 'touch' || ev.pointers[0].pointerType == 'pen'){
+                var isOpne = d3.select('#menuOpener').attr('isOpen')
+                if (isOpne == 'false'){
+                    // console.log('GO')
+                    that.props.closeGallery({isOpen: true})
+                    d3.select('#menuOpener').attr('isOpen', 'true');
+                } else{
+                    that.props.closeGallery({isOpen: false})
+                    d3.select('#menuOpener').attr('isOpen', 'false')
+                }
+            }
+        })
     } 
+    componentDidUpdate(prevProps, prevState){
+        if (this.props.galleryItems.isOpen != prevProps.galleryItems.isOpen){
+            if (this.props.galleryItems.isOpen){
+                this.open();
+            }
+            else {
+                this.close();
+            }
+        }
+    }
+    open(){
+        
+        d3.select('#menuOpener').transition().duration(1500).attr('r', '1000')
+    }
+    close(){
+        
+        d3.select('#menuOpener').transition().duration(1500).attr('r', '150')
+    }
     dragItem = (d) => {
         this.isItemDragged = d;
     }
@@ -65,45 +101,62 @@ class GalleryItmes extends Component {
     render() {
 
         // console.log(this.props.galleryItems)
+
+        var widthShouldHave = 100;
+
+
         // ORDER GALLERY ITEMS
         var offsetRight = 400;
-        var offset = 200;
-        var amountInLine = (window.innerWidth)/offset;
+        var offset = 700;
+        var amountInLine = 6//(window.innerWidth)/offset;
         var ceilAmount = Math.floor(amountInLine) - 2
-        // console.log(ceilAmount, amountInLine)
-        var items = JSON.parse(JSON.stringify(this.props.galleryItems));
-        // console.log(amountLine)
+        // // console.log(ceilAmount, amountInLine)
+        var items = JSON.parse(JSON.stringify(this.props.galleryItems.data));
+        // // console.log(amountLine)
        
         items.forEach((element, i) => {
-           
-            element.position[0] = ((i%ceilAmount) * offset) + offsetRight;
-            element.position[1] = (Math.floor(i/ceilAmount) * offset) + 70;
+
+            var elementOuterBG = element.placeHolder[0];
+            // console.log(elementOuterBG['x'])
+            // element.position[0] = ((i%ceilAmount) * offset) + offsetRight ;
+            // element.position[1] = (Math.floor(i/ceilAmount) * offset) + 70 ;
+            element.position[0] = - elementOuterBG['x'] + ((i%ceilAmount) * offset) + offsetRight;
+            element.position[1] =  - elementOuterBG['y'] + (Math.floor(i/ceilAmount) * offset) + 70
+            
+            // console.log()
+            element.scale = widthShouldHave / elementOuterBG.width//0.7;
 
             // console.log((i%ceilAmount), element.position[1])
         });
 
 
+        var listItems = null;
 
-        var listItems = items.map((d, i) => {
-            return <Guide 
-                    key={i} 
-                    stroke={d}
-                    isGallery={true}
+        if (this.props.galleryItems.isOpen){
+            listItems = items.map((d, i) => {
+                return <g key={i}  transform={`translate(0,`+(window.innerHeight - 600)+`)scale(`+d.scale+`)`}>
+                    <Guide 
+                        key={i} 
+                        stroke={d}
+                        // isGallery={true}
+    
+                        // holdGuide={this.props.holdGuide}
+                        dragItem={this.props.dragItem}
+                        setGuideTapped={this.props.setGuideTapped}
+                        addGuideToSticky={this.addGuideToSticky}
+    
+                        // colorStroke = {this.props.colorStroke}
+                        // sizeStroke = {this.props.sizeStroke}
+                /></g>
+            });
+        }
+            
 
-                    holdGuide={this.props.holdGuide}
-                    dragItem={this.props.dragItem}
-                    setGuideTapped={this.setGuideTapped}
-                    addGuideToSticky={this.addGuideToSticky}
-
-                    colorStroke = {this.props.colorStroke}
-                    sizeStroke = {this.props.sizeStroke}
-            />
-        });
-
-        if (this.props.openGalleryModel == false) listItems = []
+        // if (this.props.openGalleryModel == false) listItems = []
         
         return (     
             <g className="galleryItems"  transform={`translate(0,0)`}>
+                <circle id="menuOpener" cx={0} cy={window.innerHeight} r={150} fill={'#b3c6e0'} />
                     {listItems}  
             </g>
         );

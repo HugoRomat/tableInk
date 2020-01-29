@@ -50,6 +50,7 @@ class Background extends Component {
                 // console.log(this.props.placeholders)
                 this.BBox = d;
                 this.addPlaceHolder();
+                // console.log('UPDATE')
             })
             
         }
@@ -173,8 +174,8 @@ class Background extends Component {
                         // console.log(BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width, d.BBox.x, d.BBox.x + d.BBox.width)
                         // var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
                         // var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
-                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x, d.x + d.width]);
-                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y , d.y + d.height]);
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x - transform.translateX, d.x + d.width  - transform.translateX]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y  - transform.translateY, d.y + d.height  - transform.translateY]);
 
                         var points =  myLine.data.map((e)=> {
                             return [myScaleX(e[0] ) , myScaleY(e[1]) ]

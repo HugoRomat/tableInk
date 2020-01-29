@@ -102,12 +102,25 @@ class Tag extends Component {
                 if (that.down){
                     // console.log(that.down)
                     if (that.props.holdTag != undefined) that.findIntersection(that.allBoundingBox, ev);
-                    that.dragged(ev);
+                    if (!$('#item-'+that.props.stroke.id).hasClass( "saveRight" )) that.dragged(ev);
 
-                    if ( $('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
+                    var absolutePosition = [ev.srcEvent.x, ev.srcEvent.y]
+
+                    if (absolutePosition[0] < 30 && !$('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
+                        var transform =  getTransformation(d3.select('#panItems').attr('transform'));
+                        var X = absolutePosition[0] - transform.translateX;
+                        var Y = absolutePosition[1] - transform.translateY;
+                        $('#item-'+that.props.stroke.id).addClass( "saveRight" );
+                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
+
+                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip')
+                            .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
+                    }
+                    // console.log(absolutePosition)
+                    /* if ( $('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
                         $('#item-'+that.props.stroke.id).removeClass( "saveRight" );
                         d3.select('#item-'+that.props.stroke.id).select('.imgClip').remove()
-                    }
+                    } */
                 }
             }
         })
@@ -165,7 +178,7 @@ class Tag extends Component {
                 //         data.offsetX = d.x - e.x;
                 //         data.offsetY = d.y - e.y;
                 //         data.BB = d;
-                        if (that.props.holdTag != undefined) that.props.holdTag(that.props.stroke); 
+                if (that.props.holdTag != undefined) that.props.holdTag(that.props.stroke); 
                 //     })
                 // })
                 

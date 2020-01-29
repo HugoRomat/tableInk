@@ -113,14 +113,15 @@ class Guide extends Component {
             // clearTimeout(that.timerPress);
             if (event.changedPointers[0].pointerType == 'touch'){
                 // console.log(that.props.guideTapped)
-                if (that.props.guideTapped == false){
-                    that.props.setGuideTapped(that.props.stroke.child);
+                if (that.props.guideTapped == false || that.props.guideTapped == undefined){
+                    that.props.setGuideTapped(that.props.stroke);
                     that.colorForHolding(true);
                     setTimeout(function(){
                         that.props.setGuideTapped(false);
                         that.colorForHolding(false);
                     }, 2000)
                 } else {
+                    // console.log(that.props.guideTapped)
                     var newGuide = JSON.parse(JSON.stringify(that.props.guideTapped))
                     var actualGuide = JSON.parse(JSON.stringify(that.props.stroke))
 
@@ -147,7 +148,9 @@ class Guide extends Component {
                         'x': actualGuide.placeHolder[2]['x'],
                         'y': actualGuide.placeHolder[2]['y']
                     }
-                    console.log(that.props.guideTapped, actualGuide)
+                    newGuide.position = [0,0]
+                    delete newGuide.scale;
+                    // console.log(newGuide)
                     that.props.updatePlaceHolderGroup({'idGroup': that.props.stroke.child, 'model':newGuide})
                 }
                 
@@ -267,12 +270,21 @@ class Guide extends Component {
         
         if (isIt == true){
             var getData = d3.select('#group-'+ that.props.stroke.child).select('#rect-outerBackground');
-            // console.log(getData)
-            d3.select('#rect-'+that.props.stroke.id)
-                .attr('x', getData.attr('x'))
-                .attr('y', getData.attr('y'))
-                .attr('width', getData.attr('width'))
-                .attr('height',  getData.attr('height'))
+            // console.log('rect-'+that.props.stroke.id)
+
+            // console.log(that.props.stroke.placeHolder[0])
+            // d3.select('#rect-'+that.props.stroke.id)
+            //     .attr('x', getData.attr('x'))
+            //     .attr('y', getData.attr('y'))
+            //     .attr('width', getData.attr('width'))
+            //     .attr('height',  getData.attr('height'))
+            //     .attr('opacity', '0.2')
+
+                d3.select('#rect-'+that.props.stroke.id)
+                .attr('x', that.props.stroke.placeHolder[0]['x'])
+                .attr('y', that.props.stroke.placeHolder[0]['y'])
+                .attr('width', that.props.stroke.placeHolder[0]['width'])
+                .attr('height', that.props.stroke.placeHolder[0]['height'])
                 .attr('opacity', '0.2')
         }
     }
@@ -311,10 +323,11 @@ class Guide extends Component {
     }
     render() {
 
-        // console.log(this.props.stroke.placeHolder)
+        // console.log('update', this.props.stroke.placeHolder[0])
         // var BB = calculateBB(this.props.stroke.points);
-
-
+        var scale = 1;
+        if (this.props.stroke.position[2] != undefined) scale = this.props.stroke.position[2]
+  
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
                 return <PlaceHolder 
                     key={i}
@@ -339,7 +352,7 @@ class Guide extends Component {
         // console.log(this.props.stroke)
 
         return (
-            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(1)`}>
+            <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(${scale})`}>
                 <rect id={'rect-'+this.props.stroke.id} />
                 {/* <path id={this.props.stroke.id}></path> */}
                 {listPlaceHolder}

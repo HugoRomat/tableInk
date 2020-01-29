@@ -596,10 +596,12 @@ class ColorsMenu extends Component {
                     <div id="alphabetButton" > 
                             <img src={alphabet} />
                     </div>
-                    
-                    
                </div>
-              
+
+               {/* <div id="gallery" className="buttonMenu"> 
+                    <div id="circle" />
+               </div>
+               */}
 
 
                <div id="pens" > 

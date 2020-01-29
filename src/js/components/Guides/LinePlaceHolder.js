@@ -89,14 +89,9 @@ class LinePlaceHolder extends Component {
                 .attr('stroke-linejoin', "round")
         }
     }
-    // componentDidUpdate(){
-    //     var that = this;
-    //     d3.select('#stroke-'+that.props.stroke.id)
-    //         .attr("d", line(that.props.stroke.data))
-    //         .attr('stroke', that.props.stroke.colorStroke)
-    //         .attr('stroke-width', that.props.stroke.sizeStroke)
-    //         .attr('fill', 'none') 
-    // }
+    componentDidUpdate(){
+        if (this.props.stroke.BBoxPlaceHolder != undefined) this.drawLines()
+    }
     amountDragged = (d) => {
         this.props.moveTag({'idPlaceHolder': this.props.placeHolder.id, 'id':this.props.stroke.id, 'event': d});
     }
