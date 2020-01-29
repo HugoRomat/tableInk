@@ -94,14 +94,14 @@ class Guide extends Component {
         pan.recognizeWith(press);
         this.mc.on("press", function(event){
             if (event.pointers[0].pointerType == 'touch'){
-                that.props.dragItem(false);
+                // that.props.dragItem(false);
                 that.colorForHolding(true);
                 that.props.holdGuide(that.props.stroke.id);
             }
         })
         this.mc.on("pressup", function(event){
             if (event.pointers[0].pointerType == 'touch'){
-                that.props.dragItem(false);
+                // that.props.dragItem(false);
                 that.colorForHolding(false);
                 that.props.holdGuide(false);
             }
@@ -270,18 +270,22 @@ class Guide extends Component {
         
     }
     moveTag = (d) => {
+        var placeHolder = this.props.stroke.placeHolder.find(x => x.id == d.idPlaceHolder);
+
+        var line = placeHolder['lines'].find(x => x.id == d.id);
+        // console.log(line)
         // var group = this.props.groupLines.find(x => x.id == this.props.stroke.child);
         // var position = group.placeHolder[1]['lines'][0]['tag']['position']
-        var position = this.props.stroke.placeHolder[1]['lines'][0]['tag']['position']
-        position[0] += d.x; 
-        position[1] += d.y;
+        var position = line['tag']['position']
+        position[0] += d.event.x; 
+        position[1] += d.event.y;
         this.props.updatePlaceHolderGroup({'idGroup': this.props.stroke.child, 'model':JSON.parse(JSON.stringify(this.props.stroke))})
-       console.log(this.props.stroke)
+    //    console.log(this.props.stroke)
     }
     render() {
 
         // console.log(this.props.stroke.placeHolder)
-        var BB = calculateBB(this.props.stroke.points);
+        // var BB = calculateBB(this.props.stroke.points);
 
 
         const listPlaceHolder = this.props.stroke.placeHolder.map((d, i) => {
@@ -289,7 +293,7 @@ class Guide extends Component {
                     key={i}
                     data={d}
                     parent={this.props.stroke}
-                    BBoxParent={BB}
+                    // BBoxParent={BB}
                     lines={d['lines']}
                     addLine={this.addLine}
                     // shouldExpand={this.state.shouldExpand}

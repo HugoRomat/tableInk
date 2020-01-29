@@ -512,7 +512,7 @@ class ColorsMenu extends Component {
         var data = {
             'id': guid(),
             'width': 100,
-            'height': 100,
+            'height': 200,
             'placeHolder': [
                 {'id':'left', 'data': {}, 'lines':arrayStrokes}
             ],
@@ -521,30 +521,6 @@ class ColorsMenu extends Component {
             
         }
         this.props.addTag(data)
-
-        // var master = {
-        //     'id': id,
-        //     'width': 100,
-        //     'height': 100,
-        //     'placeHolder': [
-        //         {'id':'left', 'data': {}, 'lines':arrayStrokes}
-        //     ],
-        //     'tagSnapped': [],
-        //     'position': [0,0]
-            
-        // }
-        // // console.log(master)
-
-        // var that = this;
-        // var data = {
-        //     'id': guid(),
-        //     'data':  firstPoint,
-        //     'tagHold': master,
-        //     'isPattern': false
-        // }
-        // // console.log(data)
-        // this.props.addTagCanvas(data);
-        // console.log(data)
     }
     drawTempStrokeTag(){
         var that = this;

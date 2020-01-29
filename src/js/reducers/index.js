@@ -59,7 +59,7 @@ initialState.galleryItems = galleryData;
 initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-// initialState.groupLines = group
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 initialState.voiceQueries = voice;
@@ -153,6 +153,23 @@ initialState.colorPalette.lines = strokesPalette;
         return state;
 
 
+        case 'UPDATE_WIDTH_HEIGHT_TAG':
+
+          var id = action.data.idTag;
+          var index = state.tags.indexOf(state.tags.find(x => x.id == id));
+          if (index > -1){
+            // console.log(state.tags[index])
+            state = update(state, { 
+              tags: {
+                [index] : {
+                  width:  {$set: action.data.width},
+                  height:  {$set: action.data.height}
+                }
+              }
+            })
+          }
+          return state;
+
         case 'REMOVE_TAG':
           var index = state.tags.indexOf(state.tags.find(x => x.id == action.data))
           if (index > -1){
@@ -164,6 +181,32 @@ initialState.colorPalette.lines = strokesPalette;
           // console.log(JSON.parse(JSON.stringify(state.tags)))
           return state;
         
+
+        case 'REMOVE_TAG_LINE':
+          var idTag = action.data.idTag;
+          var idLine = action.data.idLine
+          var index = state.tags.indexOf(state.tags.find(x => x.id == idTag))
+          if (index > -1){
+    
+              var indexLine = state.tags[index]['placeHolder'][0]['lines'].indexOf(state.tags[index]['placeHolder'][0]['lines'].find(x => x.id == idLine))
+              console.log(indexLine)
+              if (indexLine > -1){
+                state = update(state, { 
+                  tags: {
+                    [index] : {
+                      placeHolder: {
+                        [0]: { 
+                          lines: {$splice: [[indexLine, 1]]}
+                        }
+                      }
+                      
+                    }
+                  }
+                })
+              }
+            }
+
+
         case 'ADD_LINE_TO_STICKY_TAG':
             var id = action.data.idTag;
             var where = action.data.where;
@@ -467,6 +510,24 @@ initialState.colorPalette.lines = strokesPalette;
           })
           return state;
 
+
+          case 'CHANGE_STROKE_PROPERTIES':
+
+              var id = action.data.id;
+              var index = state.sketchLines.indexOf(state.sketchLines.find(x => x.id == id))
+              console.log(state.sketchLines[index])
+                if (index > -1){
+                  // console.log(position)
+                  state = update(state, { 
+                    sketchLines: {
+                      [index] : {$set: action.data.data},
+                      
+                    }
+                  })
+                }
+              
+              return state;
+          
       case 'UPDATE_GROUP_POSITION':
         
           var id = action.data.id;

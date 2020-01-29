@@ -132,6 +132,13 @@ class Line extends Component {
             .attr('stroke-opacity', '0')
         
         d3.select('#item-'+that.props.stroke.id).attr('class', that.props.stroke.data.class.join(" "))
+
+        if (this.props.stroke.pattern != undefined){
+            this.drawPattern();
+        }
+        if (this.props.stroke.stretch != undefined){
+            this.drawStretch();
+        }
     }
     componentWillUnmount(){
         // console.log("BYE BYEs")

@@ -37,7 +37,8 @@ import {
     addImage,
     tapGroup,
     swipeGroup,
-    moveSketchLines
+    moveSketchLines,
+    changeStrokesProperties
 } from '../actions';
 import Guides from "./Guides/Guides";
 
@@ -73,7 +74,8 @@ const mapDispatchToProps = {
     addImage,
     tapGroup,
     swipeGroup,
-    moveSketchLines
+    moveSketchLines,
+    changeStrokesProperties
 };
 
 
@@ -158,6 +160,7 @@ class Document extends Component {
 
         this.positionTag = [];
         this.lastStepTagPattern = 0;
+        this.colorPaletteTapped = false;
         // this.shouldOpenAlphabet = false;
         // console.log(CalcOmbb)
     }
@@ -511,7 +514,7 @@ class Document extends Component {
                 var x = ev.pointers[0]['x'];
                 var y = ev.pointers[0]['y'];
                 checkIfSomething(x, y).then((element)=>{
-                    console.log(element)
+                    // console.log(element)
                     if (element != null){
                         var type = element.split('-')[0];
                     }
@@ -579,6 +582,26 @@ class Document extends Component {
             }
         })
         this.mc.on("tap", function(ev) {
+            if (ev.pointers[0]['pointerType'] == 'pen' ){
+                that.props.removeSketchLines([that.idLine]);
+                var x = ev.pointers[0]['x'];
+                var y = ev.pointers[0]['y'];
+                var element = whereIsPointer(x, y)
+                var id = element.id;
+                var line = that.props.sketchLines.find((d)=> d.id == id)
+                    
+                if (id != null && line != undefined){
+                    var myLine = JSON.parse(JSON.stringify(line));
+                    var data = JSON.parse(JSON.stringify(that.colorPaletteTapped));
+                    if (data.stretch != undefined) myLine.stretch = data.stretch;
+                    if (data.pattern != undefined) myLine.pattern = data.pattern;
+                    myLine.data = data.data;
+                    that.props.changeStrokesProperties({
+                        'id': id,
+                        'data': myLine
+                    }) 
+                }
+            }
             if (ev.pointers[0]['pointerType'] == 'touch' ){
                 // console.log('TAP')
                 var x = ev.pointers[0]['x'];
@@ -1041,7 +1064,8 @@ class Document extends Component {
             }*/
             else if (that.straightLine != false){
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
-                that.makingGroup([], 'initial', strokeGuide);
+
+                //that.makingGroup([], 'initial', strokeGuide);
             }
             else if (that.isFunctionPen){
                 var transform = getTransformation(d3.select('#panItems').attr('transform'))
@@ -1114,8 +1138,7 @@ class Document extends Component {
                             that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
     
                                 
-                                // console.log(elementLines)
-                                that.makingGroup(elementLines, 'initial', strokeGuide);
+                               that.makingGroup(elementLines, 'initial', strokeGuide);
                             })
                         })
                     }
@@ -1126,10 +1149,13 @@ class Document extends Component {
                 } 
                 // Or a stroke
                 else {
+                    // console.log('ADD')
                     that.idLine = guid();
-                    that.addStroke();
-                    that.isNewLine();
-                    that.isSameLine();
+                    // if (that.tempArrayStroke.length > 15){
+                        that.addStroke();
+                        that.isNewLine();
+                        that.isSameLine();
+                    // }
                 }
 
 
@@ -1271,6 +1297,8 @@ class Document extends Component {
             'stroke': {'points':arrayPoints, 'position': [firstPoint[0],firstPoint[1]]}
         };
         this.props.createGroupLines(group);
+
+        this.props.tapGroup({'id': idChild, 'tap':true})
         // this.props.removeSketchLines();
 
     }
@@ -2366,6 +2394,10 @@ class Document extends Component {
 
         console.log(data)
     }
+    setColorPaletteTapped = (d) => {
+        // console.log(d)
+        this.colorPaletteTapped = d;
+    }
     setGuideTapped = (d) => {
 
         // console.log('tap', d)
@@ -2486,8 +2518,13 @@ class Document extends Component {
                         isHoldingCanvas = {this.state.isHoldingCanvas}
                         colorStroke = {this.state.colorStroke}
                         sizeStroke = {this.state.sizeStroke}
+                        stretchPen = {this.stretchPen}
+                        patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
+                        penType = {this.state.penType}
+                        selectPen = {this.selectPen}
 
                         selectColorSize = {this.selectColorSize}
+                        setColorPaletteTapped = {this.setColorPaletteTapped}
                     />
                     
                  

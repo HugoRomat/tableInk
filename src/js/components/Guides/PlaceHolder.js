@@ -30,7 +30,7 @@ class PlaceHolder extends Component {
         var swipe = new Hammer.Swipe({threshold: 0, pointers: 1,velocity: 0.1});
 
         // this.mc.add(pan);
-        this.mc.add(swipe);
+        // this.mc.add(swipe);
 
         // pan.requireFailure(swipe);
         this.mc.on("swipe", function(ev) {
@@ -150,7 +150,7 @@ class PlaceHolder extends Component {
     }
     pointerUp(event){
         var that = this;
-        console.log('GOOO', this.isTag) ;
+        // console.log('GOOO', this.props, this.isTag) ;
 
         if (this.isTag){
 
@@ -176,7 +176,9 @@ class PlaceHolder extends Component {
                     'data': that.tempArrayStroke,
                     'colorStroke': that.props.colorStroke,
                     'sizeStroke': that.props.sizeStroke,
-                    'tag': dataNewTag
+                    'tag': dataNewTag,
+                    'type': 'tag',
+                    'BBoxPlaceHolder': {'width': this.props.data.width, 'height': this.props.data.height, 'x': this.props.data.x, 'y': this.props.data.y}
                     // 'position': [firstPoint[0],firstPoint[1]]
                 }]
             }
@@ -195,7 +197,8 @@ class PlaceHolder extends Component {
                     'data': that.tempArrayStroke,
                     'colorStroke': that.props.colorStroke,
                     'sizeStroke': that.props.sizeStroke,
-                    'type': 'normal'
+                    'type': 'normal',
+                    'BBoxPlaceHolder': {'width': this.props.data.width, 'height': this.props.data.height, 'x': this.props.data.x, 'y': this.props.data.y}
                     // 'position': [firstPoint[0],firstPoint[1]]
                 }]
             }
@@ -214,7 +217,8 @@ class PlaceHolder extends Component {
                     'colorStroke': that.props.colorStroke,
                     'sizeStroke': that.props.sizeStroke,
                     'type': 'pattern',
-                    'pattern': that.props.patternPenData
+                    'pattern': that.props.patternPenData,
+                    'BBoxPlaceHolder': {'width': this.props.data.width, 'height': this.props.data.height, 'x': this.props.data.x, 'y': this.props.data.y}
                     // 'position': [firstPoint[0],firstPoint[1]]
                 }]
             }
@@ -381,6 +385,7 @@ class PlaceHolder extends Component {
         
         const listItems = this.props.lines.map((d, i) => {
             return <LinePlaceHolder 
+                placeHolder={this.props.data}
                 key={i} 
                 stroke={d}
                 colorStroke = {this.props.colorStroke}

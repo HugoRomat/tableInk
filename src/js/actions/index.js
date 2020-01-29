@@ -75,6 +75,20 @@ export const updatePlaceHolderGroup = data => ({
     data
 })
 
+export const changeStrokesProperties = data => ({
+    type: 'CHANGE_STROKE_PROPERTIES',
+    data
+})
+
+export const updateWidthHeightTag = data => ({
+    type: 'UPDATE_WIDTH_HEIGHT_TAG',
+    data
+})
+export const removeTagLine = data => ({
+    type: 'REMOVE_TAG_LINE',
+    data
+})
+
 // export const moveStrokes = data => ({
 //     type: 'MOVE_STROKES',
 //     data

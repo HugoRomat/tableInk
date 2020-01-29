@@ -853,20 +853,37 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
     var isItAGroup = allGroups.find(group => group.id == id)
     var arrayLineAttached = (isItAGroup) ? isItAGroup.lines.join().split(',') : []
     // console.log(offsetY, offsetX)
-    var BBid = [];
+    var BBidID = [];
     // var arrayLineAttached = this.props.group.lines.join().split(',')
     // console.log(arrayLineAttached)
     /** Push all the lines */
     d3.select('.standAloneLines').selectAll('.parentLine').each(function(){
         var idSImple = d3.select(this).attr('id').split('-')[1]
         // console.log(d3.select(this).attr('id'))
-        if (arrayLineAttached.indexOf(idSImple) == -1 && idSImple != id) BBid.push(d3.select(this).attr('id'))
+        if (arrayLineAttached.indexOf(idSImple) == -1 && idSImple != id) BBidID.push(d3.select(this).attr('id'))
     })
      /** Push all the groups */
-    d3.selectAll('.groupPath').each(function(){
-        var idSImple = d3.select(this).attr('id').split('-')[1]
-        if (idSImple != id) BBid.push('group-'+idSImple)
-    })
+    // d3.selectAll('.groupPath').each(function(){
+    //     var idSImple = d3.select(this).attr('id').split('-')[1]
+    //     if (idSImple != id) BBidID.push('group-'+idSImple)
+    // })
+
+    var BBid = []
+    for (var i =0; i < BBidID.length; i ++){
+        var BB = await _getBBoxPromise(BBidID[i]);
+        // BB.x -= 40;
+        // BB.y -= 40;
+        // BB.width += 50;
+        // BB.height += 50;
+
+        var dist = distance(BBTemp.x, BB.x, BBTemp.y + (BBTemp.height/2), BB.y+ (BB.height/2))
+        // console.log(dist)
+        if (dist < 300){
+            // showBboxBB(BB, 'red');
+            BBid.push({'id': BBidID[i], 'BB': BB});
+        }
+        
+    }
     // console.log(BBid)
     findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups)
 }
@@ -878,19 +895,10 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
     // console.log(BBid)
     // Check for all these lines
     for (var i in BBid){
-        var id = BBid[i];
+        var id = BBid[i]['id'];
+        var BB = BBid[i]['BB']
         var idSImple = id.split('-')[1];
         var type = id.split('-')[0]
-        // if (type == 'item') var BB = await _getBBoxPromise(BBid[i]);
-        /** Make it bigger if it's a group */
-        // if (type == 'group') {
-            // console.log(BBid[i])
-            var BB = await _getBBoxPromise(BBid[i]);
-            BB.x -= 40;
-            BB.y -= 40;
-            BB.width += 50;
-            BB.height += 50;
-        // }
         // showBboxBB(BBTemp, 'red');
         // showBboxBB(BB, 'blue');
         var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
@@ -900,7 +908,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
             var insideandWhichGroup = allGroups.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
             // console.log(insideandWhichGroup)
             var isItAGroup = allGroups.find(group => group.id == idSImple)//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
-            // console.log()
+            // console.log(isItAGroup, insideandWhichGroup)
             // if not attached to a group
 
             /** It's a group que je tappe */
@@ -928,13 +936,13 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                         var arraywihoutItem = arrayLineAttached.map((k)=>'item-'+k)
                         var newBB = JSON.parse(JSON.stringify(BBid))
                         for (var i = arraywihoutItem.length - 1; i >= 0; i--) {
-                            var index = BBid.indexOf(BBid.find(x => x == arraywihoutItem[i]));
+                            var index = BBid.indexOf(BBid.find(x => x.id == arraywihoutItem[i]));
                             newBB.splice(index,1)
                         }
                     } else var newBB = JSON.parse(JSON.stringify(BBid))
-                    var index = newBB.indexOf(newBB.find(x => x == id));
+                    var index = newBB.indexOf(newBB.find(x => x.id == id));
                     newBB.splice(index,1)
-                    findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                    // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
                 
             }
             /** Not stroke inside a group */
@@ -955,7 +963,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                     // console.log(offsetX, offsetY)
                     d3.select('#'+ id).attr('transform', 'translate('+X+','+Y+')')
 
-                    var index = BBid.indexOf(BBid.find(x => x == id));
+                    var index = BBid.indexOf(BBid.find(x => x.id == id));
                     // console.log(index)
                     var newBB = JSON.parse(JSON.stringify(BBid))
                     newBB.splice(index,1)
@@ -984,14 +992,14 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                 var arraywihoutItem = arrayLineAttached.map((k)=>'item-'+k)
                 var newBB = JSON.parse(JSON.stringify(BBid))
                 for (var i = arraywihoutItem.length - 1; i >= 0; i--) {
-                    var index = BBid.indexOf(BBid.find(x => x == arraywihoutItem[i]));
+                    var index = BBid.indexOf(BBid.find(x => x.id == arraywihoutItem[i]));
                     // console.log(index)
                     newBB.splice(index,1)
                 }
                 /** REMOVING THE GROUP */
-                var index = newBB.indexOf(newBB.find(x => x == 'group-'+insideandWhichGroup.id));
+                var index = newBB.indexOf(newBB.find(x => x.id == 'group-'+insideandWhichGroup.id));
                 newBB.splice(index,1)
-                findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
             }
         }
     }

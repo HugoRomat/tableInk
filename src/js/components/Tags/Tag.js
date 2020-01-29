@@ -12,7 +12,9 @@ import {
     addLineToTagGroup,
     addTagSnapped,
     removeTag,
-    addTagToGuide
+    addTagToGuide,
+    updateWidthHeightTag,
+    removeTagLine
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
@@ -23,7 +25,9 @@ const mapDispatchToProps = {
     addLineToTagGroup,
     addTagSnapped,
     removeTag,
-    addTagToGuide
+    addTagToGuide,
+    updateWidthHeightTag,
+    removeTagLine
 };
 const mapStateToProps = (state, ownProps) => {  
   
@@ -113,37 +117,37 @@ class Tag extends Component {
                 that.down = false;
             }
         })
-        this.mc.on("swipe", function(ev) {
-            if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                    console.log('SWIPE')
-                    if ( !$('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
+        // this.mc.on("swipe", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
+        //             console.log('SWIPE')
+        //             if ( !$('#item-'+that.props.stroke.id).hasClass( "saveRight" )){
                         
 
-                        var X = 0;
-                        var Y = 300
-                        var where =  d3.selectAll('.saveRight');
-                        console.log(where.size())
-                        // if (where.empty()){
+        //                 var X = 0;
+        //                 var Y = 300
+        //                 var where =  d3.selectAll('.saveRight');
+        //                 console.log(where.size())
+        //                 // if (where.empty()){
 
-                        // } else {
-                        //     var transform = getTransformation(where.attr('transform'));
-                            Y = (where.size() * 120) + 300
-                            // console.log(where)
-                        // }
+        //                 // } else {
+        //                 //     var transform = getTransformation(where.attr('transform'));
+        //                     Y = (where.size() * 120) + 300
+        //                     // console.log(where)
+        //                 // }
                         
 
-                        $('#item-'+that.props.stroke.id).addClass( "saveRight" );
-                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
+        //                 $('#item-'+that.props.stroke.id).addClass( "saveRight" );
+        //                 d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
 
-                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip')
-                            .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
+        //                 d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip')
+        //                     .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
 
-                    }
+        //             }
                    
                 
-            }
+        //     }
             
-        });
+        // });
         
 
         this.mc.on('press', function(ev) {
@@ -192,7 +196,7 @@ class Tag extends Component {
                     /* Pour les autres elements */
                     else {
                         var newTag = othersTags[where-1];
-                        // console.log(newTag.placeHolder[0])
+                        // console.log(newTag.placeHolder[0])/
                         that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(newTag.placeHolder[0]))})
                         // console.log(newTag)
                     }
@@ -217,7 +221,7 @@ class Tag extends Component {
         // this.setState({'BBox': BBox})
         this.addBG();
         // this.drawLine()
-    
+            console.log('CREATE TAG', that.props.stroke)
     }
     addBG(){
         var that = this;
@@ -455,17 +459,23 @@ class Tag extends Component {
 
                     colorStroke = {this.props.colorStroke}
                     sizeStroke = {this.props.sizeStroke}
+
+                    updateWidthHeightTag = {this.props.updateWidthHeightTag}
+                    removeTagLine = {this.props.removeTagLine}
                 />
         if (this.state.currentPlaceHolder != null){
                 placeHolder = <PlaceHolder 
-                data={this.state.currentPlaceHolder}
-                parent={this.props.stroke}
-               
-                lines={this.state.currentPlaceHolder.lines}
-                addLine={this.addLine}
+                    data={this.state.currentPlaceHolder}
+                    parent={this.props.stroke}
+                
+                    lines={this.state.currentPlaceHolder.lines}
+                    addLine={this.addLine}
 
-                colorStroke = {this.props.colorStroke}
-                sizeStroke = {this.props.sizeStroke}
+                    colorStroke = {this.props.colorStroke}
+                    sizeStroke = {this.props.sizeStroke}
+
+                    updateWidthHeightTag = {this.props.updateWidthHeightTag}
+                    removeTagLine = {this.props.removeTagLine}
                 />
         }
 
@@ -494,7 +504,7 @@ class Tag extends Component {
                 
                 <path id={this.props.stroke.id}></path>
                 {/* <path id={'fake-'+this.props.stroke.id}></path> */}
-                    {placeHolder}
+                <g>{placeHolder}</g>
                 <rect id={'rect-'+this.props.stroke.id} style={{'pointerEvents': 'none' }}/>
 
                 

@@ -9,7 +9,7 @@ import {
   } from './../../actions';
 import LinePalette from "./LinePalette";
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
-import { _getBBoxPromise, guid, checkIfSomething, drawCircle, distance, getTransformation } from "../Helper";
+import { _getBBoxPromise, guid, checkIfSomething, drawCircle, distance, getTransformation, createPositionAtLengthAngle } from "../Helper";
 // import strokesJSON from './../../usecases/paletteLine.json';
 import paletteSVG from './../../../../static/palette.svg'
 
@@ -37,6 +37,8 @@ class Picker extends Component {
 
         this.offsetX = -250;
         this.offsetY = -130;
+        this.lastStepTagPattern = 0;
+        this.lastStepTagPattern = 0;
     }
     htmlToElement(html) {
         var template = document.createElement('template');
@@ -168,7 +170,19 @@ class Picker extends Component {
                 var X = ev.pointers[0].x - that.startPosition.x - 236;
                 var Y = ev.pointers[0].y - that.startPosition.y - 66;
                 that.tempArrayStroke.push([X, Y]);
-                that.drawTempStroke();
+
+                // console.log(that.penType)
+                if (that.penType == 'pattern'){
+                    that.drawTempStroke();
+                    that.drawPattern(ev);
+                   
+                }
+                else if (that.penType == 'stretch'){
+                    that.drawTempStroke();
+                    that.drawStretch(ev);
+                    
+                }
+                else that.drawTempStroke();
             }
         })
         this.mc.on("panend", function(ev) {
@@ -211,7 +225,7 @@ class Picker extends Component {
             })
 
         this.mc.on("tap", function(ev) {
-            console.log('TAP')
+            // console.log('TAP')
             if (ev.pointers[0]['pointerType'] == 'touch' || ev.pointers[0]['pointerType'] == 'pen'){
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'auto')
                 var element = document.elementFromPoint(ev.pointers[0]['x'], ev.pointers[0]['y']);
@@ -221,7 +235,16 @@ class Picker extends Component {
                     var id = element.id.split('-')[1];
                     var idNormal = 'palette-'+id;
 
-                    // d3.select('#'+ idNormal).selectAll('path').attr('stroke', 'red')
+                    var getStroke = that.props.colorPalette.lines.find(x => x.id == id);
+
+
+                    if (getStroke.pattern != undefined) that.penType = 'pattern';
+                    if (getStroke.stretch != undefined) that.penType = 'stretch';
+                    else that.penType = 'normal';
+
+
+                    that.props.selectPen(that.penType)
+                    that.props.setColorPaletteTapped(getStroke);
                     that.selectItem(idNormal);
                 }
                 d3.select('.linesPalette').selectAll('.fake').style('pointer-events', 'none')
@@ -315,6 +338,10 @@ class Picker extends Component {
     removeTempStroke(){
         var line = d3.line()
         d3.select('#pathPalette').attr("d", line([]))
+       
+    }
+    removeTempGroup(){
+        d3.select('#tempGroupPalette').selectAll('*').remove()
     }
     drawTempStroke(){
         var that = this;
@@ -328,6 +355,79 @@ class Picker extends Component {
             .attr("stroke-dasharray", 'none')
             .attr('stroke-linejoin', "round")
     }
+    drawPattern(event){
+        // console.log('GO')
+        var that = this;
+        var line = d3.line()
+        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+
+        var step = that.props.patternPenData.BBox.width;
+        var path = d3.select('#pathPalette').node()
+        var length = path.getTotalLength();
+        if (length - this.lastStepTagPattern > step){
+            this.lastStepTagPattern = length;
+            for (var i = 0; i < length; i += step){
+                var point = path.getPointAtLength(i);
+
+                this.props.patternPenData.strokes.forEach((d)=>{
+
+                    var X = point['x'] + d.position[0] - transformPan.translateX - that.props.patternPenData.BBox.width/2;
+                    var Y = point['y'] + d.position[1] - transformPan.translateY  - that.props.patternPenData.BBox.height/2;
+                    d3.select('#tempGroupPalette').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
+                        .append('path')
+                        .attr('d', (f)=>  line(d.points))
+                        .attr('fill', 'none')
+                        .attr('stroke', d.data.colorStroke)
+                        .attr('stroke-width', d.data.sizeStroke)
+                        .attr("stroke-dasharray", 'none')
+                        .attr('stroke-linejoin', "round")
+                })
+            }
+        }
+    }
+    drawStretch(){
+        var path = d3.select('#pathPalette').node();
+        var line = d3.line(d3.curveCardinal);
+        var length = path.getTotalLength();
+
+        var dataPoints = this.props.stretchPen[0].points
+        var lengthStretch = dataPoints.length;
+
+        var step = 20
+        var diff = this.props.stretchPen.map((d, i)=>{ 
+            var points = d.points;
+            return distance(this.props.stretchPen[0].points[0][0], points[0][0], this.props.stretchPen[0].points[0][1], points[0][1]);
+        })
+        if (length - this.lastStepTagPattern > step){
+            this.removeTempGroup();
+            this.lastStepTagPattern = length;
+
+            this.props.stretchPen.forEach((d, k)=>{
+                // var dataPoints = this.stretchPen[k].points
+                var allPoints = []
+                var j = 0;
+                for (var i = 0; i < length; i += step){
+                    var point = path.getPointAtLength(i);
+                    var pointBefore = path.getPointAtLength(i-1);
+                    var angle = Math.atan2(point.y-pointBefore.y, point.x-pointBefore.x) //* 180 / Math.PI;
+                    var newPointCos = createPositionAtLengthAngle(point, angle - (Math.PI/2), diff[k])
+                    // drawCircle(newPoint['x'], newPoint['y'], 10, 'red')
+                    var newPoint = [newPointCos['x'], newPointCos['y']];
+                    allPoints.push(newPoint)
+                    // }
+                    j++;
+                }
+                d3.select('#tempGroupPalette').append('g')
+                    .append('path')
+                    .attr('d', (f)=>  line(allPoints))
+                    .attr('fill', 'none')
+                    .attr('stroke', d.data.colorStroke)
+                    .attr('stroke-width', d.data.sizeStroke)
+                    .attr("stroke-dasharray", 'none')
+                    .attr('stroke-linejoin', "round")
+            })
+        }
+    }
     addStroke(){
         if (this.tempArrayStroke.length > 1){
             var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
@@ -337,13 +437,33 @@ class Picker extends Component {
                 d[0] = d[0] - firstPoint[0];
                 d[1] = d[1] - firstPoint[1]
             })
-            // console.log(JSON.stringify(arrayPoints))
-            var data = {
-                'points': arrayPoints, 
-                'data': {'class':[], 'sizeStroke': this.size, 'colorStroke': this.color}, 
-                'id':  id, 
-                'position': [firstPoint[0],firstPoint[1]]
+            console.log(this.penType);
+
+            if (this.penType == 'pattern'){
+                var data = {
+                    'points': arrayPoints, 
+                    'data': {'class':[], 'sizeStroke': this.size, 'colorStroke': this.color}, 
+                    'id':  id, 
+                    'position': [firstPoint[0],firstPoint[1]],
+                    'pattern': this.props.patternPenData
+                }
+            } else if (this.penType == 'stretch'){
+                var data = {
+                    'points': arrayPoints, 
+                    'data': {'class':[], 'sizeStroke': this.size, 'colorStroke': this.color}, 
+                    'id':  id, 
+                    'position': [firstPoint[0],firstPoint[1]],
+                    'stretch': this.props.stretchPen
+                }
+            } else {
+                var data = {
+                    'points': arrayPoints, 
+                    'data': {'class':[], 'sizeStroke': this.size, 'colorStroke': this.color}, 
+                    'id':  id, 
+                    'position': [firstPoint[0],firstPoint[1]]
+                }
             }
+           
 
             
             this.props.addPaletteLine(data);
@@ -354,6 +474,7 @@ class Picker extends Component {
     componentDidUpdate(nextProps){
         this.color = this.props.colorStroke;
         this.size = this.props.sizeStroke;
+        this.penType = this.props.penType;
 
         if (this.props.isHoldingCanvas){
             this.size = this.props.isHoldingCanvas.size;
@@ -440,6 +561,10 @@ class Picker extends Component {
                     
                     </g>
                 <g className="templinesPalette"><path id="pathPalette" /></g>
+                <g id="tempGroupPalette">
+
+                            
+                        </g>
                 <g className="linesPalette">{listItems}</g>
                 <rect id='overlayGestures' width={0} height={0} x={-X} y={-Y} fill={'black'} opacity={0}/>
                

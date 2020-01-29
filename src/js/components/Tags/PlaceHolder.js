@@ -12,6 +12,8 @@ class PlaceHolder extends Component {
         super(props);
         this.down = false;
         this.tempArrayStroke = [];
+
+        this.erasing = false;
     }
     // componentDidMount(){
     //     console.log(this.props.data)
@@ -25,9 +27,16 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                if (d3.event.pointerType == 'pen' ){
+                if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
+                    // console.log('HELLOs')
+                    that.erasing = true;
+                    that.tempArrayStrokeErase = [];
+                    d3.selectAll('.linesTag').style('pointer-events', 'auto')
+                }
+                else if (d3.event.pointerType == 'pen' ){
                     that.down = true;
                 }
+                
                 
                 /**
                 * TO FADEOUT
@@ -39,12 +48,33 @@ class PlaceHolder extends Component {
             .on('pointermove', function(d){
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
                     if (that.down){
-                        // console.log('#item-' + that.props.parent.id)
+                        // console.log(that.props.parent);
                         var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-                        that.tempArrayStroke.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY])
+                        var X = d3.event.x - transform.translateX;
+                        var Y = d3.event.y - transform.translateY;
+                        
+                        that.tempArrayStroke.push([X, Y])
                         that.drawLine();
+                        if (X > that.props.parent.width){
+                            var height = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect').attr('height')
+                            that.props.updateWidthHeightTag({'idTag': that.props.parent.id, 'width': X, 'height': height})
+                        }
+                        
+                        if (Y > that.props.parent.height){
+                            var width = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect').attr('width')
+                            that.props.updateWidthHeightTag({'idTag': that.props.parent.id, 'width': width, 'height': Y})
+                            // d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect').attr('height', Y)
+                        }
+                        // console.log(d3.event.x - transform.translateX, d3.event.y - transform.translateY, that.props.parent.width,that.props.parent.height )
                     }
-                       
+                    if (that.erasing){
+                        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                        that.tempArrayStrokeErase.push([d3.event.x - transform.translateX, d3.event.y - transform.translateY]);
+                        that.tempArrayStrokeErase = that.tempArrayStrokeErase.slice(-10);
+                        that.eraseStroke();
+                        // console.log('MOVE')
+                    }
+                
                     
                 }
                 // console.log('Hello')
@@ -68,10 +98,32 @@ class PlaceHolder extends Component {
                     that.removeTempLine();
                     
                 }
+                if (that.erasing) {
+                    that.erasing = false;
+                    that.tempArrayStrokeErase = [];
+                    d3.selectAll('.linesTag').style('pointer-events', 'none')
+                }
 
                 // console.log('Hello')
             })
-        
+        // this.addErase('placeHolder-' + this.props.data.id + '-' + this.props.parent.id);
+    }
+    // /** TO ERASE THE STROKE IN THE CANVAS ON THE RIGHT */
+    eraseStroke(){
+
+        var lastPoint = JSON.parse(JSON.stringify(this.tempArrayStrokeErase[this.tempArrayStrokeErase.length-1]));
+        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+        lastPoint[0] += transform.translateX;
+        lastPoint[1] += transform.translateY;
+        // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
+        var element = document.elementFromPoint(lastPoint[0], lastPoint[1]);
+        // console.log(element)
+        if (element.tagName == 'path' && element.className.baseVal == "linesTag"){
+            var id = element.id.split('-')[1];
+            // console.log(id)
+            this.props.removeTagLine({'idTag': this.props.parent.id, 'idLine': id });
+        }
     }
     removeTempLine(){
         var that = this;
@@ -91,8 +143,9 @@ class PlaceHolder extends Component {
         
     }
     componentDidUpdate(prevProps, prevState){
-        // console.log('DRAZ')
-        // this.drawPlaceHolder();
+    
+        // console.log( this.props.parent.width)
+        this.drawPlaceHolder();
     }
     drawPlaceHolder(){
 
@@ -112,18 +165,6 @@ class PlaceHolder extends Component {
 
         
         if (this.props.data.id == 'left'){
-            // var rec = sketch.rectStroke({ x:0, y:0, width:widthTotal, height:heightTotal, density: 3, sketch:2});
-            // var flattened = [].concat(...rec)
-
-            // element.selectAll('path')
-            //     .data(flattened).enter()
-            //     .append('path')
-            //     .attr('d', (d)=>{ return d })
-            //     .attr('fill', 'none')
-            //     .attr('stroke', 'black')
-            //     .attr('stroke-width', '0.3')
-            //     .style('stroke-linecap', 'round')
-            //     .style('stroke-linejoin', 'round')
             
             var element = d3.select('#placeHolder-' + that.props.data.id + '-' + that.props.parent.id).select('rect');
             element
@@ -131,25 +172,9 @@ class PlaceHolder extends Component {
                 .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                // .attr('fill', 'rgba(252, 243, 242, 1)')
-                // .style("filter", "url(#drop-shadow)")
                 .attr('stroke', 'rgba(252, 243, 242, 1)')
                 .attr('fill', 'white')
         }
-
-        
-        // d3.select('#horizontal-' + that.props.data.id + '-' + that.props.parent.id)
-        //     .attr('x1', 0).attr('y1', 50)
-        //     .attr('x2', 100).attr('y2', 50)
-        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
-
-        // d3.select('#vertical-' + that.props.data.id + '-' + that.props.parent.id)
-        //     .attr('x1', 50).attr('y1', 0)
-        //     .attr('x2', 50).attr('y2', 100)
-        //     .attr('stroke-width', '1').attr('stroke', 'red').attr('opacity', '0.2')
-
-        // <rect id={'horizontal-' + this.props.data.id} />
-        // <rect id={'vertical-' + this.props.data.id} />
     }
     componentWillUnmount(){
         var that = this;
@@ -182,9 +207,9 @@ class PlaceHolder extends Component {
                     {listItems}
                 </g>
 
-                
+{/*                 
                 <line id={'horizontal-'  + this.props.data.id + '-' + this.props.parent.id}/>
-                <line id={'vertical-' + this.props.data.id + '-' + this.props.parent.id}/>
+                <line id={'vertical-' + this.props.data.id + '-' + this.props.parent.id}/> */}
             </g>
         );
         

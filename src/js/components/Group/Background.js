@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, _getBBoxPromise, simplify, groupBy } from "../Helper";
+import { getNearestElement, getTransformation, showOmBB, distance, drawCircle, getSpPoint, mergeRectangles, showBboxBB, _getBBox, unionRectangles, _getBBoxPromise, simplify, groupBy, guid } from "../Helper";
 
 import Vector from "../../../../customModules/vector";
 import CalcConvexHull from "../../../../customModules/convexhull";
 import CalcOmbb from "../../../../customModules/ombb";
 import Polygon from 'polygon';
+import Tag from "../Tags/Tag";
 // import { resolve } from "dns";
 
 
@@ -18,6 +19,10 @@ class Background extends Component {
     constructor(props) {
         super(props);
         this.organizedCorners = [];
+
+        this.state = {
+            tagInsideBG: null
+        }
     }
     componentDidMount(){
         var that = this;
@@ -27,6 +32,8 @@ class Background extends Component {
 
         this.getBoundinxBoxEveryone().then((d)=>{  
             this.BBox = d;
+
+            
             this.addPlaceHolder();
         })
         // this.movePoints();
@@ -40,6 +47,7 @@ class Background extends Component {
             // console.log('Update placeHolders')
             this.getBoundinxBoxEveryone().then((d)=>{
                 // console.log(d)
+                // console.log(this.props.placeholders)
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -50,6 +58,7 @@ class Background extends Component {
             this.getBoundinxBoxEveryone().then((d)=>{
                 // console.log(JSON.stringify(d));
                 // showBboxBB(d, 'red');
+                // console.log(this.props.placeholders)
                 this.BBox = d;
                 this.addPlaceHolder();
             })
@@ -110,8 +119,8 @@ class Background extends Component {
     addPlaceHolder(){
         var that = this;
 
-        console.log('GO', JSON.parse(JSON.stringify(that.BBox)))
-        // console.log(this.props.placeholders)
+        // console.log('GO', JSON.parse(JSON.stringify(that.BBox)))
+        console.log(this.props.placeholders)
         // showBboxBB(this.BBox, 'red');
         // console.log(this.BBox)
         var line = d3.line().curve(d3.curveBasis)
@@ -127,8 +136,8 @@ class Background extends Component {
 
      
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
-        // d3.select('#placeHolderBGLine-'+that.props.id).selectAll('g').remove()
-        // d3.select('#placeHolderText-'+that.props.id).selectAll('g').remove();
+        d3.select('#placeHolderBGLine-'+that.props.id).selectAll('g').remove()
+        d3.select('#placeHolderText-'+that.props.id).selectAll('g').remove();
         
         
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove();
@@ -140,47 +149,81 @@ class Background extends Component {
             // console.log(d)
             if (d.id == 'outerBackground' && d.lines.length > 0){
 
-                var myScaleX = d3.scaleLinear().domain([d.BBox.x, d.BBox.x + d.BBox.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
-                var myScaleY = d3.scaleLinear().domain([d.BBox.y, d.BBox.y + d.BBox.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
-
                 const grouped = groupBy(d.lines, line => line.type);
-                
                 var scale = grouped.get("normal");
                 var pattern = grouped.get("pattern");
+                var tag = grouped.get("tag");
 
-                // console.log(pattern)
-                /** For scale data */
-
-                showBboxBB(that.BBox, 'red')
+                // console.log(tag)
+                // /** For scale data */
+                // console.log(d.BBox.y, d.BBox.y + d.BBox.height, that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70)
+                
                 if (scale != undefined && scale.length > 0){
-                    // console.log('GOO')
                     var lines = JSON.parse(JSON.stringify(scale))
-                    lines.forEach((line)=>{
-                        line.data = line.data.map((e)=> {
-                            // showBboxBB(d.BBox, 'red');
-                            return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]
-                        })
-                    })
-                    // console.log(lines)
+
                     for (var i = 0; i < lines.length; i += 1){
-                        var myLine = lines[i]
+                        var myLine = lines[i];
+
+                        // console.log(myLine)
+                        var BBoxOriginalHolder = myLine.BBoxPlaceHolder
+
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+
+
+                        var points =  myLine.data.map((e)=> {
+                            return [myScaleX(e[0] + BBoxOriginalHolder.x) - transform.translateX, myScaleY(e[1] + BBoxOriginalHolder.y) - transform.translateY]
+                        })
                         d3.select('#placeHolderOuterBG-'+that.props.id).append('path')
-                        .attr('d', ()=>line(myLine.data))
-                        .attr('fill', 'none')
-                        .attr('stroke', ()=> myLine.colorStroke )
-                        .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width);})
+                            .attr('d', ()=>line(points))
+                            .attr('fill', 'none')
+                            .attr('stroke', ()=> myLine.colorStroke )
+                            .attr('stroke-width', (e)=>{return myLine.sizeStroke})// + (that.BBox.width / d.BBox.width);})
                     }
                 }
 
+                if (tag != undefined && tag.length > 0){
+                    var lines = JSON.parse(JSON.stringify(tag));
+
+                    
+                    for (var i = 0; i < lines.length; i += 1){
+                        var myLine = lines[i];
+
+                        console.log(myLine)
+                        var BBoxOriginalHolder = myLine.BBoxPlaceHolder
+
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+
+
+                        var tag = JSON.parse(JSON.stringify(myLine.tag));
+                        tag.id = guid();
+                        tag.placeHolder[0]['lines'].forEach(element => { element.id = guid() });
+                        for (var j in tag.tagSnapped){
+                            tag.tagSnapped[j].id = guid()
+                            var placeHolderTagSnapped = tag.tagSnapped[j]['placeHolder'];
+                            // console.log(tag.tagSnapped[j])
+                            placeHolderTagSnapped[0]['lines'].forEach(element => {element.id = guid()});
+                        }
+                        this.setState({tagInsideBG: <Tag key={0} stroke={tag} isGallery={false} holdTag={null} colorStroke={'red'} sizeStroke = {10} /> })
+                    }
+                }
+
+
                 /** for pattern data */
                 if (pattern != undefined && pattern.length > 0){
-                   console.log(d)
+                //    console.log(d)
                     pattern.forEach((myPattern, i)=>{
                         var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id)
+
+                        
+                        var BBoxOriginalHolder = myPattern.BBoxPlaceHolder
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
                         var myLine = JSON.parse(JSON.stringify(myPattern['data']))
-                        console.log(d.BBox.x)
-                        var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + d.BBox.x) - transform.translateX, myScaleY(e[1] + d.BBox.y) - transform.translateY]})
+                        var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + BBoxOriginalHolder.x) - transform.translateX, myScaleY(e[1] + BBoxOriginalHolder.y) - transform.translateY]})
                             
+                        // console.log()
                             
                         var pathSelection = d3.select('#placeHolderOuterBGPattern-'+that.props.id)
                             .append('path')
@@ -228,7 +271,8 @@ class Background extends Component {
             <g id={'background-'+this.props.id} transform={`translate(0,0)`}>
                <g id={'placeHolderOuterBG-'+this.props.id} ></g>
                <g id={'placeHolderOuterBGPattern-'+this.props.id} ></g>
-               {/* <g id={'placeHolderText-'+this.props.id} ></g>
+               {this.state.tagInsideBG}
+        {/* <g id={'placeHolderText-'+this.props.id} ></g>
                <g id={'placeHolderBGLine-'+this.props.id} ></g> */}
             </g>
         );

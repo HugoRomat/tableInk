@@ -13,7 +13,10 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        console.log(this.props)
+        if (this.props.stroke.BBoxPlaceHolder != undefined) this.drawLines()
+    }
+    drawLines(){
+        // console.log(this.props.stroke)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
@@ -21,9 +24,19 @@ class LinePlaceHolder extends Component {
 
                 var that = this;
                 var line = d3.line()
+
+                var points = JSON.parse(JSON.stringify(that.props.stroke.data))
+
+                var BBoxOriginalHolder = that.props.stroke.BBoxPlaceHolder;
+                var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.props.placeHolder.x , that.props.placeHolder.x + that.props.placeHolder.width]);
+                var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.props.placeHolder.y, that.props.placeHolder.y + that.props.placeHolder.height]);
+
+                var points = points.map((e)=> {
+                    return [myScaleX(e[0]), myScaleY(e[1])]
+                })
     
                 d3.select('#item-'+that.props.stroke.id)
-                    .attr("d", line(that.props.stroke.data))
+                    .attr("d", line(points))
                     .attr('stroke', that.props.stroke.colorStroke)
                     .attr('stroke-width', that.props.stroke.sizeStroke)
                     // .attr('stroke', that.props.colorStroke)
@@ -53,16 +66,28 @@ class LinePlaceHolder extends Component {
                     }    
                 }    
         } else {
+
+            
+            var points = JSON.parse(JSON.stringify(that.props.stroke.data))
+
+            var BBoxOriginalHolder = that.props.stroke.BBoxPlaceHolder;
+            var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.props.placeHolder.x , that.props.placeHolder.x + that.props.placeHolder.width]);
+            var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.props.placeHolder.y, that.props.placeHolder.y + that.props.placeHolder.height]);
+
+            var points = points.map((e)=> {
+                return [myScaleX(e[0]), myScaleY(e[1])]
+            })
+
+
             d3.select('#item-'+that.props.stroke.id)
-            .attr("d", line(that.props.stroke.data))
-            .attr('stroke', that.props.stroke.colorStroke)
-            .attr('stroke-width', that.props.stroke.sizeStroke)
-            // .attr('stroke', that.props.colorStroke)
-            // .attr('stroke-width', that.props.sizeStroke)
-            .attr('fill', 'none')
-            .attr('stroke-linejoin', "round")
+                .attr("d", line(points))
+                .attr('stroke', that.props.stroke.colorStroke)
+                .attr('stroke-width', that.props.stroke.sizeStroke)
+                // .attr('stroke', that.props.colorStroke)
+                // .attr('stroke-width', that.props.sizeStroke)
+                .attr('fill', 'none')
+                .attr('stroke-linejoin', "round")
         }
-       
     }
     // componentDidUpdate(){
     //     var that = this;
@@ -73,7 +98,7 @@ class LinePlaceHolder extends Component {
     //         .attr('fill', 'none') 
     // }
     amountDragged = (d) => {
-        this.props.moveTag(d);
+        this.props.moveTag({'idPlaceHolder': this.props.placeHolder.id, 'id':this.props.stroke.id, 'event': d});
     }
     render() {
 
