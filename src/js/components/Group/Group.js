@@ -40,7 +40,7 @@ class Group extends Component {
         super(props);
 
         this.state = {
-            'placeholders':[],
+            // 'placeholders':[],
             'sketchLines': this.props.sketchLines,
             'BBs': [],
             'offsetY': [],
@@ -72,14 +72,14 @@ class Group extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "5")
-            .attr('opacity', '0.0')
+            .attr('opacity', '1.0')
         
         d3.select('#fake-'+that.props.group.id)
             .attr("d", line(that.strokePath))
             .attr('fill', 'none')
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '1')
-            .attr('opacity', '0.0')
+            .attr('opacity', '1.0')
 
         
             // getBoundinxBoxLines([that.props.group.id]).then((d)=>{
@@ -102,168 +102,211 @@ class Group extends Component {
     }
     updateBackground(){
         var that = this;
-        getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
-            that.computeStyle(d).then((model)=>{
+        if (this.props.group.lines.length > 0) {
+            getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+                that.computeStyle(d).then((model)=>{
+                    console.log('UPDATE MODEL')
+                    that.props.updateModel({
+                        'idGroup': that.props.group.id,
+                        'model': model
+                    })
+                })
+            })
+        } else {
+            that.computeStyle().then((model)=>{
                 console.log('UPDATE MODEL')
                 that.props.updateModel({
                     'idGroup': that.props.group.id,
                     'model': model
                 })
             })
-        })
+        }
+        this.postIt.update();
+        
     }
     updateLine(){
         var that = this;
-        // console.log(this.props.group)
-        this.placeHolder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder)); 
 
-        
-        
+        return new Promise(resolve => {
+            // console.log(this.props.group)
 
-        var el = document.getElementById('fake-'+that.props.group.id);
-        this.mc = new Hammer.Manager(el);
-        // var press = new Hammer.Press({time: 250});
-        var pan = new Hammer.Pan({'pointers':0, threshold: 1});
-        // var pan2fingers = new Hammer.Pan({'pointers':1, threshold: 1});
-        // var tap = new Hammer.Tap();
+            var el = document.getElementById('fake-'+that.props.group.id);
+            this.mc = new Hammer.Manager(el);
+            // var press = new Hammer.Press({time: 250});
+            var pan = new Hammer.Pan({'pointers':0, threshold: 1});
+            // var pan2fingers = new Hammer.Pan({'pointers':1, threshold: 1});
+            // var tap = new Hammer.Tap();
 
-        // this.mc.add(press);
-        this.mc.add(pan);
-        // this.mc.add(tap);
-        // pan.recognizeWith(press);
-        // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
+            // this.mc.add(press);
+            this.mc.add(pan);
+            // this.mc.add(tap);
+            // pan.recognizeWith(press);
+            // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
 
-        // pan.recognizeWith(tap);
+            // pan.recognizeWith(tap);
 
-        
-        // this.mc.on("tap", function(ev) {
-        //     if (ev.pointers[0].pointerType == 'pen' ){
-        //         if (that.props.isGuideHold){
-        //             that.props.setGroupTapped({'item': that.props.group.id});
-        //             that.colorForTaping(false);
-        //         }
-        //         else {
-        //             // console.log(that.props.isGuideHold)
-        //             that.colorForTaping(true);
-        //             that.props.addToSelection({'id':that.props.group.id});
-                    
-        //         }
-        //     }
-        // })
-        this.mc.on("panstart", function(event) {
-            if (event.pointers[0].pointerType == 'pen' ){
-                that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
-                that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
-                _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
-                    that.BBOxPathMain  = d;
-                })
-            }
-        })
-        this.mc.on("panmove", function(ev) {
-           
-                
-            /** Si c'est pen sur stroke */
-            if (ev.pointers[0].pointerType == 'pen' ){
-                var X = ev.pointers[0].x - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
-                var Y = ev.pointers[0].y - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
-               
-                // drawCircle(that.BBOxPathMain.x, that.BBOxPathMain.y + that.BBOxPathMain.height, 10, 'red')
-                // console.log(Y+ that.BBOxPathMain.y, that.BBOxPathMain.y + that.BBOxPathMain.height)
-                if (Y+ that.BBOxPathMain.y > that.BBOxPathMain.y + that.BBOxPathMain.height){
-                    that.strokePath.push([X,Y])
-                    that.updateStroke();
-                } else {
-                    // var lastPoint = 
-                    // that.strokePath.push([X,Y])
-                }
-            }
-        })
-        this.mc.on("panend", function(ev) {
-            if (ev.pointers[0].pointerType == 'pen' ){
-                that.updateBackground();
-            }
-        })
-        // this.mc.on("press", function(ev) {
-        //     // console.log('press')
-        //     if (ev.pointers[0].pointerType == 'touch' ){
-        //         // that.press = true;
-        //         that.props.holdGuide(that.props.group.id);
-        //     }
-        // })
-        // this.mc.on("pressup", function(ev) {
-        //     if (ev.pointers[0].pointerType == 'touch' ){
-        //         // that.press = false;
-        //         that.props.holdGuide(false);
-        //     }
-        // })
-        
-          
-
-
-        /*d3.select('#fake-'+that.props.group.id)
-            .on('pointerdown', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-                    that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-                    that.dragstarted(that);
+            
+            // this.mc.on("tap", function(ev) {
+            //     if (ev.pointers[0].pointerType == 'pen' ){
+            //         if (that.props.isGuideHold){
+            //             that.props.setGroupTapped({'item': that.props.group.id});
+            //             that.colorForTaping(false);
+            //         }
+            //         else {
+            //             // console.log(that.props.isGuideHold)
+            //             that.colorForTaping(true);
+            //             that.props.addToSelection({'id':that.props.group.id});
+                        
+            //         }
+            //     }
+            // })
+            this.mc.on("panstart", function(event) {
+                if (event.pointers[0].pointerType == 'pen' ){
+                    that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
+                    that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+                    _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
+                        that.BBOxPathMain  = d;
+                    })
                 }
             })
-            .on('pointermove', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                    if (dist > 10 ){
-                        that.dragged(that);
+            this.mc.on("panmove", function(ev) {
+            
+                    
+                /** Si c'est pen sur stroke */
+                if (ev.pointers[0].pointerType == 'pen' ){
+
+                    var trans = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'))
+                    var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                    var X = ev.pointers[0].x - trans.translateX -transformPan.translateX// - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
+                    var Y = ev.pointers[0].y - trans.translateY-transformPan.translateY// - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
+                    // console.log(trans)
+                    // drawCircle(ev.pointers[0].x, ev.pointers[0].y, 10, 'red')
+                
+                    // drawCircle(that.BBOxPathMain.x, that.BBOxPathMain.y + that.BBOxPathMain.height, 10, 'red')
+                    // console.log(Y+ that.BBOxPathMain.y, that.BBOxPathMain.y + that.BBOxPathMain.height)
+                    if (Y+ that.BBOxPathMain.y > that.BBOxPathMain.y + that.BBOxPathMain.height){
+                        
+                        that.strokePath.push([X,Y])
+                        // that.strokePath.push([X,Y])
+                        that.updateStroke();
+                    } else {
+                        // var lastPoint = 
+                        // that.strokePath.push([X,Y])
                     }
                 }
             })
-            .on('pointerup', function(d){
-                if (d3.event.pointerType == 'touch'){
-                    that.dragended(that);
+            this.mc.on("panend", function(ev) {
+                if (ev.pointers[0].pointerType == 'pen' ){
+                   that.updateBackground();
                 }
-            })*/
-            d3.select('#fake-'+that.props.group.id).on('contextmenu', function(){
-                d3.event.preventDefault();
             })
-
-
-        // console.log(JSON.parse(JSON.stringify(this.placeHolder)))\
-        // console.log('BEGINNING')
-        if (this.props.group.lines.length >0){
-            this.getBoundinxBoxEveryone().then(()=> {
+            // this.mc.on("press", function(ev) {
+            //     // console.log('press')
+            //     if (ev.pointers[0].pointerType == 'touch' ){
+            //         // that.press = true;
+            //         that.props.holdGuide(that.props.group.id);
+            //     }
+            // })
+            // this.mc.on("pressup", function(ev) {
+            //     if (ev.pointers[0].pointerType == 'touch' ){
+            //         // that.press = false;
+            //         that.props.holdGuide(false);
+            //     }
+            // })
             
-                this.computePosition();
-                this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
-            })     
-        } else {
-            this.getBoundinxBoxEveryone().then(()=> {
-                this.computeLinesPlaceHOlder(JSON.parse(JSON.stringify(this.placeHolder)))
-            })    
-        }
-        
+            
 
 
-        //Swipe on the BIG box
-        // var that = this;
-        // var el = d3.select('#rect-'+this.props.group.id).node()
-        // this.mc = new Hammer.Manager(el);
-        // var swipe = new Hammer.Swipe({pointers: 1});
-        // this.mc.add(swipe);
+            /*d3.select('#fake-'+that.props.group.id)
+                .on('pointerdown', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
+                        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
+                        that.dragstarted(that);
+                    }
+                })
+                .on('pointermove', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
+                        if (dist > 10 ){
+                            that.dragged(that);
+                        }
+                    }
+                })
+                .on('pointerup', function(d){
+                    if (d3.event.pointerType == 'touch'){
+                        that.dragended(that);
+                    }
+                })*/
+                d3.select('#fake-'+that.props.group.id).on('contextmenu', function(){
+                    d3.event.preventDefault();
+                })
 
-        // this.mc.on("swipeleft", function(ev) {
-        //     if (ev.pointers[0].pointerType == 'touch'){
-        //         console.log('swipeleft', ev.direction)
-        //         that.createTable();
-                
-        //         // var data = {
-        //         //     'id': guid(), 
-        //         //     'idGroupline':that.props.iteration +'-'+that.props.id, 
-        //         //     'position': [0,0],
-        //         //     'model': that.props.tagHold
-        //         // };
-        //         // that.props.addTagToGroup(data)
-        //         // // console.log('TAP', that.props.tagHold)
-        //     }
-        // }) 
+            // console.log('BEGINNING')
+            if (this.props.group.lines.length >0){
+                this.getBoundinxBoxEveryone().then(()=> {
+                    
+                    
+                    this.computePosition();
+                    getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+                        that.computeStyle(d).then((model)=>{
+                            
+                            // console.log(model)
+                            that.props.updateModel({
+                                'idGroup': that.props.group.id,
+                                'model': model
+                            })
+                            
+                            resolve(true)
+                        })
+                    })
+            
+                    // resolve(true)
+                })     
+            } 
+            else {
+                // console.log('HEY')
+                this.getBoundinxBoxEveryone().then(()=> {
+                    // console.log(this.props.group)
+                    that.computeStyle().then((model)=>{
+                        // console.log('UPDATE MODEL', model.placeHolder)
+                        that.props.updateModel({
+                            'idGroup': that.props.group.id,
+                            'model': JSON.parse(JSON.stringify(model))
+                        })
+                        // that.placeHolder = model.placeHolder; 
+                        // console.log(that.placeHolder, JSON.parse(JSON.stringify(model.placeHolder)))
+                       
+                        resolve(true)
+                    })
+                   
+                })    
+            }
+            
+
+
+            //Swipe on the BIG box
+            // var that = this;
+            // var el = d3.select('#rect-'+this.props.group.id).node()
+            // this.mc = new Hammer.Manager(el);
+            // var swipe = new Hammer.Swipe({pointers: 1});
+            // this.mc.add(swipe);
+
+            // this.mc.on("swipeleft", function(ev) {
+            //     if (ev.pointers[0].pointerType == 'touch'){
+            //         console.log('swipeleft', ev.direction)
+            //         that.createTable();
+                    
+            //         // var data = {
+            //         //     'id': guid(), 
+            //         //     'idGroupline':that.props.iteration +'-'+that.props.id, 
+            //         //     'position': [0,0],
+            //         //     'model': that.props.tagHold
+            //         // };
+            //         // that.props.addTagToGroup(data)
+            //         // // console.log('TAP', that.props.tagHold)
+            //     }
+        }) 
     }
 
     /** GET THE BOUNDING BOX OF THE LINES +  GET ALL THE STROKES BOUNDING BOX */
@@ -277,6 +320,9 @@ class Group extends Component {
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
         BBLine.x = BBLine.x - transformPan.translateX;
         BBLine.y = BBLine.y - transformPan.translateY;
+
+        // console.log(id, BBLine)
+        // showBboxBB(BBLine, 'green')
         // console.log(transformPan)
         return new Promise(resolve => {
             that.getBoundinxBoxEveryone().then((BBox)=>{
@@ -296,14 +342,18 @@ class Group extends Component {
     componentDidMount(){
         var that = this;
         console.log('GOs')
-        this.updateLine();   
+         
         this.createStroke();
-        this.postIt = new postIt(this);
-        this.postIt.init().then(()=>{
-           
-        })
-        d3.select('#postItImage-' + this.props.group.id).style('opacity', 0);
+        this.updateLine().then(()=>{
+            this.postIt = new postIt(this);
+            this.postIt.init().then(()=>{
+               
+            })
+            d3.select('#postItImage-' + this.props.group.id).style('opacity', 0);
 
+        })
+        
+        
         // getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
         //     that.computeStyle(d).then((model)=>{
         //         console.log('UPDATE MODEL')
@@ -332,47 +382,7 @@ class Group extends Component {
     // POUR TOUS LES PLACEHOLDER
     // SERT A METTRE MES OBJETS EN 0 ABSOLU ++ 
     // Update ma BBOX de mon objet PLACEHOLDER
-    computeLinesPlaceHOlder = async(placeholder) => {
-        var that = this;
-        var itemsGuide = [];
-        for (var j in placeholder){
-            var element = placeholder[j];
-            var lines = element.lines;
-            if (lines.length > 0){
-                await this.computeBBoxInPlaceHolder(element, lines)
-            }
-        };
-        this.setState({'placeholders': placeholder});
-    }
-    computeBBoxInPlaceHolder = async(element, lines) => {
-        var that = this;
-        var arrayBBox = [];
-
-
-        var transform = {'translateX': 0, 'translateY': 0}
-        var BBoxAll = await getBoundinxBoxLines(that.props.group.lines[0])
-        var model = await that.computeStyle(BBoxAll);
-        var BBox = model.placeHolder.find((d)=> d.id == element.id)
-        var BB = {'x': BBox.x, 'y': BBox.y, 'width': BBox.width, 'height': BBox.height};
-        arrayBBox.push(BB);
-        
-        // SERT A TROUVER LE COIN EN HAUT A GAUCHE
-        var polygon;
-        if (arrayBBox.length > 1){
-            polygon = mergeRectangles(arrayBBox[0], arrayBBox[1])
-            for (var i = 2; i < arrayBBox.length; i++){
-                polygon = mergeRectangles(polygon, arrayBBox[i])
-            }
-        } else polygon = arrayBBox[0]
-        // showBboxBB(polygon, 'red')
-        //UNE FOIS QUE c'EST FAIT TOUT LE NONDE EN 0
-        lines.forEach((d)=>{
-            d.data = d.data.map((f)=> [f[0] - polygon.x, f[1] - polygon.y])
-        })
-        element.BBox = polygon;
-        d3.select('#item-'+that.props.group.model.id).attr('transform', 'translate('+transform.translateX+','+transform.translateY+')scale(1)');
-
-    }
+   
      /**
      * FAIT LA BOUNDING BOX DE TOUTE LES LIGNES
      */
@@ -455,11 +465,18 @@ class Group extends Component {
             return d.value;
         })
         this.state.offsetX = this.state.offsetY.map((d)=> 0)
+
+        this.setState({'offsetY': this.state.offsetY})
     }
     
     componentDidUpdate(prevProps, prevState){
         var that = this;
 
+        // if (this.props.group.model != prevProps.group.model){
+        //     // this.placeHolder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder)); 
+
+        //     console.log('ZO MODEL ', JSON.parse(JSON.stringify(this.props.group.model)))
+        // }
         if (this.props.sketchLines != prevProps.sketchLines){
 
         }
@@ -467,10 +484,20 @@ class Group extends Component {
         /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME*/
         else if ([].concat(...this.props.group.lines).length != [].concat(...prevProps.group.lines).length ){
             //NOUVELLE LIGNE
-            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
-                this.computeLinesPlaceHOlder(this.placeholder);
+                getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+                    that.computeStyle(d).then((model)=>{
+                        // console.log('UPDATE MODEL')
+                        that.props.updateModel({
+                            'idGroup': that.props.group.id,
+                            'model': model
+                        })
+                        // that.setState({"model": model})
+                    })
+                })
+
             })
         }
         // else if (this.props.shouldUnselect != prevProps.shouldUnselect){
@@ -483,10 +510,9 @@ class Group extends Component {
         //     // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         // }
         else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
-            this.placeholder = JSON.parse(JSON.stringify(this.props.group.model.placeHolder))
+           
             this.getBoundinxBoxEveryone().then(()=> {
                 if (this.props.group.lines.length > 0) this.computePosition();
-                this.computeLinesPlaceHOlder(this.placeholder);
             })
         }
         else if (this.props.groupHolded != prevProps.groupHolded){
@@ -577,13 +603,13 @@ class Group extends Component {
 
             }
         }
-        // console.log(this.props.group)
-        
-        if (this.props.group.model != prevProps.group.model){
-            // console.log('CHANGE')
-        }
+
+       
     }
     computeStyle(BBfirstLine){
+
+        var isUndefined = false;
+        if (BBfirstLine == undefined) isUndefined = true;
         var that = this;
         return new Promise((resolve, reject) => {
          
@@ -593,12 +619,24 @@ class Group extends Component {
             // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
             var transform = getTransformation(d3.select('#group-'+that.props.group.id).attr('transform'))
 
-            // console.log(transform)
+            // console.log(this.props.group.model)
             this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
+                // showBboxBB(BBgroup, 'red')
+                if (BBfirstLine == undefined){
+                    BBfirstLine = { 'width': 50, 'height': 40, 'x':BBgroup.x, 'y': BBgroup.y}
+                    // var Outer = this.props.group.model.placeHolder[0]
+
+                    // console.log(this.props.group.model.placeHolder[0])
+                    BBgroup.width = this.props.group.model.placeHolder[0].width - 250
+                    BBgroup.height = this.props.group.model.placeHolder[0].height - 170
+                }
+
                 var width = BBgroup.width + 250;
                 var height = BBgroup.height + 170;
                 var X = BBgroup.x - 80 - transform.translateX;
                 var Y = BBgroup.y - 100 - transform.translateY;;
+
+               
                 /** 1/OUter 2/Backgroundline 3/ BackgroundText */
 
                 // _getBBoxPromise('containerBackground-0-' + that.props.group.id).then((BBfirstLine)=>{
@@ -616,12 +654,21 @@ class Group extends Component {
                 model.placeHolder[1] = { ...model.placeHolder[1], 'width': widthLine, 'height': heightLine, 'x': xLine, 'y': yLine}
                 model.placeHolder[2] = { ...model.placeHolder[2], 'width': BBfirstLine.width, 'height': BBfirstLine.height, 'x': xText, 'y': yText}
                 
-                // console.log(model)
+
+                // if (isUndefined == true){
+                //     var Outer = this.props.group.model.placeHolder[0]
+                //     model.placeHolder[0] = { ...model.placeHolder[0], 'width': Outer.width + 20, 'height': Outer.height, 'x': X, 'y': Y}
+
+                //     console.log(model)
+                // }
+                // console.log()
+                // showBboxBB(model.placeHolder[0], 'green')
+                // console.log(model.placeHolder[0])
                
-                // })
+                resolve(JSON.parse(JSON.stringify(model)));
             })
                
-            resolve(model);
+            
         })
     }
     hideStyleGuide(){
@@ -634,7 +681,6 @@ class Group extends Component {
     moveLines = (d) => {
         var that = this;
         this.props.moveSketchLines(d.data);
-        
 
         //** Quand je bouge une ligne je veux update la taille de mon rectangle MAximum */
         if (d.iteration == this.BB.length - 1){
@@ -650,15 +696,13 @@ class Group extends Component {
                     })
                 })
             }, 10)
-        }
-       
+        }   
     }
-   
     render() {
 
-        
+        // console.log(this.props.group.model.placeHolder, this.BB)
         var listItems = this.props.group.lines.map((d, i) => { return <g key={i} ></g>})
-        if (this.state.placeholders.length > 0){
+        if (this.props.group.model.placeHolder.length > 0){
             listItems = this.props.group.lines.map((d, i) => {
 
                 // POUR LES TAGS
@@ -670,7 +714,7 @@ class Group extends Component {
                     key={i} 
                     line={d}
                     sketchLines={this.props.sketchLines}
-                    placeholders={this.state.placeholders}
+                    placeholders={this.props.group.model.placeHolder}
                     stroke={this.props.group.stroke}
                     id={this.props.group.id}
                     iteration={i}
@@ -705,7 +749,7 @@ class Group extends Component {
                    {/* { (this.props.group.lines > 0) ? */}
                     <Background
                         sketchLines={this.props.sketchLines}
-                        placeholders={this.state.placeholders}
+                        placeholders={this.props.group.model.placeHolder}
                         stroke={this.props.group.stroke}
                         id={this.props.group.id}
                         
@@ -726,6 +770,8 @@ class Group extends Component {
                         setGuideTapped={this.props.setGuideTapped}
                         guideTapped={this.props.guideTapped}
                         tagHold={this.props.tagHold}
+
+                        holdGuide={this.props.holdGuide}
                     /> 
                     : null}
                 

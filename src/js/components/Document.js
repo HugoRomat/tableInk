@@ -1258,9 +1258,7 @@ class Document extends Component {
         }
     }*/
     makingGroup(lines, model, strokeGuide){
-        // console.log(lines)
-        // var selection = whoIsInside(this.props.sketchLines, this.tempArrayStroke);
-        // console.log(this.tempArrayStroke)
+        
         var firstPoint = JSON.parse(JSON.stringify(strokeGuide[0]))
         var arrayPoints = strokeGuide;
         arrayPoints.forEach((d)=>{
@@ -1283,8 +1281,6 @@ class Document extends Component {
             ],
             'position': [0,0]
         }
-        // this.props.addStickyLines(data);
-
 
         /** Create the group */
         var group = {
@@ -1779,16 +1775,64 @@ class Document extends Component {
         var that = this;
         var line = d3.line()
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-
+        console.log()
         var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
-        if (dist > 450){//(this.guidHoldObject.width)){
+        if (dist > this.isGuideHold.placeHolder[0]['width']){//(this.guidHoldObject.width)){
             that.lastMovePosition = {'x': event['x'],'y': event['y']};
             // drawCircle(event['x'], event['y'], 10, 'red');
-            var newGuide = [
+            // var newGuidePoints = [
+            //     [event['x'] - transformPan.translateX, event['y'] - transformPan.translateY],
+            //     [event['x'] - transformPan.translateX, event['y'] + 80 - transformPan.translateY]
+            // ];
+            var newGuidePoints = [
                 [event['x'] - transformPan.translateX, event['y'] - transformPan.translateY],
-                [event['x'] - transformPan.translateX, event['y'] + 80 - transformPan.translateY]
+                [event['x'] - transformPan.translateX, event['y'] + 300 - transformPan.translateY]
             ];
-            that.makingGroup([], this.guidHoldObject.id, newGuide);
+            
+            var idChild = guid();
+
+            /** Create the guide */
+            // arrayPoints = simplify(arrayPoints, 2)
+            // var data = {
+            //     'points': newGuide, 
+            //     'id': guid(),
+            //     "paddingBetweenLines": 50,
+            //     'child':idChild,
+            //     'placeHolder': [
+            //         {'id':'outerBackground', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
+            //         {'id':'backgroundLine', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
+            //         {'id':'backgroundText', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0}
+            //     ],
+            //     'position': [0,0]
+            // }
+
+           
+            // console.log(newGuidePoints[0],  this.isGuideHold)
+            var newGuide = JSON.parse(JSON.stringify(this.isGuideHold));
+            newGuide.points = newGuidePoints
+            newGuide.id =  guid();
+            newGuide.child = idChild;
+            newGuide.placeHolder.forEach((d)=>{
+                d.lines.forEach((d)=> d.id = guid());
+                // d.width = 500
+                
+                console.log(d)
+            })
+
+            /** Create the group */
+            var group = {
+                'id': idChild, 
+                'lines':[], 
+                'position': [0,0],
+                'model': newGuide,
+                'tap': false,
+                'swipe': true,
+                'stroke': {'points':newGuidePoints, 'position': [0,0]}
+            };
+            // console.log(group)
+            this.props.createGroupLines(group);
+
+            this.props.tapGroup({'id': idChild, 'tap':true})
         }
     }
 
@@ -2220,10 +2264,10 @@ class Document extends Component {
         this.setState({'tagHold': d})
     }
     holdGuide = (d) => {
-        console.log('GuideHolded '+d)
+        // console.log('GuideHolded '+d)
         this.isGuideHold = d;
-        if (d != false) this.guidHoldObject = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == d)));
-        else this.guidHoldObject = false;
+        // if (d != false) this.guidHoldObject = JSON.parse(JSON.stringify(this.props.stickyLines.find(x => x.id == d)));
+        // else this.guidHoldObject = false;
         this.setState({'isGuideHold': d})
     }
     // To know if an item was dragged
@@ -2461,6 +2505,8 @@ class Document extends Component {
                             sizeStroke = {this.state.sizeStroke}
                             penType = {this.state.penType}
                             tagHold={this.state.tagHold}
+
+                            holdGuide={this.holdGuide}
 
                             patternPenData={{'BBox': this.patternBBOX, 'strokes': this.patternPen}}
 

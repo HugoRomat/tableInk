@@ -116,10 +116,11 @@ initialState.colorPalette.lines = strokesPalette;
 
         case 'UPDATE_MODEL':
         var id = action.data.idGroup;
-        // console.log( action.data.model)
+        
         var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
         // console.log(index)
         if (index > -1){
+          // console.log( action.data.model, index)
             state = update(state, { 
               groupLines: {
                 [index] : {

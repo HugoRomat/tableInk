@@ -486,7 +486,10 @@ class ColorsMenu extends Component {
           this.mc.on("panend", function(ev) {
             if (ev.pointers[0].pointerType == 'touch'){
                 d3.select(that.newNode).remove();
-                that.addTagOnCanvas(ev.pointers[0].x, ev.pointers[0].y)
+
+                var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+                that.addTagOnCanvas(ev.pointers[0].x - transform.translateX, ev.pointers[0].y - transform.translateY)
                 that.setState({'tagLines': []});
             }
           })

@@ -61,11 +61,11 @@ class Guide extends Component {
         
 
 
-        d3.select('#'+that.props.stroke.id)
-            .attr("d", line(that.props.stroke['points']))
-            .attr('fill', 'none')
-            // .attr('stroke', '#9C9EDEDF')
-            .attr('stroke-width', '2')
+        // d3.select('#'+that.props.stroke.id)
+        //     .attr("d", line(that.props.stroke['points']))
+        //     .attr('fill', 'none')
+        //     // .attr('stroke', '#9C9EDEDF')
+        //     .attr('stroke-width', '2')
             
         /*
         d3.select('#fake-'+that.props.stroke.id)
@@ -96,7 +96,7 @@ class Guide extends Component {
             if (event.pointers[0].pointerType == 'touch'){
                 // that.props.dragItem(false);
                 that.colorForHolding(true);
-                that.props.holdGuide(that.props.stroke.id);
+                that.props.holdGuide(that.props.stroke);
             }
         })
         this.mc.on("pressup", function(event){
@@ -109,7 +109,7 @@ class Guide extends Component {
 
         this.mc.on("tap", function(event){
             // console.log(event)
-            console.log('GO',that.props)
+            // console.log('GO',that.props)
             // clearTimeout(that.timerPress);
             if (event.changedPointers[0].pointerType == 'touch'){
                 console.log(that.props.guideTapped)
@@ -314,7 +314,7 @@ class Guide extends Component {
         return (
             <g id={'item-'+this.props.stroke.id} className='guide' transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})scale(1)`}>
                 <rect id={'rect-'+this.props.stroke.id} />
-                <path id={this.props.stroke.id}></path>
+                {/* <path id={this.props.stroke.id}></path> */}
                 {listPlaceHolder}
             </g>
         );

@@ -156,7 +156,7 @@ export class postIt {
                 BB.x -= 90;
                 BB.width += 150;
                 BB.height += 100;
-
+                d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
                 this.createFlipPage(BB);
 
                 resolve(true);

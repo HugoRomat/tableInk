@@ -40,7 +40,7 @@ class LinePlaceHolder extends Component {
         
         return (
  
-            <path id={'stroke-'+this.props.stroke.id} style={{'pointerEvents': 'none' }}/>//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
+            <path id={'stroke-'+this.props.stroke.id} className={'linesTag'} style={{'pointerEvents': 'none' }}/>//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
 
         );
         

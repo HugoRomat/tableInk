@@ -98,9 +98,9 @@ class Groups extends Component {
             // console.log('GO')
         }, 2000)
     }
-    holdGroup = (d) => {
-        this.setState({'groupHolded': d})
-    }
+    // holdGroup = (d) => {
+    //     this.setState({'groupHolded': d})
+    // }
     createTable = (d) => {
         // console.log('ADD')
         this.props.createTables(d);
@@ -127,14 +127,14 @@ class Groups extends Component {
                 allGroups={JSON.parse(JSON.stringify(this.props.groupLines))}
                 // tables = {JSON.parse(JSON.stringify(this.props.tables))}
                 shouldUnselect={this.state.shouldUnselect}
-                groupHolded={this.state.groupHolded}
+                // groupHolded={this.state.groupHolded}
                 iteration={i}
                 // showGrid={this.state.showGrid}
                 isGuideHold={this.props.isGuideHold}
 
                 setGroupTapped={this.setGroupTapped}
                 tagHold={this.props.tagHold}
-                holdGuide={this.holdGroup}
+                holdGuide={this.props.holdGuide}
                 addToSelection={this.addToSelection}
 
                 colorStroke = {this.props.colorStroke}

@@ -27,8 +27,9 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
+                console.log('HELLOs')
                 if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
-                    // console.log('HELLOs')
+                    console.log('HELLOs')
                     that.erasing = true;
                     that.tempArrayStrokeErase = [];
                     d3.selectAll('.linesTag').style('pointer-events', 'auto')
@@ -50,8 +51,11 @@ class PlaceHolder extends Component {
                     if (that.down){
                         // console.log(that.props.parent);
                         var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
-                        var X = d3.event.x - transform.translateX;
-                        var Y = d3.event.y - transform.translateY;
+                        var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
+                        // ev.pointers[0].x - transform.translateX, ev.pointers[0].y - transform.translateY
+
+                        var X = d3.event.x - transform.translateX - transformPan.translateX;
+                        var Y = d3.event.y - transform.translateY - transformPan.translateY;
                         
                         that.tempArrayStroke.push([X, Y])
                         that.drawLine();
@@ -121,7 +125,7 @@ class PlaceHolder extends Component {
         // console.log(element)
         if (element.tagName == 'path' && element.className.baseVal == "linesTag"){
             var id = element.id.split('-')[1];
-            // console.log(id)
+            console.log(this.props.parent.id, id)
             this.props.removeTagLine({'idTag': this.props.parent.id, 'idLine': id });
         }
     }

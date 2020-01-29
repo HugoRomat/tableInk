@@ -64,6 +64,7 @@ class Background extends Component {
             })
            
         }
+        // this.addPlaceHolder();
     }
     /**
      * FAIT LA BOUNDING BOX DE TOUT LE MONDE
@@ -120,7 +121,7 @@ class Background extends Component {
         var that = this;
 
         // console.log('GO', JSON.parse(JSON.stringify(that.BBox)))
-        console.log(this.props.placeholders)
+        // console.log(this.props.placeholders)
         // showBboxBB(this.BBox, 'red');
         // console.log(this.BBox)
         var line = d3.line().curve(d3.curveBasis)
@@ -164,15 +165,20 @@ class Background extends Component {
                     for (var i = 0; i < lines.length; i += 1){
                         var myLine = lines[i];
 
-                        // console.log(myLine)
+                        /** BOX */
+                        
                         var BBoxOriginalHolder = myLine.BBoxPlaceHolder
 
-                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
-                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+                        // console.log(d, BBoxOriginalHolder)
+                        // console.log(BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width, d.BBox.x, d.BBox.x + d.BBox.width)
+                        // var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
+                        // var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x, d.x + d.width]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y , d.y + d.height]);
 
 
                         var points =  myLine.data.map((e)=> {
-                            return [myScaleX(e[0] + BBoxOriginalHolder.x) - transform.translateX, myScaleY(e[1] + BBoxOriginalHolder.y) - transform.translateY]
+                            return [myScaleX(e[0] ) - transform.translateX, myScaleY(e[1]) - transform.translateY]
                         })
                         d3.select('#placeHolderOuterBG-'+that.props.id).append('path')
                             .attr('d', ()=>line(points))
@@ -192,8 +198,8 @@ class Background extends Component {
                         console.log(myLine)
                         var BBoxOriginalHolder = myLine.BBoxPlaceHolder
 
-                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
-                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x - 80 , d.x + d.width + 170]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y - 100 , d.y + d.height + 70]);
 
 
                         var tag = JSON.parse(JSON.stringify(myLine.tag));
@@ -218,10 +224,10 @@ class Background extends Component {
 
                         
                         var BBoxOriginalHolder = myPattern.BBoxPlaceHolder
-                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
-                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x, d.x + d.width]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y, d.y + d.height]);
                         var myLine = JSON.parse(JSON.stringify(myPattern['data']))
-                        var myNewLine = myLine.map((e)=> {return [myScaleX(e[0] + BBoxOriginalHolder.x) - transform.translateX, myScaleY(e[1] + BBoxOriginalHolder.y) - transform.translateY]})
+                        var myNewLine = myLine.map((e)=> {return [myScaleX(e[0]) - transform.translateX, myScaleY(e[1]) - transform.translateY]})
                             
                         // console.log()
                             
