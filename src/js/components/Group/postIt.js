@@ -1,4 +1,4 @@
-import { guid, mergeRectangles, calculateBB, getTransformation, drawCircle, _getBBoxPromise } from "../Helper";
+import { guid, mergeRectangles, calculateBB, getTransformation, drawCircle, _getBBoxPromise, showBboxBB } from "../Helper";
 import * as d3 from 'd3';
 // import flip from './../../../../static/turn2.jpg'
 import flipSVG from './../../../../static/page-curl-basic.svg'
@@ -150,9 +150,9 @@ export class postIt {
                 //     .attr('height', 100)
                 //     .attr("xlink:href", flip)
                     
-
+                // showBboxBB(BB, 'red')
                 // this.colors.forEach((d)=>{
-                BB.y -= 50;
+                BB.y -= 90;
                 BB.x -= 90;
                 BB.width += 150;
                 BB.height += 100;

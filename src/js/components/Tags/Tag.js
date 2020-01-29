@@ -221,7 +221,7 @@ class Tag extends Component {
         // this.setState({'BBox': BBox})
         this.addBG();
         // this.drawLine()
-            console.log('CREATE TAG', that.props.stroke)
+            // console.log('CREATE TAG', that.props.stroke)
     }
     addBG(){
         var that = this;

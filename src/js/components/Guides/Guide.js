@@ -112,7 +112,7 @@ class Guide extends Component {
             // console.log('GO',that.props)
             // clearTimeout(that.timerPress);
             if (event.changedPointers[0].pointerType == 'touch'){
-                console.log(that.props.guideTapped)
+                // console.log(that.props.guideTapped)
                 if (that.props.guideTapped == false){
                     that.props.setGuideTapped(that.props.stroke.child);
                     that.colorForHolding(true);
@@ -121,7 +121,34 @@ class Guide extends Component {
                         that.colorForHolding(false);
                     }, 2000)
                 } else {
-                    that.props.updatePlaceHolderGroup({'idGroup': that.props.stroke.child, 'model':that.props.guideTapped})
+                    var newGuide = JSON.parse(JSON.stringify(that.props.guideTapped))
+                    var actualGuide = JSON.parse(JSON.stringify(that.props.stroke))
+
+                    newGuide.id = guid();
+                    newGuide.child = actualGuide.child;
+                    for (var j in newGuide.placeHolder){
+                        newGuide.placeHolder[j]['lines'].forEach(element => {element.id = guid()});
+                    }
+                    newGuide.placeHolder[0] = {...newGuide.placeHolder[0], 
+                        'width': actualGuide.placeHolder[0]['width'],
+                        'height': actualGuide.placeHolder[0]['height'],
+                        'x': actualGuide.placeHolder[0]['x'],
+                        'y': actualGuide.placeHolder[0]['y']
+                    }
+                    newGuide.placeHolder[1] = {...newGuide.placeHolder[1], 
+                        'width': actualGuide.placeHolder[1]['width'],
+                        'height': actualGuide.placeHolder[1]['height'],
+                        'x': actualGuide.placeHolder[1]['x'],
+                        'y': actualGuide.placeHolder[1]['y']
+                    }
+                    newGuide.placeHolder[2] = {...newGuide.placeHolder[2], 
+                        'width': actualGuide.placeHolder[2]['width'],
+                        'height': actualGuide.placeHolder[2]['height'],
+                        'x': actualGuide.placeHolder[2]['x'],
+                        'y': actualGuide.placeHolder[2]['y']
+                    }
+                    console.log(that.props.guideTapped, actualGuide)
+                    that.props.updatePlaceHolderGroup({'idGroup': that.props.stroke.child, 'model':newGuide})
                 }
                 
             }
@@ -220,7 +247,7 @@ class Guide extends Component {
            
     }
     addLine = (d) => {
-        console.log('DOOO',d)
+        // console.log('DOOO',d)
         this.props.addLineToStickyGroup({
             'idGroup': this.props.stroke.child,
             'where':d.where,

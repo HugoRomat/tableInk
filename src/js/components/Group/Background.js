@@ -176,9 +176,8 @@ class Background extends Component {
                         var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x, d.x + d.width]);
                         var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y , d.y + d.height]);
 
-
                         var points =  myLine.data.map((e)=> {
-                            return [myScaleX(e[0] ) - transform.translateX, myScaleY(e[1]) - transform.translateY]
+                            return [myScaleX(e[0] ) , myScaleY(e[1]) ]
                         })
                         d3.select('#placeHolderOuterBG-'+that.props.id).append('path')
                             .attr('d', ()=>line(points))
@@ -195,14 +194,16 @@ class Background extends Component {
                     for (var i = 0; i < lines.length; i += 1){
                         var myLine = lines[i];
 
-                        console.log(myLine)
+                        // console.log(myLine)
                         var BBoxOriginalHolder = myLine.BBoxPlaceHolder
 
-                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x - 80 , d.x + d.width + 170]);
-                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y - 100 , d.y + d.height + 70]);
+                        var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([d.x, d.x + d.width]);
+                        var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([d.y, d.y + d.height]);
 
 
                         var tag = JSON.parse(JSON.stringify(myLine.tag));
+                        // console.log(tag)
+                        tag.position = [myScaleX(tag.position[0]), myScaleY(tag.position[1])]
                         tag.id = guid();
                         tag.placeHolder[0]['lines'].forEach(element => { element.id = guid() });
                         for (var j in tag.tagSnapped){

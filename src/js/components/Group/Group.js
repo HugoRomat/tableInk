@@ -42,7 +42,7 @@ class Group extends Component {
         this.state = {
             // 'placeholders':[],
             'sketchLines': this.props.sketchLines,
-            'BBs': [],
+            'BB': [],
             'offsetY': [],
             'guide': null,
             'model': this.props.group.model
@@ -72,14 +72,14 @@ class Group extends Component {
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "5")
-            .attr('opacity', '1.0')
+            .attr('opacity', '0.0')
         
         d3.select('#fake-'+that.props.group.id)
             .attr("d", line(that.strokePath))
             .attr('fill', 'none')
             .attr('stroke', '#9C9EDEDF')
             .attr('stroke-width', '1')
-            .attr('opacity', '1.0')
+            .attr('opacity', '0.0')
 
         
             // getBoundinxBoxLines([that.props.group.id]).then((d)=>{
@@ -175,10 +175,10 @@ class Group extends Component {
                 /** Si c'est pen sur stroke */
                 if (ev.pointers[0].pointerType == 'pen' ){
 
-                    var trans = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'))
-                    var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-                    var X = ev.pointers[0].x - trans.translateX -transformPan.translateX// - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
-                    var Y = ev.pointers[0].y - trans.translateY-transformPan.translateY// - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
+                    // var trans = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'))
+                    // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+                    var X = ev.pointers[0].x - that.BBOxPathMain.x //-transformPan.translateX// - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
+                    var Y = ev.pointers[0].y - that.BBOxPathMain.y//- transformPan.translateY// - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
                     // console.log(trans)
                     // drawCircle(ev.pointers[0].x, ev.pointers[0].y, 10, 'red')
                 
@@ -274,6 +274,8 @@ class Group extends Component {
                             'idGroup': that.props.group.id,
                             'model': JSON.parse(JSON.stringify(model))
                         })
+
+                        // that.postIt.update();
                         // that.placeHolder = model.placeHolder; 
                         // console.log(that.placeHolder, JSON.parse(JSON.stringify(model.placeHolder)))
                        
@@ -349,7 +351,9 @@ class Group extends Component {
             this.postIt.init().then(()=>{
                
             })
-            d3.select('#postItImage-' + this.props.group.id).style('opacity', 0);
+            d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',1);
+            d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
+            d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
 
         })
         
@@ -434,6 +438,7 @@ class Group extends Component {
         // console.log('GO',BBox)
         // showBboxBB(BBox[0], 'red');
         this.BB = BBox;
+        this.setState({'BB': this.BB})
         return BBox;
 
     }
@@ -560,14 +565,16 @@ class Group extends Component {
             }
             else if (this.props.group.swipe){
                 // console.log('SWIPE')
-                d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+                
                 // 
                 this.postIt.transition();
 
                 setTimeout(function(){ 
+                    d3.select('#postItImage-' + that.props.group.id).style('opacity', 0);
                     d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',0);
                     d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
                     d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
+                    that.postIt.reverseTransition();
                 }, 1000)
 
 
@@ -588,16 +595,26 @@ class Group extends Component {
                 d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)')
                 d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.0')
                 d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.0').attr('stroke-width', '1')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 1)
 
+                d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+                d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',1);
+                d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
+                d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
+
+                
                 // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'none')
             }
             else if (this.props.group.tap){
                 d3.select('#'+that.props.group.id).transition().duration(500).attr('opacity', '0.4')
                 d3.select('#fake-'+that.props.group.id).transition().duration(500).attr('opacity', '0.4').attr('stroke-width', '50')
-                d3.select('#postItImage-' + that.props.group.id).transition().duration(500).style('opacity', 0);
 
-                setTimeout(function(){ }, 1000)
+                d3.select('#postItImage-' + that.props.group.id).style('opacity', 1);
+                d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',1);
+                d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',1);
+                d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',1);
+
+                
+                // setTimeout(function(){ }, 1000)
                 // d3.select('#postItImage-' + that.props.group.id).style('pointer-events', 'auto')
 
 
@@ -626,7 +643,7 @@ class Group extends Component {
                     BBfirstLine = { 'width': 50, 'height': 40, 'x':BBgroup.x, 'y': BBgroup.y}
                     // var Outer = this.props.group.model.placeHolder[0]
 
-                    // console.log(this.props.group.model.placeHolder[0])
+                    console.log(this.props.group.model.placeHolder[0])
                     BBgroup.width = this.props.group.model.placeHolder[0].width - 250
                     BBgroup.height = this.props.group.model.placeHolder[0].height - 170
                 }
@@ -661,7 +678,7 @@ class Group extends Component {
 
                 //     console.log(model)
                 // }
-                // console.log()
+                // console.log(model.placeHolder[1])
                 // showBboxBB(model.placeHolder[0], 'green')
                 // console.log(model.placeHolder[0])
                
@@ -681,7 +698,7 @@ class Group extends Component {
     moveLines = (d) => {
         var that = this;
         this.props.moveSketchLines(d.data);
-
+        // console.log('MOVE LINES')
         //** Quand je bouge une ligne je veux update la taille de mon rectangle MAximum */
         if (d.iteration == this.BB.length - 1){
             setTimeout(function(){
@@ -718,7 +735,7 @@ class Group extends Component {
                     stroke={this.props.group.stroke}
                     id={this.props.group.id}
                     iteration={i}
-                    BBs={this.BB} 
+                    BBs={this.state.BB} 
                     offsetY={this.state.offsetY}
                     offsetX={this.state.offsetX}
                     showGrid={this.props.showGrid}

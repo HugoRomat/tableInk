@@ -1275,9 +1275,9 @@ class Document extends Component {
             "paddingBetweenLines": 50,
             'child':idChild,
             'placeHolder': [
-                {'id':'outerBackground', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
-                {'id':'backgroundLine', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0},
-                {'id':'backgroundText', 'position':[0,0], 'lines':[], 'width': 800, 'height': 800, 'x':0, 'y':0}
+                {'id':'outerBackground', 'position':[0,0], 'lines':[], 'width': 400, 'height': 400, 'x':0, 'y':0},
+                {'id':'backgroundLine', 'position':[0,0], 'lines':[], 'width': 400, 'height': 400, 'x':0, 'y':0},
+                {'id':'backgroundText', 'position':[0,0], 'lines':[], 'width': 400, 'height': 400, 'x':0, 'y':0}
             ],
             'position': [0,0]
         }
@@ -1816,7 +1816,7 @@ class Document extends Component {
                 d.lines.forEach((d)=> d.id = guid());
                 // d.width = 500
                 
-                console.log(d)
+                // console.log(d)
             })
 
             /** Create the group */

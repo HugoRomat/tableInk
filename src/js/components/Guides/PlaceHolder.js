@@ -150,10 +150,10 @@ class PlaceHolder extends Component {
     }
     pointerUp(event){
         var that = this;
-        // console.log('GOOO', this.props, this.isTag) ;
+        
 
         if (this.isTag){
-
+            // console.log('it is a tag') ;
             /** JUST TO REMOVE IDS AND MAKE A NEW ONE */
             var firstPoint = [that.tempArrayStroke[0][0], that.tempArrayStroke[0][1]]; 
             // var firstPoint = [0,0];
