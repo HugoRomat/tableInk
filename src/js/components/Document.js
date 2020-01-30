@@ -209,24 +209,60 @@ class Document extends Component {
             .attr("x", 0)
             .attr("y", 0);
 
+            // var defs = svg.append("defs");
 
             var filter = defs.append("filter")
-                .attr("id", "drop-shadow")
-                .attr("height", "130%");
-            filter.append("feGaussianBlur")
-                .attr("in", "SourceGraphic")
-                .attr("stdDeviation", 5)
-                .attr("result", "blur");
-            filter.append("feOffset")
-                .attr("in", "blur")
-                .attr("dx", 5)
-                .attr("dy", 5)
-                .attr("result", "offsetBlur");
-            var feMerge = filter.append("feMerge");
-            feMerge.append("feMergeNode")
-                .attr("in", "offsetBlur")
-            feMerge.append("feMergeNode")
-                .attr("in", "SourceGraphic");
+            .attr("id", "drop-shadow")
+            .attr("height", "130%");
+        
+        // SourceAlpha refers to opacity of graphic that this filter will be applied to
+        // convolve that with a Gaussian with standard deviation 3 and store result
+        // in blur
+        filter.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 5)
+        
+        // translate output of Gaussian blur to the right and downwards with 2px
+        // store result in offsetBlur
+        filter.append("feOffset")
+            .attr("dx", 2)
+            .attr("dy", 2)
+            .attr("result", "offsetBlur");
+        
+        // Control opacity of shadow filter
+        var feTransfer = filter.append("feComponentTransfer");
+        
+        feTransfer.append("feFuncA")
+            .attr("type", "linear")
+            .attr("slope", 0.2)
+        
+        // overlay original SourceGraphic over translated blurred opacity by using
+        // feMerge filter. Order of specifying inputs is important!
+        var feMerge = filter.append("feMerge");
+        
+        feMerge.append("feMergeNode")
+        feMerge.append("feMergeNode")
+            .attr("in", "SourceGraphic");	
+          
+
+
+            // var filter = defs.append("filter")
+            //     .attr("id", "drop-shadow")
+            //     .attr("height", "130%");
+            // filter.append("feGaussianBlur")
+            //     .attr("in", "SourceGraphic")
+            //     .attr("stdDeviation", 5)
+            //     .attr("result", "blur");
+            // filter.append("feOffset")
+            //     .attr("in", "blur")
+            //     .attr("dx", 5)
+            //     .attr("dy", 5)
+            //     .attr("result", "offsetBlur");
+            // var feMerge = filter.append("feMerge");
+            // feMerge.append("feMergeNode")
+            //     .attr("in", "offsetBlur")
+            // feMerge.append("feMergeNode")
+            //     .attr("in", "SourceGraphic");
 
             
         // this.init();
@@ -625,7 +661,8 @@ class Document extends Component {
                     })
 
                     that.props.closeGallery({'isOpen': false})
-                    
+                    d3.select('.groups').selectAll('.groupLine').style('opacity', 1)
+                    d3.select('.standAloneLines').selectAll('.realStroke').style('opacity', 1)
                     
 
                 } else {
@@ -839,6 +876,15 @@ class Document extends Component {
 
         /*** POUR MA BARRE DE GAUCHE ***/
         d3.selectAll('.saveRight').each(function(){
+            var transform = getTransformation(d3.select(this).attr('transform'))
+            var X = transform.translateX - offsetX;
+            var Y = transform.translateY - offsetY;
+
+            d3.select(this).attr('transform', 'translate('+X+','+Y+')rotate('+transform.rotate+')')
+        })
+
+        /*** POUR MA BARRE DE GAUCHE ***/
+        d3.selectAll('.saveTop').each(function(){
             var transform = getTransformation(d3.select(this).attr('transform'))
             var X = transform.translateX - offsetX;
             var Y = transform.translateY - offsetY;
@@ -1076,8 +1122,8 @@ class Document extends Component {
             }
             else if (that.isFunctionPen){
                 var transform = getTransformation(d3.select('#panItems').attr('transform'))
-                // console.log(sourceEvent)
-                var penPosition = JSON.parse(JSON.stringify([sourceEvent.srcEvent.x - transform.translateX, sourceEvent.srcEvent.y - transform.translateY]))
+                console.log(event)
+                var penPosition = JSON.parse(JSON.stringify([event.x - transform.translateX, event.y - transform.translateY]))
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
                 that.findCloseStrokes().then((closelements)=>{
                     that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
@@ -1702,8 +1748,8 @@ class Document extends Component {
 
                 this.patternPen.forEach((d)=>{
 
-                    var X = point['x']+ d.position[0] - transformPan.translateX - that.patternBBOX.width/2;
-                    var Y = point['y']+ d.position[1] - transformPan.translateY  - that.patternBBOX.height/2;
+                    var X = point['x']+ d.position[0] - that.patternBBOX.width/2;
+                    var Y = point['y']+ d.position[1]   - that.patternBBOX.height/2;
                     d3.select('#tempGroup').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
                         .append('path')
                         .attr('d', (f)=>  line(d.points))
@@ -2032,36 +2078,7 @@ class Document extends Component {
         // console.log(data)
         this.props.addSketchLine(data);
     }
-    /** 
-     * 1 - Get all groups lines
-     * 2 - Apply NLP on them to get the meaning
-    */
-    voiceQuery(position){
-
-        
-        // var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-        /** Get all lines */
-        var allLines = [];
-        this.props.groupLines.forEach((d)=>{
-            allLines = allLines.concat(d.lines);
-        })
-    //    console.log(allLines)
-        this.speech.getSpeechReco().then((speech)=>{
-
-            recognizeInk(this, allLines, true).then((ink)=> {
-                console.log(ink)
-                var data = {
-                    'id': guid(),
-                    'content': speech,
-                    'inkDetection': ink,
-                    'position': [position['x'],position['y']]
-                }
-                this.props.addVoiceQueries(data)
-            })
-            
-            // console.log('HEY', speech)
-        })
-    }
+    
     drawEraseStroke(){
         // console.log('HEY')
         var that = this;
@@ -2566,7 +2583,7 @@ class Document extends Component {
                    
 
                     {/* <image href="https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png" height="200" width="200"/> */}
-                    <VoiceQuerys />
+                    {/* <VoiceQuerys /> */}
 
                     <Picker 
                         isHoldingCanvas = {this.state.isHoldingCanvas}

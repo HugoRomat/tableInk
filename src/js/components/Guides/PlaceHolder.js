@@ -344,8 +344,9 @@ class PlaceHolder extends Component {
                 .attr('height',  this.props.data.height)
                 .attr('x', this.props.data.x)
                 .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 0.0)')
-                .style("filter", "url(#drop-shadow)")
+                .attr('fill', 'rgba(247, 247, 247, 1)')
+                .attr('stroke-width', '1')
+                // .style("filter", "url(#drop-shadow)")
 
         }
         else if (this.props.data.id == 'backgroundText'){
@@ -356,8 +357,9 @@ class PlaceHolder extends Component {
             .attr('height', this.props.data.height)
             .attr('x', this.props.data.x)
             .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 0.0)')
-                .style("filter", "url(#drop-shadow)")
+            .attr('fill', 'rgba(247, 247, 247, 1)')
+            .attr('stroke-width', '1')
+            // .style("filter", "url(#drop-shadow)")
 
         }
         else if (this.props.data.id == 'outerBackground'){
@@ -367,14 +369,15 @@ class PlaceHolder extends Component {
                 .attr('height', this.props.data.height)
                 .attr('x', this.props.data.x)
                 .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 0.3)')
+                .attr('fill', 'rgba(247, 247, 247, 1)')
+                .attr('stroke-width', '2')
                 .style("filter", "url(#drop-shadow)")
         }
         
         if (rect != null){
             rect.attr('stroke', 'rgba(79, 79, 79, 0.15)')
             rect.attr('opacity', 1.0)
-                .attr('stroke-width', '1')
+                
 
           }
         // }

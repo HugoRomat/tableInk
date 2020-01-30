@@ -10,7 +10,7 @@ import alphabet from './../../../../static/alphabet.png';
 // import w1 from './../../../js/usecases/workspace1.json';
 // import w2 from './../../js/usecases/workspace2.json';
 
-
+import multiLines from './../../../../static/multiLines.png';
 import highlighter from './../../../../static/higlighter.png';
 import pen from './../../../../static/pen2.png';
 import pattern from './../../../../static/patternPen.png';
@@ -235,7 +235,7 @@ class ColorsMenu extends Component {
         this.drawSVGPattern();
         this.drawSVGStretch();
         this.moveTagStock();
-        this.drawTag();
+        // this.drawTag();
 
 
         $('#myRange').on('change', function(event) {
@@ -515,7 +515,8 @@ class ColorsMenu extends Component {
         var data = {
             'id': guid(),
             'width': 100,
-            'height': 200,
+            'height': 100,
+            'idUniqTag': guid(),
             'placeHolder': [
                 {'id':'left', 'data': {}, 'lines':arrayStrokes}
             ],
@@ -622,7 +623,7 @@ class ColorsMenu extends Component {
                             </svg>
                         </div>
 
-                        <div className="pen" id="stretch"><img src={pattern} />
+                        <div className="pen" id="stretch"><img src={multiLines} />
                              <svg id="stretchSVG">
                                 <g id="options"></g>
                                     <line id="redLineStretch" x1={0} y1={41.5} x2={200} y2={41.5} stroke={'red'} opacity={0.1}/>
@@ -636,14 +637,14 @@ class ColorsMenu extends Component {
 
 
                         <div className="pen" id="tagMenu"><img src={pageFlags} />
-                            <svg id="tagSVG">
+                            {/* <svg id="tagSVG">
                                 <g id="options"></g>
                                 
                                     <Lines 
                                         sketchLines = {this.state.tagLines}
                                     />
                                      <path id="penTempTag"></path>
-                            </svg>
+                            </svg> */}
                         </div>
                </div>
                {/* <div id='range'><input type="range" orient="vertical" min="0" max="1" defaultValue="1" step='0.1' className="slider" id="myRange"/></div>

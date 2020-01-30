@@ -753,7 +753,7 @@ class Group extends Component {
     //    console.log(this.props)
         
         return (
-            <g id={'group-'+this.props.group.id} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
+            <g id={'group-'+this.props.group.id} className={'groupLine'} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
                 <g id={"postIt-" + this.props.group.id} className="postit"> 
                     <rect id={"rectAllBB-" + this.props.group.id} />
                     <g id={"postItImage-" + this.props.group.id}> 

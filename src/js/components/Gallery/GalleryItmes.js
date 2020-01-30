@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import * as d3 from 'd3';
 import { connect } from 'react-redux';
 import Items from './Items';
+import pocket from './../../../../static/pocket.png';
+import pocket2 from './../../../../static/procket2.png';
+
 
 import { 
     addGuideToSticky,
@@ -68,12 +71,22 @@ class GalleryItmes extends Component {
         }
     }
     open(){
-        
-        d3.select('#menuOpener').transition().duration(1500).attr('r', '1000')
+        // d3.select('#menuOpener').select('#circle2').attr('cx', '240').attr('cy', '20').attr('r', '20')
+        // d3.select('#menuOpener').select('#circle2').transition().duration(1500)
+        // .attr('cx', '240').attr('cy', '20').attr('r', '300')
+        d3.select('#menuOpener').select('#pocket2').transition().duration(1500).attr('x', '0').attr('y', '0')
+        d3.select('#menuOpener').select('#pocket2').transition().duration(1500)
+        .attr('width', '800').attr('y', '-700')
+        // d3.select('#menuOpener').select('circle').transition().duration(1500).attr('r', '300')
     }
     close(){
-        
-        d3.select('#menuOpener').transition().duration(1500).attr('r', '150')
+        // d3.select('#menuOpener').select('circle').transition().duration(1500).attr('r', '300')
+        d3.select('#menuOpener').select('#pocket2').transition().duration(1500)
+       
+        .attr('y', '0')
+        .attr('x', '0')
+        .attr('width', '0')
+        // d3.select('#menuOpener').select('circle').transition().duration(1500).attr('r', '0')
     }
     dragItem = (d) => {
         this.isItemDragged = d;
@@ -156,7 +169,12 @@ class GalleryItmes extends Component {
         
         return (     
             <g className="galleryItems"  transform={`translate(0,0)`}>
-                <circle id="menuOpener" cx={0} cy={window.innerHeight} r={150} fill={'#b3c6e0'} />
+                {/* <circle id="menuOpener" cx={0} cy={window.innerHeight} r={150} fill={'#b3c6e0'} /> */}
+                <g id="menuOpener"  transform={`translate(0,`+(window.innerHeight-250)+`)`}> 
+                    <image href={pocket} width={300}/> 
+                    <image id="pocket2" href={pocket2} width={0}/> 
+                    {/* <circle id="circle2" cx={0} cy={0} r={0} fill={'#b3c6e0'} /> */}
+                </g>
                     {listItems}  
             </g>
         );

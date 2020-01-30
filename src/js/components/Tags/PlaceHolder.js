@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import * as d3 from 'd3';
 import shallowCompare from 'react-addons-shallow-compare';
-import { getNearestElement, _getBBox, getTransformation, guid, simplify, _getBBoxPromise } from "../Helper";
+import { getNearestElement, _getBBox, getTransformation, guid, simplify, _getBBoxPromise, showBboxBB, getBoundinxBoxLines } from "../Helper";
 import LinePlaceHolder from "./LinePlaceHolder";
 // import LinePlaceHolder
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
-
+import  $ from 'jquery';
 
 class PlaceHolder extends Component {
     constructor(props) {
@@ -27,9 +27,9 @@ class PlaceHolder extends Component {
         // console.log('placeHolder-' + this.props.data.id)
         d3.select('#placeHolder-' + this.props.data.id + '-' + this.props.parent.id)
             .on('pointerdown', function(d){
-                console.log('HELLOs')
+                // console.log('HELLOs')
                 if (d3.event.buttons == 32 && d3.event.pointerType == 'pen'){
-                    console.log('HELLOs')
+                    // console.log('HELLOs')
                     that.erasing = true;
                     that.tempArrayStrokeErase = [];
                     d3.selectAll('.linesTag').style('pointer-events', 'auto')
@@ -48,6 +48,8 @@ class PlaceHolder extends Component {
             })
             .on('pointermove', function(d){
                 if (d3.event.pointerType == 'pen' || d3.event.pointerType == 'mouse'){
+
+                   
                     if (that.down){
                         // console.log(that.props.parent);
                         var transform = getTransformation(d3.select('#item-' + that.props.parent.id).attr('transform'))
@@ -108,9 +110,100 @@ class PlaceHolder extends Component {
                     d3.selectAll('.linesTag').style('pointer-events', 'none')
                 }
 
+                if (d3.event.pointerType == 'pen' && $('#item-'+that.props.parent.id).hasClass( "saveTop" )){
+                    that.searchandDrawOnItem()
+                }   
+
                 // console.log('Hello')
             })
         // this.addErase('placeHolder-' + this.props.data.id + '-' + this.props.parent.id);
+    }
+    drawLineOnTagElement(BB, BBTag){
+        // showBboxBB(BB, 'red')
+        // showBboxBB(BBTag, 'green')
+        var line = d3.line()
+        var myScaleX = d3.scaleLinear().domain([0, 0 + BBTag.width]).range([BB.x, BB.x + BB.width]);
+        var myScaleY = d3.scaleLinear().domain([0, 0 + BBTag.height]).range([BB.y, BB.y + BB.height]);
+
+        var lines = JSON.parse(JSON.stringify(this.props.lines));
+        // console.log(lines[j])
+        for (var j = 1; j < lines.length; j += 1){
+            var points = lines[j]['data'].map((e)=> { return [myScaleX(e[0]), myScaleY(e[1])]  })
+            lines[j]['data'] = points;
+            // console.log(points)
+        }
+
+        for (var i = 1; i < lines.length; i += 1){
+                var myLine = lines[i]
+                // console.log(myLine)
+
+                var data = {
+                    'points': myLine.data, 
+                    'data': {'class':[], 'sizeStroke': myLine.sizeStroke, 'colorStroke': myLine.colorStroke}, 
+                    'id': guid() , 
+                    'device':0,
+                    'isAlphabet': false,
+                    'position': [0,0]
+                }
+                this.props.addSketchLine(data);
+
+                // d3.select('#tempGroup').append('path')
+                //     .attr('d', ()=>line(myLine.data))
+                //     .attr('fill', 'none')
+                //     .attr('stroke', ()=> 'red' )
+                //     .attr('stroke-width', '20')
+            }
+
+    //    lines.forEach((element, i) => {
+    //     console.log(i)
+    //    });
+    }
+    searchandDrawOnItem(){
+        var that = this;
+        var inkDetection = this.props.lines[0];
+        // console.log(inkDetection)
+        var flattened = [].concat(...inkDetection.inkDetection);
+
+        var result = flattened.filter(x => x.text == inkDetection.content);
+
+        
+        var linesG = result.map((d)=> d.idLine)
+        // console.log(linesG)
+        
+        for (var i= 0; i < linesG.length; i += 1){
+            getBoundinxBoxLines(linesG[i]).then((BB) => {
+
+                _getBBoxPromise('placeHolder-left-'+that.props.parent.id).then((BBTag) => {
+                    // console.log(BBTag)
+                    this.drawLineOnTagElement(BB, BBTag);
+
+                })
+
+            })
+        }
+                // var scaleX = this.tempArrayStroke
+                // console.log(tempStroke)
+               
+                // var myScaleX = d3.scaleLinear().domain([tempStroke[0][0], tempStroke[tempStroke.length-1][0]]).range([BB.x, BB.x + BB.width]);
+                // var myScaleY = d3.scaleLinear().domain([tempStroke[0][1], tempStroke[tempStroke.length-1][1]]).range([BB.y, BB.y + BB.height]);
+                // tempStroke = tempStroke.map((e)=> {
+                //     // return [e[0]+ 50, e[1] + 50 ]
+                //     return [myScaleX(e[0]), myScaleY(e[1])]
+                // })
+            
+                // // for (var i = 0; i < lines.length; i += 1){
+                //     // var myLine = lines[i]
+                //     d3.select('#tempGroup').append('path')
+                //         .attr('d', ()=>line(tempStroke))
+                //         .attr('fill', 'none')
+                //         .attr('stroke', ()=> 'red' )
+                //         .attr('stroke-width', '20')
+                // }
+            
+           
+    
+        // }
+
     }
     // /** TO ERASE THE STROKE IN THE CANVAS ON THE RIGHT */
     eraseStroke(){

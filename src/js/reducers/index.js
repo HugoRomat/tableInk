@@ -37,16 +37,13 @@ const initialState = {
     'UIid': 0,
     'tags':[],
     'tagsGroup':[],
-    'tables': [],
-    'grid': false,
-    'voiceQueries': [],
     // 'tagsInterface': [], 
     'colorPalette':  {'lines':[]},
     'imagesCanvas': []
     ,
   };
 
-    console.log(galleryData)
+    // console.log(galleryData)
 
 
 
@@ -66,7 +63,7 @@ initialState.tags = tags;
 initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
-initialState.voiceQueries = voice;
+// initialState.voiceQueries = voice;
 // initialState.stickyLines = sticky;
 initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
@@ -87,7 +84,7 @@ initialState.colorPalette.lines = strokesPalette;
     //   console.log('=========================', i); 
     //   console.log(JSON.stringify(d.model)) 
     // })
-    // console.log(JSON.stringify(placeHolder));
+    // console.log(JSON.stringify(state.tags));
     // console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
       
@@ -153,6 +150,23 @@ initialState.colorPalette.lines = strokesPalette;
             })
          
         }
+        return state;
+
+        case 'UPDATE_TAG_POSITION':
+          var idTag = action.data.idTag;
+          var position = action.data.position;
+          var index = state.tags.indexOf(state.tags.find(x => x.id == idTag));
+          
+          if (index > -1){
+            state = update(state, { 
+              tags: {
+                [index] : {
+                  position:  {$set: position}
+                }
+              }
+            })
+          }
+          
         return state;
 
 

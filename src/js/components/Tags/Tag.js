@@ -14,12 +14,16 @@ import {
     removeTag,
     addTagToGuide,
     updateWidthHeightTag,
-    removeTagLine
+    removeTagLine,
+    addSketchLine,
+    updateTagPosition
 } from '../../actions';
 
 import PlaceHolder from "./PlaceHolder";
 // import PlaceHolderText from "./PlaceHolderText";
 import { boxBox, boxCircle } from "intersects";
+import { recognizeInk } from "../InkRecognition/InkRecognition";
+import { SpeechRecognitionClass } from "../SpeechReognition/Speech";
 
 const mapDispatchToProps = { 
     addLineToTagGroup,
@@ -27,12 +31,15 @@ const mapDispatchToProps = {
     removeTag,
     addTagToGuide,
     updateWidthHeightTag,
-    removeTagLine
+    removeTagLine,
+    addSketchLine,
+    updateTagPosition
 };
 const mapStateToProps = (state, ownProps) => {  
   
   return { 
-    
+    groupLines: state.rootReducer.present.groupLines,
+    sketchLines: state.rootReducer.present.sketchLines,
   };
 };
 
@@ -52,6 +59,7 @@ class Tag extends Component {
             'BBox':{},
             'currentPlaceHolder': null
         };
+        this.speech = new SpeechRecognitionClass(this);
 
     }
     componentDidMount(){
@@ -113,7 +121,19 @@ class Tag extends Component {
                         $('#item-'+that.props.stroke.id).addClass( "saveRight" );
                         d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
 
-                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip')
+                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip').style('pointer-events', 'none')
+                            .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
+                    }
+
+
+                    if (absolutePosition[1] < 30 && !$('#item-'+that.props.stroke.id).hasClass( "saveTop" )){
+                        var transform =  getTransformation(d3.select('#panItems').attr('transform'));
+                        var X = absolutePosition[0] - transform.translateX;
+                        var Y = absolutePosition[1] - transform.translateY;
+                        $('#item-'+that.props.stroke.id).addClass( "saveTop" );
+                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(0)')
+
+                        d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip').style('pointer-events', 'none')
                             .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
                     }
                     // console.log(absolutePosition)
@@ -128,6 +148,14 @@ class Tag extends Component {
             if (ev.pointers[0].pointerType == 'touch' ){
                 that.dragended(ev);
                 that.down = false;
+
+                if(d3.select('#item-'+that.props.stroke.id).empty() == false){
+                    var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+                    var X = transform.translateX;
+                    var Y = transform.translateY;
+                    that.props.updateTagPosition({'idTag': that.props.stroke.id, 'position':[X, Y]})
+                }
+                
             }
         })
         // this.mc.on("swipe", function(ev) {
@@ -165,7 +193,7 @@ class Tag extends Component {
 
         this.mc.on('press', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
-                if (that.props.holdTag != undefined) that.colorForHolding(true);
+
 
                 /** Calculate the BBox for the Tag */
                 // var data = JSON.parse(JSON.stringify(that.props.stroke));
@@ -178,7 +206,16 @@ class Tag extends Component {
                 //         data.offsetX = d.x - e.x;
                 //         data.offsetY = d.y - e.y;
                 //         data.BB = d;
-                if (that.props.holdTag != undefined) that.props.holdTag(that.props.stroke); 
+                // console.log(that.props.holdTag != undefined, that.props.stroke.placeHolder[0]['lines'])
+                
+                if (that.props.holdTag != undefined && that.props.stroke.placeHolder[0]['lines'].length > 0) {
+                    that.colorForHolding(true);
+                    that.props.holdTag(that.props.stroke); 
+                }
+
+                if (that.props.stroke.placeHolder[0]['lines'] == 0){
+                    that.voiceQuery();
+                }
                 //     })
                 // })
                 
@@ -195,27 +232,34 @@ class Tag extends Component {
         this.mc.on('tap', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 
-                that.iteration += 1
-                var othersTags = that.props.stroke.tagSnapped;
+                console.log('TAP')
+                if ($('#item-'+that.props.stroke.id).hasClass( "saveTop" )){
+                    // console.log('HEY', that.props.stroke);
 
-                if (othersTags.length > 0){
-                    var where = that.iteration % (othersTags.length + 1);
-                    // console.log(where)
-                    /* Pour le premier element */
-                    if (where == 0){
-                        // console.log(that.props.stroke.placeHolder[0])
-                        that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(that.props.stroke.placeHolder[0]))})
-                    } 
-                    /* Pour les autres elements */
-                    else {
-                        var newTag = othersTags[where-1];
-                        // console.log(newTag.placeHolder[0])/
-                        that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(newTag.placeHolder[0]))})
-                        // console.log(newTag)
+                    that.props.highlightAllSameTag({'tag':that.props.stroke})
+                   
+                } else {
+                    that.iteration += 1
+                    var othersTags = that.props.stroke.tagSnapped;
+    
+                    if (othersTags.length > 0){
+                        var where = that.iteration % (othersTags.length + 1);
+                        // console.log(where)
+                        /* Pour le premier element */
+                        if (where == 0){
+                            // console.log(that.props.stroke.placeHolder[0])
+                            that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(that.props.stroke.placeHolder[0]))})
+                        } 
+                        /* Pour les autres elements */
+                        else {
+                            var newTag = othersTags[where-1];
+                            // console.log(newTag.placeHolder[0])/
+                            that.setState({'currentPlaceHolder': JSON.parse(JSON.stringify(newTag.placeHolder[0]))})
+                            // console.log(newTag)
+                        }
+                        
                     }
-                    
                 }
-
             }
         })
         
@@ -235,6 +279,41 @@ class Tag extends Component {
         this.addBG();
         // this.drawLine()
             // console.log('CREATE TAG', that.props.stroke)
+    }
+    /** 
+     * 1 - Get all groups lines
+     * 2 - Apply NLP on them to get the meaning
+    */
+   voiceQuery(){
+        // var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+        /** Get all lines */
+        var allLines = [];
+        this.props.groupLines.forEach((d)=>{
+            allLines = allLines.concat(d.lines);
+        })
+        //    console.log(allLines)
+        this.speech.getSpeechReco().then((speech)=>{
+
+            recognizeInk(this, allLines, true).then((ink)=> {
+                console.log(ink)
+                var data = {
+                    'id': guid(),
+                    'content': speech,
+                    'inkDetection': ink,
+                    'position': [10,10]
+                }
+
+                this.props.addLineToTagGroup({
+                    'idTag': this.props.stroke.id,
+                    'where': 'left',
+                    'data': [data]
+                })
+                // console.log(data)
+                // this.props.addVoiceToTag(data)
+            })
+            
+            // console.log('HEY', speech)
+        })
     }
     addBG(){
         var that = this;
@@ -434,7 +513,7 @@ class Tag extends Component {
        
     }
     addLine = (d) => {
-        // console.log('DOOO')
+        console.log('DOOO', d)
        this.props.addLineToTagGroup({
            'idTag': d.idTag,
            'where':d.where,
@@ -457,8 +536,9 @@ class Tag extends Component {
         }
     }
     render() {
+        var that = this;
         // console.log(this.props.stroke);
-        var translate = [this.props.stroke.position[0],this.props.stroke.position[1]]
+        
 
         var scale = 1;
 
@@ -475,6 +555,8 @@ class Tag extends Component {
 
                     updateWidthHeightTag = {this.props.updateWidthHeightTag}
                     removeTagLine = {this.props.removeTagLine}
+
+                    addSketchLine={this.props.addSketchLine}
                 />
         if (this.state.currentPlaceHolder != null){
                 placeHolder = <PlaceHolder 
@@ -489,6 +571,7 @@ class Tag extends Component {
 
                     updateWidthHeightTag = {this.props.updateWidthHeightTag}
                     removeTagLine = {this.props.removeTagLine}
+                    addSketchLine={this.props.addSketchLine}
                 />
         }
 
@@ -504,9 +587,15 @@ class Tag extends Component {
         // });
 
 
-
+        var translate = [this.props.stroke.position[0],this.props.stroke.position[1]];
+        if (!d3.select('#item-'+that.props.stroke.id).empty()){
+            var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+            var X = transform.translateX;
+            var Y = transform.translateY;
+            translate = [X, Y]
+        }
         // console.log(this.props.stroke)
-
+        // console.log(d3.select('#item-'+that.props.stroke.id).empty())
         return (
             <g id={'item-'+this.props.stroke.id} className={'tagEntities'} transform={`translate(${translate[0]},${translate[1]})scale(${scale})`}>
                 <g id={'tagSnapped-' + this.props.stroke.id} style={{'pointerEvents': 'none' }} transform={`translate(0,0)`}>

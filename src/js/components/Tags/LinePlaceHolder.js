@@ -12,35 +12,52 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        // console.log('stroke-'+this.props.stroke.id)
-        var line = d3.line().curve(d3.curveBasis)
         var that = this;
-        d3.select('#stroke-'+that.props.stroke.id)
-            .attr("d", line(that.props.stroke.data))
-            .attr('stroke', that.props.stroke.colorStroke)
-            .attr('stroke-width', that.props.stroke.sizeStroke)
-            // .attr('stroke', that.props.colorStroke)
-            // .attr('stroke-width', that.props.sizeStroke)
-            .attr('fill', 'none')
+        // console.log(this.props.stroke)
+
+        if (this.props.stroke.content == undefined){
+            var line = d3.line().curve(d3.curveBasis)
+            d3.select('#stroke-'+that.props.stroke.id)
+                .attr("d", line(that.props.stroke.data))
+                .attr('stroke', that.props.stroke.colorStroke)
+                .attr('stroke-width', that.props.stroke.sizeStroke)
+                // .attr('stroke', that.props.colorStroke)
+                // .attr('stroke-width', that.props.sizeStroke)
+                .attr('fill', 'none')
+        } else {
+            d3.select('#stroke-'+that.props.stroke.id).text(that.props.stroke.content)
+        }
+       
     }
     componentDidUpdate(){
-        // console.log('UPDATE')
-        var line = d3.line().curve(d3.curveBasis)
         var that = this;
-        d3.select('#stroke-'+that.props.stroke.id)
-            .attr("d", line(that.props.stroke.data))
-            .attr('stroke', that.props.stroke.colorStroke)
-            .attr('stroke-width', that.props.stroke.sizeStroke)
-            // .attr('stroke', that.props.colorStroke)
-            // .attr('stroke-width', that.props.sizeStroke)
-            .attr('fill', 'none')
+
+        if (this.props.stroke.content == undefined){
+            var line = d3.line().curve(d3.curveBasis)
+            d3.select('#stroke-'+that.props.stroke.id)
+                .attr("d", line(that.props.stroke.data))
+                .attr('stroke', that.props.stroke.colorStroke)
+                .attr('stroke-width', that.props.stroke.sizeStroke)
+                // .attr('stroke', that.props.colorStroke)
+                // .attr('stroke-width', that.props.sizeStroke)
+                .attr('fill', 'none')
+        }
+        else {
+            d3.select('#stroke-'+that.props.stroke.id).text(that.props.stroke.content)
+        }
     }
    
     render() {
-        
+        var item = null;
+
+        if (this.props.stroke.content == undefined){
+            item = <path id={'stroke-'+this.props.stroke.id} className={'linesTag'} style={{'pointerEvents': 'none' }}></path>
+        } else {
+            item = <text id={'stroke-'+this.props.stroke.id} className={'linesTag'} style={{'pointerEvents': 'none', 'fontSize': '30px' }} dy={"60"}></text>
+        }
         return (
- 
-            <path id={'stroke-'+this.props.stroke.id} className={'linesTag'} style={{'pointerEvents': 'none' }}/>//transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
+            <g>{item}</g> 
+           //transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`} /> 
 
         );
         

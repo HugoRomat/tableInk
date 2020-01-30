@@ -511,7 +511,9 @@ class Picker extends Component {
         var td = this.htmlToElement(paletteSVG);
         d3.select(td.childNodes[1]).attr('id', 'pathPaletteSVG')
         newNode.node().append(td.childNodes[1])
-        d3.select('#pathPaletteSVG').attr('stroke', 'black').attr('fill', 'rgba(252, 243, 242,  0.4)').style("filter", "url(#drop-shadow)")//.style('pointer-events', 'none')
+        d3.select('#pathPaletteSVG')
+        .attr('stroke', 'black')
+        .attr('fill', 'white').style("filter", "url(#drop-shadow)")//.style('pointer-events', 'none')
         
         
         var td = this.htmlToElement(paletteSVG);

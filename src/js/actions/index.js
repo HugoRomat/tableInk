@@ -51,6 +51,10 @@ export const setWorkspace = data => ({
     type: 'SET_WORKSPACE',
     data
 })
+export const updateTagPosition = data => ({
+    type: 'UPDATE_TAG_POSITION',
+    data
+})
 
 export const tapGroup = data => ({
     type: 'TAP_GROUP',

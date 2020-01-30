@@ -60,8 +60,8 @@ class Line extends Component {
 
             this.props.stroke.pattern.forEach((d)=>{
 
-                var X = point['x']+ d.position[0] - transformPan.translateX - that.props.stroke.patternBBox.width/2;
-                var Y = point['y']+ d.position[1] - transformPan.translateY  - that.props.stroke.patternBBox.height/2;
+                var X = point['x']+ d.position[0] - that.props.stroke.patternBBox.width/2;
+                var Y = point['y']+ d.position[1] - that.props.stroke.patternBBox.height/2;
                 d3.select('#tempGroup-'+ that.props.stroke.id).append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
                     .append('path')
                     .attr('d', (f)=>  line(d.points))
