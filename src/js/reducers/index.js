@@ -60,11 +60,10 @@ initialState.galleryItems.data = galleryData;
 // initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-// initialState.groupLines = group
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 // initialState.voiceQueries = voice;
-initialState.stickyLines = sticky;
 // initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
 initialState.sketchLines = strokes;
