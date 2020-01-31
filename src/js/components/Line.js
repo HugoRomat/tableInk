@@ -11,7 +11,7 @@ class Line extends Component {
     }
     componentDidMount(){
         // console.log(this.props.stroke)
-        var line = d3.line().curve(d3.curveCatmullRom)
+        var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
         // console.log(that.props.stroke.data.colorStroke)
@@ -120,7 +120,7 @@ class Line extends Component {
     componentDidUpdate(){
         // console.log('UPDATE')
         // console.log(this.props.stroke.data.class)
-        var line = d3.line().curve(d3.curveCatmullRom)
+        var line = d3.line().curve(d3.curveBasis)
         var that = this;
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
