@@ -6,8 +6,8 @@ import {d3sketchy} from './../../../../customModules/d3.sketchy'
 import html2canvas from 'html2canvas';
 import  $ from 'jquery';
 
-import clip from '../../../../static/clip.png'
-
+import clip from '../../../../static/clip.png';
+import pin from '../../../../static/pin.png';
 import { 
     addLineToTagGroup,
     addTagSnapped,
@@ -110,7 +110,7 @@ class Tag extends Component {
                 if (that.down){
                     // console.log(that.down)
                     if (that.props.holdTag != undefined) that.findIntersection(that.allBoundingBox, ev);
-                    if (!$('#item-'+that.props.stroke.id).hasClass( "saveRight" )) that.dragged(ev);
+                    if (!$('#item-'+that.props.stroke.id).hasClass( "saveRight" ) && !$('#item-'+that.props.stroke.id).hasClass( "saveTop" )) that.dragged(ev);
 
                     var absolutePosition = [ev.srcEvent.x, ev.srcEvent.y]
 
@@ -119,7 +119,9 @@ class Tag extends Component {
                         var X = absolutePosition[0] - transform.translateX;
                         var Y = absolutePosition[1] - transform.translateY;
                         $('#item-'+that.props.stroke.id).addClass( "saveRight" );
-                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(10)')
+                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+(20- transform.translateX)+','+Y+')scale(1)rotate(10)')
+                        // d3.select('#item-'+that.props.stroke.id).select('#rect-left').attr('fill','red')
+
 
                         d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip').style('pointer-events', 'none')
                             .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
@@ -131,10 +133,12 @@ class Tag extends Component {
                         var X = absolutePosition[0] - transform.translateX;
                         var Y = absolutePosition[1] - transform.translateY;
                         $('#item-'+that.props.stroke.id).addClass( "saveTop" );
-                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+Y+')scale(1)rotate(0)')
+                        d3.select('#item-'+that.props.stroke.id).transition().duration(1000).attr('transform', 'translate('+X+','+(10- transform.translateY)+')scale(1)rotate(0)')
+                        // d3.select('#item-'+that.props.stroke.id).select('#rect-left').attr('fill','red')
 
+                        // console.log('#item-'+that.props.stroke.id)
                         d3.select('#item-'+that.props.stroke.id).append("svg:image").attr('class', 'imgClip').style('pointer-events', 'none')
-                            .attr("xlink:href", clip).attr("width", 75).attr("height", 75).attr("x", -20).attr("y", -30);
+                            .attr("xlink:href", pin).attr("width", 200).attr("height", 200).attr("x", 0).attr("y", -20);
                     }
                     // console.log(absolutePosition)
                     /* if ( $('#item-'+that.props.stroke.id).hasClass( "saveRight" )){

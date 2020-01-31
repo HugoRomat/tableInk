@@ -269,7 +269,8 @@ class Guide extends Component {
             .attr('height', 0)
         
         if (isIt == true){
-            var getData = d3.select('#group-'+ that.props.stroke.child).select('#rect-outerBackground');
+            console.log(that.props.stroke.placeHolder[0])
+            // var getData = d3.select('#group-'+ that.props.stroke.child).select('#rect-outerBackground');
             // console.log('rect-'+that.props.stroke.id)
 
             // console.log(that.props.stroke.placeHolder[0])
@@ -281,10 +282,10 @@ class Guide extends Component {
             //     .attr('opacity', '0.2')
 
                 d3.select('#rect-'+that.props.stroke.id)
-                .attr('x', that.props.stroke.placeHolder[0]['x'])
-                .attr('y', that.props.stroke.placeHolder[0]['y'])
-                .attr('width', that.props.stroke.placeHolder[0]['width'])
-                .attr('height', that.props.stroke.placeHolder[0]['height'])
+                .attr('x', that.props.stroke.placeHolder[0]['x']-20)
+                .attr('y', that.props.stroke.placeHolder[0]['y']-20)
+                .attr('width', that.props.stroke.placeHolder[0]['width']+40)
+                .attr('height', that.props.stroke.placeHolder[0]['height']+40)
                 .attr('opacity', '0.2')
         }
     }

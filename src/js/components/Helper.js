@@ -876,9 +876,12 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
         // BB.width += 50;
         // BB.height += 50;
 
-        var dist = distance(BBTemp.x, BB.x, BBTemp.y + (BBTemp.height/2), BB.y+ (BB.height/2))
+        // LEFT CORNER
+        var dist = distance(BBTemp.x, BB.x, BBTemp.y , BB.y+ BB.height)
+        // middle CORNER
+        var distMiddle = distance(BBTemp.x + (BBTemp.width/2), BB.x + (BB.width/2), BBTemp.y + (BBTemp.height/2) , BB.y+ (BB.height/2))
         // console.log(dist)
-        if (dist < 300){
+        if (dist < 300 || distMiddle < 300){
             // showBboxBB(BB, 'red');
             BBid.push({'id': BBidID[i], 'BB': BB});
         }

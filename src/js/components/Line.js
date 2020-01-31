@@ -52,16 +52,18 @@ class Line extends Component {
         var that = this;
         d3.select('#'+that.props.stroke.id).attr('opacity', 0)
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-        var step = that.props.stroke.patternBBox.width;
+
+        // console.log(that.props.stroke)
+        var step = that.props.stroke.pattern.BBox.width;
         var path = d3.select('#'+that.props.stroke.id).node()
         var length = path.getTotalLength();
         for (var i = 0; i < length; i += step){
             var point = path.getPointAtLength(i);
 
-            this.props.stroke.pattern.forEach((d)=>{
+            this.props.stroke.pattern.strokes.forEach((d)=>{
 
-                var X = point['x']+ d.position[0] - that.props.stroke.patternBBox.width/2;
-                var Y = point['y']+ d.position[1] - that.props.stroke.patternBBox.height/2;
+                var X = point['x']+ d.position[0] - that.props.stroke.pattern.BBox.width/2;
+                var Y = point['y']+ d.position[1] - that.props.stroke.pattern.BBox.height/2;
                 d3.select('#tempGroup-'+ that.props.stroke.id).append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
                     .append('path')
                     .attr('d', (f)=>  line(d.points))
@@ -74,11 +76,12 @@ class Line extends Component {
         }
     }
     drawStretch(event){
+        // console.log('GO STREATH')
         var that = this;
         var path = d3.select('#'+that.props.stroke.id).node()
         var line = d3.line(d3.curveCardinal);
         var length = path.getTotalLength();
-        var step = 20;
+        var step = 2;
         // console.log(that.props.stroke)
         var diff = that.props.stroke.stretch.map((d, i)=>{ 
             var points = d.points;
@@ -89,6 +92,7 @@ class Line extends Component {
             // var dataPoints = this.stretchPen[k].points
             var allPoints = []
             var j = 0;
+            // console.log(length,d )
             for (var i = 0; i < length; i += step){
                 var point = path.getPointAtLength(i);
                 var pointBefore = path.getPointAtLength(i-1);
@@ -98,6 +102,7 @@ class Line extends Component {
                 allPoints.push(newPoint)
                 j++;
             }
+            // console.log(allPoints)
             d3.select('#tempGroup-'+ that.props.stroke.id).append('g')
                 .append('path')
                 .attr('d', (f)=>  line(allPoints))

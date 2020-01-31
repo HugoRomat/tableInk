@@ -645,8 +645,8 @@ class Group extends Component {
                     // var Outer = this.props.group.model.placeHolder[0]
 
                     console.log(this.props.group.model.placeHolder[0])
-                    BBgroup.width = this.props.group.model.placeHolder[0].width - 250
-                    BBgroup.height = this.props.group.model.placeHolder[0].height - 170
+                    BBgroup.width = BBgroup.height - 250
+                    BBgroup.height = BBgroup.height - 170
                 }
 
                 var width = BBgroup.width + 250;

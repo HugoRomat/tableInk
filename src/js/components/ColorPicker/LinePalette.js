@@ -31,6 +31,8 @@ class LinePalette extends Component {
             .attr('stroke-opacity', '0')
             .attr('stroke-linejoin', "round")
         
+
+            d3.select('#'+that.props.stroke.id).style('opacity', 1)
         _getBBoxPromise('palette-'+this.props.stroke.id).then((BBox)=>{
             this.BBox = BBox;
         })
@@ -38,9 +40,11 @@ class LinePalette extends Component {
         
         if (this.props.stroke.pattern != undefined){
             this.drawPattern();
+            d3.select('#'+that.props.stroke.id).style('opacity', 0)
         }
         if (this.props.stroke.stretch != undefined){
             this.drawStretch();
+            d3.select('#'+that.props.stroke.id).style('opacity', 0)
         }
 
 

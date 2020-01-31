@@ -371,8 +371,8 @@ class Picker extends Component {
 
                 this.props.patternPenData.strokes.forEach((d)=>{
 
-                    var X = point['x'] + d.position[0] - transformPan.translateX - that.props.patternPenData.BBox.width/2;
-                    var Y = point['y'] + d.position[1] - transformPan.translateY  - that.props.patternPenData.BBox.height/2;
+                    var X = point['x'] + d.position[0] - that.props.patternPenData.BBox.width/2;
+                    var Y = point['y'] + d.position[1]   - that.props.patternPenData.BBox.height/2;
                     d3.select('#tempGroupPalette').append('g').attr("transform", (f) => 'translate('+X+','+Y+')')
                         .append('path')
                         .attr('d', (f)=>  line(d.points))

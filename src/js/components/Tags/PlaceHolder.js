@@ -271,6 +271,15 @@ class PlaceHolder extends Component {
                 .attr('y',0)
                 .attr('stroke', 'rgba(252, 243, 242, 1)')
                 .attr('fill', 'white')
+
+
+            if($('#item-'+that.props.parent.id).hasClass( "saveTop" ) || $('#item-'+that.props.parent.id).hasClass( "saveRight" )){
+                // element.attr('stroke', 'grey')
+                element.style("filter", "url(#drop-shadow)")
+
+            }
+
+
         }
     }
     componentWillUnmount(){
@@ -298,12 +307,12 @@ class PlaceHolder extends Component {
 
                 
                 <rect id={'rect-' + this.props.data.id} />
-                <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
+           
 
                 <g className='paths'>
                     {listItems}
                 </g>
-
+                <path id={'tempStroke-'+this.props.data.id  + '-' + this.props.parent.id} />
 {/*                 
                 <line id={'horizontal-'  + this.props.data.id + '-' + this.props.parent.id}/>
                 <line id={'vertical-' + this.props.data.id + '-' + this.props.parent.id}/> */}

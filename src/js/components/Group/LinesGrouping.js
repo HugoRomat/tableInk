@@ -131,7 +131,7 @@ class LinesGrouping extends Component {
             .attr('height', that.BBox.height)
             .attr('x', that.BBox.x - transformDrag.translateX)
             .attr('y', that.BBox.y - transformDrag.translateY)
-            .attr('fill', 'rgba(255,0,0,0.2)')
+            .attr('fill', 'rgba(255,0,0,0.0)')
     
             
     }

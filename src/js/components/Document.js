@@ -6,7 +6,7 @@ import './../../css/main.css';
 
 import * as Hammer from 'hammerjs';
 import { connect } from 'react-redux';
-import { distance, guid, drawRect, whoIsInside, retrieveStyle, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax, checkIfSomething, whereIsPointer, findIntersectionRecursive } from "./Helper";
+import { distance, guid, drawRect, whoIsInside, retrieveStyle, getTransformation, is_point_inside_selection, getType, showBbox, _getBBox, checkIntersection, getNearestElement, showBboxBB, drawCircle, interpolate, line_intersect, midPosition, getPerpendicularPoint, drawLine, distToSegment, lineIntersectsSquare, lineIntersectsPolygone, showOmBB, center, getSpPoint, LeastSquares, createPositionAtLengthAngle, getCenterPolygon, drawPath, getoobb, FgetBBox, simplify, _getBBoxPromise, getBoundinxBoxLines, _getBBoxPromiseNode, findMinMax, checkIfSomething, whereIsPointer, findIntersectionRecursive, unionRectangles } from "./Helper";
 import ColorMenu from "./Interface/ColorMenu";
 import Polygon from 'polygon'
 import {d3sketchy} from './../../../customModules/d3.sketchy'
@@ -510,7 +510,7 @@ class Document extends Component {
           this.mc.on("pan", function(ev) {
             //   console.log(ev.pointers)
             if (ev.pointers.length == 1 || ev.pointers.length == 2){
-                // console.log('OFOFOF')
+                // console.log('OFOFOF', ev.pointers)
                 if (ev.pointers.length == 2){
 
                     // that.tempArrayStroke.push([event.x - transform.translateX, event.y - transform.translateY]);
@@ -542,7 +542,7 @@ class Document extends Component {
                 that.panGroup = null;
                 that.panStroke = null
             }
-            
+            that.straightLine = false;
           })
 
 
@@ -624,7 +624,7 @@ class Document extends Component {
         })
         this.mc.on("tap", function(ev) {
             if (ev.pointers[0]['pointerType'] == 'pen' ){
-                that.props.removeSketchLines([that.idLine]);
+                
                 var x = ev.pointers[0]['x'];
                 var y = ev.pointers[0]['y'];
                 var element = whereIsPointer(x, y)
@@ -632,15 +632,19 @@ class Document extends Component {
                 var line = that.props.sketchLines.find((d)=> d.id == id)
                     
                 if (id != null && line != undefined){
+                    //
                     var myLine = JSON.parse(JSON.stringify(line));
                     var data = JSON.parse(JSON.stringify(that.colorPaletteTapped));
                     if (data.stretch != undefined) myLine.stretch = data.stretch;
                     if (data.pattern != undefined) myLine.pattern = data.pattern;
                     myLine.data = data.data;
+
+                    // console.log('CHANGE', line.id, id)
                     that.props.changeStrokesProperties({
                         'id': id,
                         'data': myLine
                     }) 
+                    // that.props.removeSketchLines([line.id]);
                 }
             }
             if (ev.pointers[0]['pointerType'] == 'touch' ){
@@ -663,6 +667,9 @@ class Document extends Component {
                     that.props.closeGallery({'isOpen': false})
                     d3.select('.groups').selectAll('.groupLine').style('opacity', 1)
                     d3.select('.standAloneLines').selectAll('.realStroke').style('opacity', 1)
+                    that.setState({'tagHold': false})
+                    that.isGuideHold = false;
+                    that.setState({'isGuideHold': false})
                     
 
                 } else {
@@ -1029,6 +1036,7 @@ class Document extends Component {
                 that.drawTempStroke();
             }
             if (that.straightLine != false){
+                // console.log('HEY')
                 that.drawTempStrokeStraightLine();
             }
             
@@ -1039,6 +1047,7 @@ class Document extends Component {
             }
             else if (that.isStretchPen){
                 that.drawStretch(event);
+                console.log('GOO')
                 that.drawTempStroke();
             }
             else if (that.state.tagHold){
@@ -1091,12 +1100,12 @@ class Document extends Component {
             }
             else if (that.isPatternPen){
                 that.addStrokePattern();
-                that.removeTempGroup();
+                
                 // that.drawPattern(event);
             }
             else if (that.isStretchPen){
                 that.addStrokeStretch();
-                that.removeTempGroup();
+               
             }
             else if (that.press){
 
@@ -1117,7 +1126,9 @@ class Document extends Component {
             }*/
             else if (that.straightLine != false){
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
-
+                that.idLine = guid();
+                // if (that.tempArrayStroke.length > 15){
+                that.addStroke();
                 //that.makingGroup([], 'initial', strokeGuide);
             }
             else if (that.isFunctionPen){
@@ -1126,25 +1137,63 @@ class Document extends Component {
                 var penPosition = JSON.parse(JSON.stringify([event.x - transform.translateX, event.y - transform.translateY]))
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
                 that.findCloseStrokes().then((closelements)=>{
-                    that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
 
-                        recognizeInk(this, elementLines).then((ink)=> {
 
-                            that.makeActionsFunctionPen(penPosition, ink, elementLines);
-                            
+                    if (that.commandFunction.command == 'highlight'){
+                        that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+                            // console.log(elementLines[0])
+                            var arrayPromise = elementLines[0].map((d)=> _getBBoxPromise('item-'+ d));
+                            var rectangle = null;
+                            // console.log(arrayPromise)
+                            Promise.all(arrayPromise).then(function(BBs) {
+                                for (var i in BBs){
+                                    if (rectangle == null) rectangle = BBs[i];
+                                    else rectangle = unionRectangles(rectangle, BBs[i]);
+                                    // showBboxBB(BBs[i], 'red')
+                                }
+                                // console.log(rectangle)
+                                // showBboxBB(rectangle, 'green')
+                                var color = that.commandFunction.args;
+                                var c = d3.color(color)
+                                c.opacity = 0.2;
+                                drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height, c.toString());
+                               
+                            })
+                           
                         })
-                        
-
-                        
-                        // console.log(elementLines)
-                        
-                    })
+                    }
+                    else {
+                        that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+                            console.log(elementLines)
+                            recognizeInk(this, elementLines).then((ink)=> {
+                               
+                                that.makeActionsFunctionPen(penPosition, ink, elementLines);
+                            })
+                        })
+                    }
                 })
             }
+
+
+           /* else if (that.commandFunction.command == 'highlight'){
+                console.log(elementLines)
+                var arrayPromise = elementLines.map((d)=> getBoundinxBoxLines(d));
+                var color = that.commandFunction.args;
+                var c = d3.color(color)
+                c.opacity = 0.2;
+                Promise.all(arrayPromise).then(function(values) {
+                    console.log(values)
+                    var transform = getTransformation(d3.select('#panItems').attr('transform'))
+                    values.forEach((BB)=> {
+                        showBboxBB(BB, 'red')
+                        drawRect(BB.x - transform.translateX, BB.y - transform.translateY, BB.width, BB.height, c.toString())
+                    })
+                })
+            }*/
             /** Copie un guide a gauche //DUPLICATION */
-            else if (that.sticky && that.isGuideHold){
-                that.addStrokeGuideCopy(this.isGuideHold, event, guid()); 
-            }
+            // else if (that.sticky && that.isGuideHold){
+            //     that.addStrokeGuideCopy(this.isGuideHold, event, guid()); 
+            // }
             /** Tap a guide to create a sticky */
             else if (that.tapGuide){
                
@@ -1166,7 +1215,7 @@ class Document extends Component {
             }
 
             /** Quisk swipe to draw or create a sticky */
-            else if (that.drawing && that.sticky == false && that.isGuideHold == false){
+            else if (that.drawing && that.sticky == false && that.isGuideHold == false && that.tempArrayStroke.length > 10){
                 // var objectsSelected = that.findCloseStrokes();
                 var length = d3.select('#penTemp').node().getTotalLength();
 
@@ -1174,9 +1223,10 @@ class Document extends Component {
                 //     console.log(d)
                 // })
                 //It's a guide OR a stroke
-
-                // console.log()
-                if (length > 150 && Date.now() - that.pointerDownPoperties.time < 400){
+               
+                var dist = distance(that.tempArrayStroke[0][0],that.tempArrayStroke[that.tempArrayStroke.length-1][0], that.tempArrayStroke[0][1],that.tempArrayStroke[that.tempArrayStroke.length-1][1] )
+                // console.log(dist)
+                if (length > 150 && Date.now() - that.pointerDownPoperties.time < 400 && dist > 30){
                     var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
 
 
@@ -1204,11 +1254,11 @@ class Document extends Component {
                 else {
                     // console.log('ADD')
                     that.idLine = guid();
-                    // if (that.tempArrayStroke.length > 15){
+                    if (that.tempArrayStroke.length > 10){
                         that.addStroke();
                         that.isNewLine();
                         that.isSameLine();
-                    // }
+                    }
                 }
 
 
@@ -1216,6 +1266,7 @@ class Document extends Component {
                 // that.addStroke();
                 // that.drawing = false;
             }
+            that.removeTempGroup();
             that.removeTempStroke();
         }
         that.straightLine = false;
@@ -1362,13 +1413,11 @@ class Document extends Component {
             var centerBox = [0];
             var pointsThroughLine = [];
             var alreadyAdded = [];
+            var lineRemove = []
 
             
             objects.forEach((objectIntersection, i)=>{
-                pointsThroughLine.push([]);
-                alreadyAdded.push([])
                 var objectId = objectIntersection.id 
-                alreadyAdded[i].push(objectId);
                 //ConvexHull
                 var line = this.props.sketchLines.find(x => x.id == objectId);
                 var points = JSON.parse(JSON.stringify(line['points']));
@@ -1378,49 +1427,97 @@ class Document extends Component {
                 })
                 
                 var BB = _getBBox('item-'+objectId);
-                // showBboxBB(BB, 'red');
-                // showBbox('item-'+objectId, 'red');
-                
-                centerBox[i] = getCenterPolygon(points);
-                // drawCircle(centerBox[i].x, centerBox[i].y, 5, 'orange');
 
-                pointOnLine[i] = {'x': BB.x+ BB.width, 'y':BB.y+ (BB.height/2)}
-                // pointOnLine[i] = getSpPoint(firstPoint, lastPoint, centerBox[i]);
-                // drawCircle(pointOnLine[i].x, pointOnLine[i].y, 5, 'green');
-                pointsThroughLine[i].push(pointOnLine[i]);
-                pointsThroughLine[i].push(centerBox[i]);
-
-                this.expandText(pointOnLine[i],  centerBox[i], 3,  pointsThroughLine[i], alreadyAdded[i], -1, JSON.parse(JSON.stringify(this.props.sketchLines)));
-                this.expandText(centerBox[i], pointOnLine[i],  3,  pointsThroughLine[i], alreadyAdded[i], +1, JSON.parse(JSON.stringify(this.props.sketchLines)))
-            })
-
-            // console.log(alreadyAdded)
-
-            /**
-             * REMOVE DOUBLONS
-             */
-            var arrayDoublons = [];
-            var realArray = [];
-            alreadyAdded.forEach((d)=>{
-                var newArr = [];
-                d.forEach((e)=>{
-                    if (arrayDoublons.indexOf(e) == -1) newArr.push(e)
-                    // else console.log('doublon');
-                    arrayDoublons.push(e)
-                })
-                realArray.push(newArr)
-            })
-
-            /**
-             * Delete empty arrays
-             */
-            for (var i = realArray.length - 1; i >= 0; i--) {
-                if (realArray[i].length == 0) realArray.splice(i, 1);
-            }
+                // console.log(BB)
+                if ((BB.width > 400 && BB.height < 50) || (BB.height > 400 && BB.width < 50)){
+                    lineRemove.push(objectId)
+                } else {
+                    
+                    pointsThroughLine.push([]);
+                    alreadyAdded.push([])
+                    var iteration = alreadyAdded.length-1
+                    alreadyAdded[iteration].push(objectId);
+                    // console.log(BB)
+                    // showBboxBB(BB, 'red');
+                    // showBbox('item-'+objectId, 'red');
+                    
+                    centerBox[iteration] = getCenterPolygon(points);
+                    // drawCircle(centerBox[i].x, centerBox[i].y, 5, 'orange');
     
+                    pointOnLine[iteration] = {'x': BB.x+ BB.width, 'y':BB.y+ (BB.height/2)}
+                    // pointOnLine[i] = getSpPoint(firstPoint, lastPoint, centerBox[i]);
+                    // drawCircle(pointOnLine[i].x, pointOnLine[i].y, 5, 'green');
+                    pointsThroughLine[iteration].push(pointOnLine[iteration]);
+                    pointsThroughLine[iteration].push(centerBox[iteration]);
+    
+                    this.expandText(pointOnLine[iteration],  centerBox[iteration], 3,  pointsThroughLine[iteration], alreadyAdded[iteration], -1, JSON.parse(JSON.stringify(this.props.sketchLines)));
+                    this.expandText(centerBox[iteration], pointOnLine[iteration],  3,  pointsThroughLine[iteration], alreadyAdded[iteration], +1, JSON.parse(JSON.stringify(this.props.sketchLines)))
+                }
+               
+            })
 
-            // console.log(realArray, arrayDoublons)
-            resolve(realArray)
+            
+            var lines = [].concat(...alreadyAdded)
+            lines = lines.filter((a, b) => lines.indexOf(a) === b)
+           
+            var arrayPromise = lines.map((d)=> _getBBoxPromise('item-'+ d));
+            
+            var lineRemove = []
+            // var rectangle = null;
+            // // console.log(arrayPromise)
+            Promise.all(arrayPromise).then(function(BBs) {
+                // console.log(BBs)
+                for (var j in BBs){
+                    if ((BBs[j].width > 400 && BBs[j].height < 100) || (BBs[j].height > 400 && BBs[j].width < 100)){
+                        lineRemove.push(lines[j])
+                    }
+                }
+                // console.log(lineRemove)
+                    //     lineRemove.push(objectId)
+                    // }
+            //     for (var i in BBs){
+            //         if (rectangle == null) rectangle = BBs[i];
+            //         else rectangle = unionRectangles(rectangle, BBs[i]);
+            //         // showBboxBB(BBs[i], 'red')
+            //     }
+            //     // console.log(rectangle)
+            //     // showBboxBB(rectangle, 'green')
+            //     var color = that.commandFunction.args;
+            //     var c = d3.color(color)
+            //     c.opacity = 0.2;
+            //     drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height, c.toString());
+
+                /**
+                 * REMOVE DOUBLONS
+                 */
+                var arrayDoublons = [];
+                var realArray = [];
+                alreadyAdded.forEach((d)=>{
+                    var newArr = [];
+                    d.forEach((e)=>{
+                        if (arrayDoublons.indexOf(e) == -1 && lineRemove.indexOf(e) == -1) newArr.push(e)
+                        // else console.log('doublon');
+                        arrayDoublons.push(e)
+                    })
+                    realArray.push(newArr)
+                })
+
+                /**
+                 * Delete empty arrays
+                 */
+                for (var i = realArray.length - 1; i >= 0; i--) {
+                    if (realArray[i].length == 0) realArray.splice(i, 1);
+                }
+        
+
+                // console.log(realArray, arrayDoublons)
+                resolve(realArray)
+
+                
+            })
+            // console.log(lineRemove)
+
+           
 
         })
 
@@ -1441,7 +1538,7 @@ class Document extends Component {
         // drawLine(begin.x, begin.y, point.x, point.y, 'red');
 
 
-        d3.select('.standAloneLines').selectAll('g').each(function(){
+        d3.select('.standAloneLines').selectAll('.parentLine').each(function(){
             var id = d3.select(this).attr('id').split('-')[1];
            
             var insideandWhichGroup = that.props.groupLines.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(id) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
@@ -1452,6 +1549,7 @@ class Document extends Component {
             if (alreadyAdded.indexOf(id) == -1 && insideandWhichGroup == undefined){
                 
                 var BB = _getBBox('item-'+id);
+                var originalBB = JSON.parse(JSON.stringify(BB))
                 BB.x -= 15;
                 BB.y -= 15;
                 BB.width +=30;
@@ -1463,7 +1561,9 @@ class Document extends Component {
                     {'x': BB.x, 'y':BB.y + BB.height}
                 ]
                 var isIntersect = lineIntersectsPolygone(begin, point, oobbNew);
-                if (isIntersect){
+                if ((originalBB.width > 400 && originalBB.height < 50) || (originalBB.height > 400 && originalBB.width <50)){
+                }
+                else if (isIntersect){
                     // showBboxBB(BB, 'red')
                     // showBbox('item-'+id, 'blue');
                     alreadyAdded.push(id)
@@ -1481,17 +1581,20 @@ class Document extends Component {
 
     findCloseStrokes = async() => {
         var offsetBBox = 100;
-
+        // console.log(d3.select('#penTemp'))
         var BBTemp = await _getBBoxPromise(d3.select('#penTemp').attr('id'));
+        // console.log(BBTemp)
         BBTemp.x -= offsetBBox;
         BBTemp.width += offsetBBox*2
         // showBboxBB(BBTemp, 'red')
         var BBid = [];
-        d3.select('.standAloneLines').selectAll('g').each(function(){
+        d3.select('.standAloneLines').selectAll('.parentLine').each(function(){
             BBid.push(d3.select(this).attr('id'))
         })
         for (var i in BBid){
+            // console.log(BBid[i])
             var BB = await _getBBoxPromise(BBid[i]);
+            // console.log(BB)
             var idSImple = BBid[i].split('-')[1]
             var insideandWhichGroup = this.props.groupLines.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
             // console.log(idSImple, insideandWhichGroup)
@@ -1515,7 +1618,7 @@ class Document extends Component {
         this.objectIn = [];
         var offset = 10;
 
-        d3.select('.standAloneLines').selectAll('g').each(function(){
+        d3.select('.standAloneLines').electAll('.parentLine').each(function(){
             var BB = _getBBox(d3.select(this).attr('id'));
             var selection = [
                 [BB.x, BB.y],
@@ -1718,8 +1821,9 @@ class Document extends Component {
                 'data': {'class':[], 'sizeStroke': this.sizePen, 'colorStroke': this.colorPen}, 
                 'id': guid() , 
                 // 'device':this.props.UIid,
-                'pattern':this.patternPen,
-                'patternBBox': this.patternBBOX,
+                // 'pattern':this.patternPen,
+                // 'patternBBox': this.patternBBOX,
+                'pattern': {'BBox': this.patternBBOX, 'strokes': this.patternPen},
                 'isAlphabet': false,
                 'position': [firstPoint[0],firstPoint[1]]
             }
@@ -1839,7 +1943,7 @@ class Document extends Component {
             // ];
             var newGuidePoints = [
                 [event['x'] - transformPan.translateX, event['y'] - transformPan.translateY],
-                [event['x'] - transformPan.translateX, event['y'] + 300 - transformPan.translateY]
+                [event['x'] - transformPan.translateX, event['y'] + this.isGuideHold.placeHolder[0]['height'] - transformPan.translateY]
             ];
             
             var idChild = guid();
@@ -2132,15 +2236,7 @@ class Document extends Component {
             // drawCircle(penPosition[0], penPosition[1], 10, 'red')
             result.forEach((d)=> that.speech.addTextTyping(d))
         }
-        else if (that.commandFunction.command == 'highlight'){
-            var arrayPromise = elementLines.map((d)=> getBoundinxBoxLines(d));
-            var color = that.commandFunction.args;
-            var c = d3.color(color)
-            c.opacity = 0.2;
-            Promise.all(arrayPromise).then(function(values) {
-                values.forEach((BB)=> drawRect(BB.x, BB.y, BB.width, BB.height, c.toString()))
-            })
-        }
+      
     }
     isSameLine = async() => {
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
