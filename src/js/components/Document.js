@@ -555,7 +555,7 @@ class Document extends Component {
                 var x = ev.pointers[0]['x'];
                 var y = ev.pointers[0]['y'];
                 checkIfSomething(x, y).then((element)=>{
-                    // console.log(element)
+                    console.log(element)
                     if (element != null){
                         var type = element.split('-')[0];
                     }

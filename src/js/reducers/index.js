@@ -60,11 +60,11 @@ initialState.galleryItems.data = galleryData;
 // initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-initialState.groupLines = group
+// initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 // initialState.voiceQueries = voice;
-// initialState.stickyLines = sticky;
+initialState.stickyLines = sticky;
 // initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
 initialState.sketchLines = strokes;
@@ -76,14 +76,14 @@ initialState.colorPalette.lines = strokesPalette;
     // console.log(action.type)
     
 
-    var placeHolder = JSON.parse(JSON.stringify(state.groupLines)).forEach((d, i)=> { 
-      d.id = guid();
-      d.model.id = guid();
-      d.model.child = null;
-      d.model.placeHolder.forEach((f)=>{f.lines.forEach((l)=> l.id = guid()) })
-      console.log('=========================', i); 
-      console.log(JSON.stringify(d.model)) 
-    })
+    // var placeHolder = JSON.parse(JSON.stringify(state.groupLines)).forEach((d, i)=> { 
+    //   d.id = guid();
+    //   d.model.id = guid();
+    //   d.model.child = null;
+    //   d.model.placeHolder.forEach((f)=>{f.lines.forEach((l)=> l.id = guid()) })
+    //   console.log('=========================', i); 
+    //   console.log(JSON.stringify(d.model)) 
+    // })
     // console.log(JSON.stringify(state.tags));
     // console.log(JSON.stringify(state.groupLines));
     // console.log(JSON.stringify(state.sketchLines));

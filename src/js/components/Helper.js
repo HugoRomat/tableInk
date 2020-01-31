@@ -461,7 +461,7 @@ export async function checkIfSomething(x, y){
     
     var BBid = [];
     var whichElement = null
-    d3.select('.standAloneLines').selectAll('g').each(function(){
+    d3.select('.standAloneLines').selectAll('.realStroke').each(function(){
         BBid.push(d3.select(this).attr('id'))
     })
     d3.select('.standAloneImages').selectAll('g').each(function(){
