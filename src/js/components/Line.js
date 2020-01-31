@@ -77,7 +77,7 @@ class Line extends Component {
     }
     drawStretch(event){
 
-        d3.select('#'+that.props.stroke.id).attr('opacity', 0)
+        
         // console.log('GO STREATH')
         var that = this;
         var path = d3.select('#'+that.props.stroke.id).node()
@@ -114,6 +114,8 @@ class Line extends Component {
                 .attr("stroke-dasharray", 'none')
                 .attr('stroke-linejoin', "round")
         })
+
+        d3.select('#'+that.props.stroke.id).attr('opacity', 0)
     }
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
