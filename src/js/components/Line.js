@@ -126,6 +126,8 @@ class Line extends Component {
         // console.log(this.props.stroke.data.class)
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
+
+        d3.select('#'+that.props.stroke.id).attr('opacity', 1)
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
             .attr('fill', 'none')
