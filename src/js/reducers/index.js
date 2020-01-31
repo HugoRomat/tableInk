@@ -57,17 +57,17 @@ alphabet.forEach((d)=>{
 
 // initialState.lettres = lettres; 
 initialState.galleryItems.data = galleryData;
-// initialState.tags = tags;
+initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-// initialState.groupLines = group
+initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 // initialState.voiceQueries = voice;
 // initialState.stickyLines = sticky;
 // initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
-// initialState.sketchLines = strokes;
+initialState.sketchLines = strokes;
 initialState.colorPalette.lines = strokesPalette;
 
 // console.log(initialState)
@@ -84,7 +84,7 @@ initialState.colorPalette.lines = strokesPalette;
     //   console.log('=========================', i); 
     //   console.log(JSON.stringify(d.model)) 
     // })
-    // console.log(JSON.stringify(state.tags));
+    // console.log(JSON.stringify(state.groupLines));
     // console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
       
