@@ -57,7 +57,7 @@ alphabet.forEach((d)=>{
 
 // initialState.lettres = lettres; 
 initialState.galleryItems.data = galleryData;
-initialState.tags = tags;
+// initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
 initialState.groupLines = group
@@ -84,6 +84,7 @@ initialState.colorPalette.lines = strokesPalette;
     //   console.log('=========================', i); 
     //   console.log(JSON.stringify(d.model)) 
     // })
+    // console.log(JSON.stringify(state.tags));
     // console.log(JSON.stringify(state.groupLines));
     // console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
