@@ -2340,6 +2340,9 @@ class Document extends Component {
                 d[0] = d[0] - firstPoint[0];
                 d[1] = d[1] - firstPoint[1]
             })
+            // console.log(arrayPoints.length)
+            arrayPoints = simplify(arrayPoints, 0.08)
+            // console.log(arrayPoints.length)
             // console.log(JSON.stringify(arrayPoints))
             var data = {
                 'points': arrayPoints, 

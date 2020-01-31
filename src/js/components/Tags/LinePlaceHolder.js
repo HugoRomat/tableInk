@@ -24,6 +24,7 @@ class LinePlaceHolder extends Component {
                 // .attr('stroke', that.props.colorStroke)
                 // .attr('stroke-width', that.props.sizeStroke)
                 .attr('fill', 'none')
+                .attr('stroke-linejoin', "round")
         } else {
             d3.select('#stroke-'+that.props.stroke.id).text(that.props.stroke.content)
         }
@@ -41,6 +42,7 @@ class LinePlaceHolder extends Component {
                 // .attr('stroke', that.props.colorStroke)
                 // .attr('stroke-width', that.props.sizeStroke)
                 .attr('fill', 'none')
+                .style('stroke-linejoin', "round")
         }
         else {
             d3.select('#stroke-'+that.props.stroke.id).text(that.props.stroke.content)

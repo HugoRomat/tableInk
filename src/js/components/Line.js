@@ -11,7 +11,7 @@ class Line extends Component {
     }
     componentDidMount(){
         // console.log(this.props.stroke)
-        var line = d3.line()
+        var line = d3.line().curve(d3.curveCatmullRom)
         var that = this;
 
         // console.log(that.props.stroke.data.colorStroke)
@@ -22,7 +22,7 @@ class Line extends Component {
             .attr('fill', 'none')
             .attr('stroke', that.props.stroke.data.colorStroke)
             .attr('stroke-width', that.props.stroke.data.sizeStroke)
-            .attr('stroke-linejoin', "round")
+            .style('stroke-linejoin', "round")
 
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
@@ -120,7 +120,7 @@ class Line extends Component {
     componentDidUpdate(){
         // console.log('UPDATE')
         // console.log(this.props.stroke.data.class)
-        var line = d3.line()
+        var line = d3.line().curve(d3.curveCatmullRom)
         var that = this;
         d3.select('#'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))

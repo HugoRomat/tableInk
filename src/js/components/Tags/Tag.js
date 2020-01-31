@@ -70,7 +70,7 @@ class Tag extends Component {
 
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':1, threshold: 0});
+        var pan = new Hammer.Pan({'pointers':1, threshold: 10});
         // var swipe = new Hammer.Swipe({threshold: 0, pointers: 1, velocity: 0.1});
         var press = new Hammer.Press({time: 250});
         var tap = new Hammer.Tap();
