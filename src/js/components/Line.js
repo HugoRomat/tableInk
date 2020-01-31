@@ -76,6 +76,8 @@ class Line extends Component {
         }
     }
     drawStretch(event){
+
+        d3.select('#'+that.props.stroke.id).attr('opacity', 0)
         // console.log('GO STREATH')
         var that = this;
         var path = d3.select('#'+that.props.stroke.id).node()
