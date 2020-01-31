@@ -22,7 +22,7 @@ class Line extends Component {
             .attr('fill', 'none')
             .attr('stroke', that.props.stroke.data.colorStroke)
             .attr('stroke-width', that.props.stroke.data.sizeStroke)
-            .style('stroke-linejoin', "round")
+            .attr('stroke-linejoin', "round")
 
         d3.select('#fake-'+that.props.stroke.id)
             .attr("d", line(that.props.stroke['points']))
