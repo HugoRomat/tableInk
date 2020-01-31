@@ -84,8 +84,8 @@ initialState.colorPalette.lines = strokesPalette;
     //   console.log('=========================', i); 
     //   console.log(JSON.stringify(d.model)) 
     // })
-    // console.log(JSON.stringify(state.groupLines));
-    // console.log(JSON.stringify(state.sketchLines));
+    console.log(JSON.stringify(state.groupLines));
+    console.log(JSON.stringify(state.sketchLines));
     switch (action.type) {
       
       case 'SET_GRID':
