@@ -39,6 +39,11 @@ export const addLineToGroup = data => ({
     type: 'ADD_LINE_TO_GROUP',
     data
 })
+export const updatePaletteLine = data => ({
+    type: 'UPDATE_PALETTE_LINE',
+    data
+})
+
 export const addLinesToSticky = data => ({
     type: 'ADD_LINES_TO_STICKY',
     data

@@ -5,7 +5,8 @@ import { connect } from 'react-redux';
 
 import { 
     addPaletteLine,
-    removePaletteLine
+    removePaletteLine,
+    updatePaletteLine
   } from './../../actions';
 import LinePalette from "./LinePalette";
 import {d3sketchy} from './../../../../customModules/d3.sketchy'
@@ -15,7 +16,8 @@ import paletteSVG from './../../../../static/palette.svg'
 
 const mapDispatchToProps = { 
     addPaletteLine,
-    removePaletteLine
+    removePaletteLine,
+    updatePaletteLine
 };
 const mapStateToProps = (state, ownProps) => {  
     return { 
@@ -75,7 +77,7 @@ class Picker extends Component {
         this.mc.on("panmove", function(ev) {
             if (that.isDrawing == false) var item = d3.select('#'+that.elementSelected).select('.nonfake');
             else var item = d3.select('#pathPalette')
-            console.log(item.empty())
+            // console.log(item.empty())
             if (item.empty() == false){
                 var strokeWidth = parseFloat(item.attr('stroke-width'));
                 var color = d3.rgb(item.attr('stroke'));
@@ -125,6 +127,13 @@ class Picker extends Component {
                         }
                     }
                 } 
+                that.props.updatePaletteLine({
+                    'id': that.elementSelected.split('-')[1], 
+                    'sizeStroke': item.attr('stroke-width'),
+                    'colorStroke': item.attr('stroke')
+                })
+                // console.log(elementSelected)
+                // console.log('GOO')
             }
         })
         this.mc.on("panend", function(ev) {
@@ -545,6 +554,7 @@ class Picker extends Component {
         .attr('stroke-opacity', '0.3')
     }
     render() {
+        // console.log('RENDER')
         // console.log(this.props.colorPalette)
 
         // console.log(JSON.stringify(this.props.colorPalette.lines))
@@ -555,7 +565,7 @@ class Picker extends Component {
             />
         });
         var X = window.innerWidth - 290;
-        var Y = 600;
+        var Y = 800;
         return (
 
             <g id="colorPalette" transform={`translate(${X},${Y})`}>

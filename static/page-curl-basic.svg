@@ -27,7 +27,7 @@
  <g>
   <title>Layer 1</title>
   <!-- <rect class="rectangle" fill="url(#linearGradient3176)" fill-rule="evenodd" stroke-miterlimit="4" stroke-dashoffset="0" y="6.516136" x="246.346449" height="756.65149" width="462.60623" id="rect3143"/> -->
-    <path class="path1" fill="url(#linearGradient3188)" fill-rule="evenodd" marker-start="none" marker-mid="none" marker-end="none" stroke-miterlimit="4" stroke-dashoffset="0" id="rect3173" d="m3,6.467266l0,975.290913l692.960938,0l0,-339.855957c0,-57.985901 -27.240173,-107.96991 -69.296143,-170.872986c-30.696777,-44.121155 -113.744202,-96.387115 -423.308701,-164.896912c49.316605,-130.472778 87.428116,-225.945663 65.587936,-275.214432c-4.257996,-9.60553 -13.735718,-24.450626 -29.527557,-24.450626l-236.416473,0z"/>
+    <path class="path1" fill="none" fill-rule="evenodd" marker-start="none" marker-mid="none" marker-end="none" stroke-miterlimit="4" stroke-dashoffset="0" id="rect3173" d="m3,6.467266l0,975.290913l692.960938,0l0,-339.855957c0,-57.985901 -27.240173,-107.96991 -69.296143,-170.872986c-30.696777,-44.121155 -113.744202,-96.387115 -423.308701,-164.896912c49.316605,-130.472778 87.428116,-225.945663 65.587936,-275.214432c-4.257996,-9.60553 -13.735718,-24.450626 -29.527557,-24.450626l-236.416473,0z"/>
     <path class="path2" fill="url(#linearGradient3163)" fill-rule="evenodd" marker-start="none" marker-mid="none" marker-end="none" stroke-miterlimit="4" stroke-dashoffset="0" id="path3155" d="m268.931488,30.863834l357.723785,440.131435c-30.696716,-44.121155 -113.710815,-96.30542 -423.275284,-164.815186c49.316605,-130.472794 87.284592,-225.999474 65.551498,-275.31625z"/> -->
  </g>
  </g>

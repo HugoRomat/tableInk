@@ -12,7 +12,7 @@ var avoidBroadCast = ['SET_UI_ID', 'SET_WORKSPACE']
 // var index = 0;
 // SUR LE SERVEUR
 
-/*
+
 wss.on('connection', function connection(ws, req) {
    
     
@@ -65,7 +65,7 @@ wss.broadcast = function broadcast(data, ws) {
   };
 
 
-*/
+
 
 
 
@@ -73,6 +73,6 @@ app.get('/',function(req,res) {
     res.sendFile('/dist/index.html', {root: __dirname });
   });
 
-app.listen(3000, '10.159.2.39', function () {
+app.listen(3000, '10.159.0.65', function () {
     console.log('Example app listening on port 3000!')
 })

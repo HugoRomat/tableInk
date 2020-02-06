@@ -16,6 +16,7 @@ import pen from './../../../../static/pen2.png';
 import pattern from './../../../../static/patternPen.png';
 import functionPen from './../../../../static/functionPen.png';
 import pageFlags from './../../../../static/pageflags.png';
+import selection from './../../../../static/selection.png';
 
 
 import { 
@@ -174,6 +175,14 @@ class ColorsMenu extends Component {
             }
         })
 
+        d3.select('#group').on("pointerdown", function(d, index){
+            if (d3.event.pointerType == 'touch'){
+                that.props.selectPen({'type': "group"})
+                that.selectThisPen(this);
+                that.movePens();
+            }
+        })
+
 
         var el = document.getElementById('function');
         this.mc = new Hammer.Manager(el);
@@ -229,6 +238,9 @@ class ColorsMenu extends Component {
         d3.select('#patternSVG').on('contextmenu', function(){
             d3.event.preventDefault();
         })
+        d3.select('#group').on('contextmenu', function(){
+            d3.event.preventDefault();
+        })
 
 
 
@@ -270,19 +282,22 @@ class ColorsMenu extends Component {
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 that.tempArrayStroke = [];
+
+                that.leftOffset = parseInt(d3.select('#pattern').style('right'));
+                // console.log(left)
                 // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-                _getBBoxPromise('patternSVG').then((d)=>{
-                    // d.x += transformPan.translateX;
-                    // d.y += transformPan.translateY;
-                    that.positionBox = d;
-                    // console.log('GO', transformPan)
-                })
+                // _getBBoxPromise('patternSVG').then((d)=>{
+                //     // d.x += transformPan.translateX;
+                //     // d.y += transformPan.translateY;
+                //     that.positionBox = d;
+                //     // console.log('GO', transformPan)
+                // })
             }
           })
           this.mc.on("pan", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 // console.log(that.positionBox)
-                var X = ev.srcEvent.x - that.positionBox.x;
+                var X = ev.srcEvent.x - that.positionBox.x + that.leftOffset;
                 var Y = ev.srcEvent.y - that.positionBox.y;
                 that.tempArrayStroke.push([X, Y]);
                 that.drawTempStroke();
@@ -330,13 +345,13 @@ class ColorsMenu extends Component {
         this.mc.on("panstart", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){console.log('GO')
                 that.tempArrayStroke = [];
-                _getBBoxPromise('stretchSVG').then((d)=>{ that.positionBoxStretch = d; })
+                that.leftOffset = parseInt(d3.select('#stretch').style('right'));
             }
           })
           this.mc.on("pan", function(ev) {
             if (ev.pointers[0].pointerType == 'pen'){
                 // console.log(that.positionBox)
-                var X = ev.srcEvent.x - that.positionBoxStretch.x;
+                var X = ev.srcEvent.x - that.positionBoxStretch.x  + that.leftOffset;
                 var Y = ev.srcEvent.y - that.positionBoxStretch.y;
                 that.tempArrayStroke.push([X, Y]);
                 that.drawTempStrokeStretch();
@@ -607,6 +622,7 @@ class ColorsMenu extends Component {
 
                <div id="pens" > 
                     <div className="pen" id="inking"><img src={pen} /></div>
+                    <div className="pen" id="group"><img src={selection} /></div>
                     <div className="pen" id="function"><img src={functionPen} />
                         <div id='containerFunction'> AVG </div>
                     </div>

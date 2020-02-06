@@ -52,12 +52,12 @@ class Guide extends Component {
         var that = this;
 
         
-        var drag = d3.drag()
-            // .subject(function (d) { return d; })
-            .on("start", function(e){ that.dragstarted(that)})
-            .on("drag", function(e){ that.dragged(that)})
-            .on("end", function(e){ that.dragended(that)})
-            .clickDistance(40)
+        // var drag = d3.drag()
+        //     // .subject(function (d) { return d; })
+        //     .on("start", function(e){ that.dragstarted(that)})
+        //     .on("drag", function(e){ that.dragged(that)})
+        //     .on("end", function(e){ that.dragended(that)})
+        //     .clickDistance(40)
         
 
 
@@ -80,18 +80,62 @@ class Guide extends Component {
 
         var el = document.getElementById('item-'+that.props.stroke.id);
         this.mc = new Hammer.Manager(el);
-        var pan = new Hammer.Pan({'pointers':1, threshold: 50});
+        // var pan = new Hammer.Pan({'pointers':1, threshold: 50});
         var tap = new Hammer.Tap();
         var press = new Hammer.Press({time: 250});
-        var pinch = new Hammer.Pinch({});
+        // var pinch = new Hammer.Pinch({});
+        // var swipe = new Hammer.Swipe({pointers: 1});
+
 
         this.mc.add(press);
-        this.mc.add(pan);
-        this.mc.add(pinch);
+        // this.mc.add(pan);
+        // this.mc.add(pinch);
         this.mc.add(tap);
+        // this.mc.add(swipe);
+
+        
+        // pan.requireFailure(swipe);
+        // pan.recognizeWith(press);
 
 
-        pan.recognizeWith(press);
+        // this.mc.on("panstart", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch'){
+        //         that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+        //     }
+        // })
+        // this.mc.on("panmove", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch'){
+        //         var transform =  getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
+
+        //         // console.log(transform)
+        //         var offsetX = ev.srcEvent.x - that.lastPosition.x;
+        //         var offsetY = ev.srcEvent.y - that.lastPosition.y;
+        //         var X = offsetX + transform.translateX;
+        //         var Y = offsetY + transform.translateY;
+        //         // console.log(transform)
+        //         d3.select('#item-'+that.props.stroke.id).attr('transform', 'translate('+X+','+Y+')scale('+transform.scaleX+')')
+        //         that.lastPosition = {'x': ev.srcEvent.x, 'y':ev.srcEvent.y}
+        //     }
+        // })
+        // this.mc.on("panend", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch'){
+        //         // if (that.props.onSwipe != undefined) that.props.onSwipe('right');
+        //     }
+        // })
+
+
+        // this.mc.on("swipeup", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch'){
+        //         if (that.props.onSwipe != undefined) that.props.onSwipe('left');
+        //     }
+        // })
+        // this.mc.on("swipedown", function(ev) {
+        //     if (ev.pointers[0].pointerType == 'touch'){
+        //         if (that.props.onSwipe != undefined) that.props.onSwipe('right');
+        //     }
+        // })
+
+
         this.mc.on("press", function(event){
             if (event.pointers[0].pointerType == 'touch'){
                 // that.props.dragItem(false);
@@ -191,15 +235,15 @@ class Guide extends Component {
 
 
             
-        var linesAttached = that.props.stroke.linesAttached;
-        for (var i in linesAttached){
-            var line = linesAttached[i];
-            var identifier = 'item-'+line;
-            var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
-            var X = offsetX + transform.translateX;
-            var Y = offsetY + transform.translateY;
-            d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
-        }
+        // var linesAttached = that.props.stroke.linesAttached;
+        // for (var i in linesAttached){
+        //     var line = linesAttached[i];
+        //     var identifier = 'item-'+line;
+        //     var transform = getTransformation(d3.select('#'+identifier).attr('transform'));
+        //     var X = offsetX + transform.translateX;
+        //     var Y = offsetY + transform.translateY;
+        //     d3.select('#'+identifier).attr('transform', 'translate('+X+','+Y+')')
+        // }
         that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
     }

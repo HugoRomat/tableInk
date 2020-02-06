@@ -22,8 +22,8 @@ class Image extends Component {
     render() {
         // console.log(this.props.stroke.position[0])
         return (
-            <g id={'image-'+this.props.image.id} style={{'pointerEvents': 'none' }} transform={`translate(${this.props.image.position[0]},${this.props.image.position[1]})`}>
-                <image href={this.props.image.src} />
+            <g id={'image-'+this.props.image.id} style={{'pointerEvents': 'none' }} className={'imagesColor'} transform={`translate(${this.props.image.position[0]},${this.props.image.position[1]})`}>
+                <image id={this.props.image.id} href={this.props.image.src} className={'imageColor'} />
             </g>
         );
         

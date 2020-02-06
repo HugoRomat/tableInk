@@ -60,13 +60,13 @@ initialState.galleryItems.data = galleryData;
 // initialState.tags = tags;
 // initialState.tagsInterface = tagsInterface;
 
-initialState.groupLines = group
+// initialState.groupLines = group
 initialState.lettres = alphabetPerso0;
 
 // initialState.voiceQueries = voice;
 // initialState.textes = [{"id":"b123453", 'content': 'hello world', 'position': [500,700]}]
 
-initialState.sketchLines = strokes;
+// initialState.sketchLines = strokes;
 initialState.colorPalette.lines = strokesPalette;
 
 // console.log(initialState)
@@ -700,6 +700,28 @@ initialState.colorPalette.lines = strokesPalette;
           // return { ...state, colorPalette[lines]: [ action.data, ...state.sketchLines] };
            state = update(state, { colorPalette: {lines :  {$push: [action.data]}}})
            return state;
+
+           case 'UPDATE_PALETTE_LINE':  
+            var id = action.data.id;
+            var data = action.data.data
+            var index = state.colorPalette.lines.indexOf(state.colorPalette.lines.find(x => x.id == id))
+
+            // console.log(id, state.colorPalette.lines)
+            if (index > -1){
+                // console.log(state.colorPalette.lines[index])
+              state = update(state, { colorPalette: { lines: { 
+                [index]: {
+                  data: {
+                    sizeStroke: {$set: action.data.sizeStroke},
+                    colorStroke: {$set: action.data.colorStroke}
+                  }
+                }
+              }} })
+            }
+
+            return state;
+
+
 
           case 'REMOVE_PALETTE_LINE':
               var idToDelete = action.data;

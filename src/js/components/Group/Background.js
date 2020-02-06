@@ -138,13 +138,16 @@ class Background extends Component {
 
      
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
-        d3.select('#placeHolderBGLine-'+that.props.id).selectAll('g').remove()
-        d3.select('#placeHolderText-'+that.props.id).selectAll('g').remove();
+        // d3.select('#placeHolderBGLine-'+that.props.id).selectAll('g').remove()
+        // d3.select('#placeHolderText-'+that.props.id).selectAll('g').remove();
         
         
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('g').remove();
         d3.select('#placeHolderOuterBG-'+that.props.id).selectAll('path').remove();
         d3.select('#placeHolderOuterBGPattern-'+that.props.id).selectAll('g').remove();
+        d3.select('#placeHolderOuterBGPattern-'+that.props.id).selectAll('path').remove();
+
+
         var lineBG = this.props.placeholders.find(x => x.id == 'backgroundLine')
         
         this.props.placeholders.forEach((d)=>{
@@ -214,7 +217,7 @@ class Background extends Component {
                             placeHolderTagSnapped[0]['lines'].forEach(element => {element.id = guid()});
                         }
                         this.setState({tagInsideBG: <Tag key={0} stroke={tag} isGallery={false} holdTag={null} colorStroke={'red'} sizeStroke = {10} /> })
-                    }
+                    }                              
                 }
 
 
@@ -276,10 +279,10 @@ class Background extends Component {
     render() {
         // console.log('GO')
         return (
-            <g id={'background-'+this.props.id} transform={`translate(0,0)`}>
-               <g id={'placeHolderOuterBG-'+this.props.id} ></g>
-               <g id={'placeHolderOuterBGPattern-'+this.props.id} ></g>
-               {this.state.tagInsideBG}
+            <g id={'background-'+this.props.id} transform={`translate(0,0)`} style={{'pointerEvents': 'none' }}>
+               <g id={'placeHolderOuterBG-'+this.props.id} style={{'pointerEvents': 'none' }}></g>
+               <g id={'placeHolderOuterBGPattern-'+this.props.id}  style={{'pointerEvents': 'none' }}></g>
+               <g id={'tag-'+this.props.id} style={{'pointerEvents': 'auto' }}> {this.state.tagInsideBG} </g>
         {/* <g id={'placeHolderText-'+this.props.id} ></g>
                <g id={'placeHolderBGLine-'+this.props.id} ></g> */}
             </g>

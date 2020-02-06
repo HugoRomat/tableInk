@@ -15,8 +15,60 @@ export class postIt {
         this.BBOxPathMain = null;
         // console.log(flipSVG)
     } 
-    update(){
-        this.init();
+    update(BBOX){
+        // console.log('UPDATE')
+        var BB = JSON.parse(JSON.stringify(BBOX))
+        var that = this;
+        if (BB != undefined){
+            // showBboxBB(BBOX, 'red')
+            // this.colors.forEach((d)=>{
+                BB.y -= 20;
+                BB.x -= 20;
+                BB.width -= 60;
+                BB.height += 50;
+            d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
+            this.createFlipPage(BB);
+        }
+        else this.init();
+    }
+    init() { 
+        var that = this;
+        return new Promise((resolve, reject) => {
+            this.group.getAllBoundingBox(this.group.props.group.id).then((BB)=> {
+                // d3.select('#rectAllBB-' + that.group.props.group.id)
+                //         .attr('width', BB.width + that.offsetX)
+                //         .attr('height', BB.height)
+                //         .attr('x', BB.x)
+                //         .attr('y', BB.y)
+                //         .attr('fill', 'rgba(0,0,255,0.1)')
+
+                // d3.select('#postIt-' + that.group.props.group.id).select('image')
+                //     .attr('x', BB.x +  BB.width +80 - 100)
+                //     .attr('y', BB.y +  BB.height - 100)
+                //     .attr('width', 100)
+                //     .attr('height', 100)
+                //     .attr("xlink:href", flip)
+                    
+                // showBboxBB(BB, 'red')
+                // this.colors.forEach((d)=>{
+                    // console.log('GO')
+                // BB.y -= 300;
+                // BB.x -= 90;
+                // BB.width += 150;
+                // BB.height += 100;
+                d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
+                this.createFlipPage(BB);
+
+                resolve(true);
+                // this.initEvent();
+                // newNode.select('.rectangle').attr('width', BB.width + 80)
+                // .attr('height', BB.height)
+                // .attr('x', BB.x)
+                // .attr('y', BB.y)
+                // })
+
+            })
+        })
     }
     initEvent(){
         var idGroup = this.group.props.group.id
@@ -132,44 +184,7 @@ export class postIt {
         that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
     }
-    init() { 
-        var that = this;
-        return new Promise((resolve, reject) => {
-            this.group.getAllBoundingBox(this.group.props.group.id).then((BB)=> {
-                // d3.select('#rectAllBB-' + that.group.props.group.id)
-                //         .attr('width', BB.width + that.offsetX)
-                //         .attr('height', BB.height)
-                //         .attr('x', BB.x)
-                //         .attr('y', BB.y)
-                //         .attr('fill', 'rgba(0,0,255,0.1)')
-
-                // d3.select('#postIt-' + that.group.props.group.id).select('image')
-                //     .attr('x', BB.x +  BB.width +80 - 100)
-                //     .attr('y', BB.y +  BB.height - 100)
-                //     .attr('width', 100)
-                //     .attr('height', 100)
-                //     .attr("xlink:href", flip)
-                    
-                // showBboxBB(BB, 'red')
-                // this.colors.forEach((d)=>{
-                BB.y -= 90;
-                BB.x -= 90;
-                BB.width += 150;
-                BB.height += 100;
-                d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
-                this.createFlipPage(BB);
-
-                resolve(true);
-                // this.initEvent();
-                // newNode.select('.rectangle').attr('width', BB.width + 80)
-                // .attr('height', BB.height)
-                // .attr('x', BB.x)
-                // .attr('y', BB.y)
-                // })
-
-            })
-        })
-    }
+    
     createFlipPage(BB){
         var that = this;
         var td = this.htmlToElement(flipSVG);
@@ -218,7 +233,9 @@ export class postIt {
         d3.select('#postItImage-' + that.group.props.group.id).select('.path1')
             .attr('id', 'path1-'+ that.group.props.group.id)
             .attr('d',path )
-            .attr('fill', 'white')
+            .attr('stroke','#ececec')
+            .attr('stroke-width','3')
+            // .attr('fill', 'white')
 
 
 
@@ -255,6 +272,15 @@ export class postIt {
         path = path.join('')
         d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
             .attr('d',path)
+
+
+        d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
+            .style('pointer-events', 'auto')
+            .on('pointerdown', function(){
+
+                that.group.props.swipeGroup({'id': that.group.props.group.id, 'swipe': !that.group.props.group.swipe});
+                console.log('HELLO', that.group.props)
+            })
             
         // console.log(d3.select('#postItImage-' + that.group.props.group.id).select('.path2').node())
         /*d3.select('#postItImage-' + that.group.props.group.id).select('.rectangle')

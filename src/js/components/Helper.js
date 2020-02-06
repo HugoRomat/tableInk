@@ -434,8 +434,24 @@ export function whereIsPointer(x, y){
     
     // drawCircle(lastPoint[0], lastPoint[1], 10, 'red')
     
+    
     var id = null
     var type = null;
+
+    d3.selectAll('.postit').style('pointer-events', 'auto');
+    d3.selectAll('.path1').style('pointer-events', 'auto');
+    d3.selectAll('.path1').attr('fill', 'red');
+    var element = document.elementFromPoint(x, y);
+    // console.log(element)
+    if (element.tagName == 'path' && element.className.baseVal == "path1"){
+        id = element.id.split('-')[1];
+        type = 'group';
+    }
+    d3.selectAll('.postit').style('pointer-events', 'none')
+    d3.selectAll('.path1').style('pointer-events', 'none');
+    d3.selectAll('.path1').attr('fill', 'none');
+
+    
     d3.selectAll('.fakeStroke').style('pointer-events', 'auto');
     var element = document.elementFromPoint(x, y);
     if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
@@ -444,41 +460,59 @@ export function whereIsPointer(x, y){
     }
     d3.selectAll('.fakeStroke').style('pointer-events', 'none');
 
-
-    d3.selectAll('.postit').style('pointer-events', 'auto');
-    var element = document.elementFromPoint(x, y);
-    // console.log(element)
-    if (element.tagName == 'path' && element.className.baseVal == "path1"){
-        id = element.id.split('-')[1];
-        type = 'group';
-    }
-    d3.selectAll('.postit').style('pointer-events', 'none')
-    
     return {'id': id, 'type': type}
     
 }
 export async function checkIfSomething(x, y){
     
-    var BBid = [];
-    var whichElement = null
-    d3.select('.standAloneLines').selectAll('.realStroke').each(function(){
-        BBid.push(d3.select(this).attr('id'))
-    })
-    d3.select('.standAloneImages').selectAll('g').each(function(){
-        BBid.push(d3.select(this).attr('id'))
-    })
-    d3.select('.linesPalette').selectAll('g').each(function(){
-        BBid.push(d3.select(this).attr('id'))
-    })
+    var id = null
 
-    // console.log(BBid)
-    for (var i in BBid){
-        var BB = await _getBBoxPromise(BBid[i]);
-        // showBboxBB(BB, 'red')
-        var isInside = boxCircle(BB.x, BB.y, BB.width, BB.height, x, y, 30);
-        if (isInside) whichElement = BBid[i]
+    d3.selectAll('.postit').style('pointer-events', 'auto');
+    d3.selectAll('.path1').style('pointer-events', 'auto');
+    d3.selectAll('.path1').attr('fill', 'red');
+    var element = document.elementFromPoint(x, y);
+    // console.log(element)
+    if (element.tagName == 'path' && element.className.baseVal == "path1"){
+        id = element.id;
     }
-    return whichElement
+    d3.selectAll('.postit').style('pointer-events', 'none')
+    d3.selectAll('.path1').style('pointer-events', 'none');
+    d3.selectAll('.path1').attr('fill', 'none');
+    
+    d3.selectAll('.fakeStroke').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    if (element.tagName == 'path' && element.className.baseVal == "fakeStroke"){
+        id = element.id;
+    }
+    d3.selectAll('.fakeStroke').style('pointer-events', 'none');
+
+
+    d3.selectAll('.imagesColor').style('pointer-events', 'auto');
+    var element = document.elementFromPoint(x, y);
+    // console.log(element.className, element.tagName)
+    if (element.tagName == 'image' && element.className.baseVal == "imageColor"){
+        // console.log('GOOO IMAGE')
+        id = 'image-' + element.id;
+    }
+    d3.selectAll('.imagesColor').style('pointer-events', 'none');
+
+
+
+    // d3.select('.standAloneImages').selectAll('g').each(function(){
+    //     BBid.push(d3.select(this).attr('id'))
+    // })
+    // d3.select('.linesPalette').selectAll('g').each(function(){
+    //     BBid.push(d3.select(this).attr('id'))
+    // })
+
+    // // console.log(BBid)
+    // for (var i in BBid){
+    //     var BB = await _getBBoxPromise(BBid[i]);
+    //     // showBboxBB(BB, 'red')
+    //     var isInside = boxCircle(BB.x, BB.y, BB.width, BB.height, x, y, 30);
+    //     if (isInside) whichElement = BBid[i]
+    // }
+    return id
 }
 
 

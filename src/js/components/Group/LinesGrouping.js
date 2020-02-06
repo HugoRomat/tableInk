@@ -353,7 +353,7 @@ class LinesGrouping extends Component {
                 // NewBBox = l'endroit ou je cree mon element
                 // BBox creation = la bbox qui a cree cet element
                 var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x) - transformDrag.translateX;
-                var Y = this.BBox.y - placeHolderLine.y -20 + (newBBox.y - BBoxCreation.y) - transformDrag.translateY;
+                var Y = this.BBox.y - placeHolderLine.y - 50 + (newBBox.y - BBoxCreation.y) - transformDrag.translateY;
 
                 // console.log(transformDrag)
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
@@ -481,9 +481,10 @@ class LinesGrouping extends Component {
         // console.log(this.state.tagInsideBullet)
         return (
             <g transform={`translate(0,0)`}>
-               <g id={'placeHolderBulletLine-'+this.props.iteration +'-'+this.props.id} >
-
-                   {this.state.tagInsideBullet}
+                
+               <g id={'placeHolderBulletLine-'+this.props.iteration +'-'+this.props.id}  style={{'pointerEvents': 'auto' }}>
+               {this.state.tagInsideBullet}
+                   
                    {/* <g></g> */}
                </g>
                <g id={'placeHolderTagLine-'+this.props.iteration +'-'+this.props.id} >

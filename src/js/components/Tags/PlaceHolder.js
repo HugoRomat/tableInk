@@ -110,7 +110,7 @@ class PlaceHolder extends Component {
                     d3.selectAll('.linesTag').style('pointer-events', 'none')
                 }
 
-                if (d3.event.pointerType == 'pen' && $('#item-'+that.props.parent.id).hasClass( "saveTop" )){
+                if (d3.event.pointerType == 'pen'){ //&& $('#item-'+that.props.parent.id).hasClass( "saveTop" )){
                     that.searchandDrawOnItem()
                 }   
 

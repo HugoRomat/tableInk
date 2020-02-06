@@ -13,7 +13,13 @@ class LinePlaceHolder extends Component {
 
     
     componentDidMount(){
-        if (this.props.stroke.BBoxPlaceHolder != undefined) this.drawLines()
+
+        
+
+        if (this.props.stroke.BBoxPlaceHolder != undefined) this.drawLines();
+
+
+
     }
     drawLines(){
         // console.log(this.props.stroke)
@@ -90,6 +96,9 @@ class LinePlaceHolder extends Component {
         }
     }
     componentDidUpdate(){
+        // console.log('GO')
+        // d3.select('#item-'+this.props.stroke.id).selectAll('*').remove();
+        d3.select('#pattern-'+this.props.stroke.id).selectAll('*').remove();
         if (this.props.stroke.BBoxPlaceHolder != undefined) this.drawLines()
     }
     amountDragged = (d) => {

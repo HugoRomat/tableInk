@@ -344,7 +344,7 @@ class PlaceHolder extends Component {
                 .attr('height',  this.props.data.height)
                 .attr('x', this.props.data.x)
                 .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 1)')
+                .attr('fill', 'rgba(247, 247, 247, 0)')
                 .attr('stroke-width', '1')
                 // .style("filter", "url(#drop-shadow)")
 
@@ -357,7 +357,7 @@ class PlaceHolder extends Component {
             .attr('height', this.props.data.height)
             .attr('x', this.props.data.x)
             .attr('y',this.props.data.y)
-            .attr('fill', 'rgba(247, 247, 247, 1)')
+            .attr('fill', 'rgba(247, 247, 247, 0)')
             .attr('stroke-width', '1')
             // .style("filter", "url(#drop-shadow)")
 
@@ -369,7 +369,7 @@ class PlaceHolder extends Component {
                 .attr('height', this.props.data.height)
                 .attr('x', this.props.data.x)
                 .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 1)')
+                .attr('fill', 'rgba(247, 247, 247, 0.9)')
                 .attr('stroke-width', '2')
                 .style("filter", "url(#drop-shadow)")
         }

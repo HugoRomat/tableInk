@@ -125,12 +125,15 @@ class Tags extends Component {
 
         
         d3.select('.groups').selectAll('.groupLine').style('opacity', 0.1)
-        d3.select('.standAloneLines').selectAll('.realStroke').style('opacity', 0.1)
+        d3.select('.standAloneLines').selectAll('.parentLine').style('opacity', 0.1)
         for (var i= 0; i < items.length; i++){
             var item = items[i];
             var type = item.split('-')[0];
             var onlyId = item.split('-')[1];
-            if (type == 'item') d3.select('#'+ item).select('.realStroke').style('opacity', 1)
+            if (type == 'item') {
+                // console.log(item)
+                d3.select('#'+ item).style('opacity', 1);
+            }
             if (type == 'group') {
                 d3.select('#'+ item).style('opacity', 1)
                 var group = this.props.groupLines.find((d)=> d.id == onlyId)

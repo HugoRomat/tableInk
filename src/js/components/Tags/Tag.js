@@ -153,7 +153,8 @@ class Tag extends Component {
                 that.dragended(ev);
                 that.down = false;
 
-                if(d3.select('#item-'+that.props.stroke.id).empty() == false){
+                if (d3.select('#item-'+that.props.stroke.id).empty() == false){
+                    console.log('GOOOO')
                     var transform = getTransformation(d3.select('#item-'+that.props.stroke.id).attr('transform'));
                     var X = transform.translateX;
                     var Y = transform.translateY;
@@ -228,6 +229,7 @@ class Tag extends Component {
         this.mc.on('pressup', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 // that.props.dragItem(false);
+                that.speech.stop()
                 if (that.props.holdTag != undefined) that.props.holdTag(false);
                 if (that.props.holdTag != undefined) that.colorForHolding(false)
             }
@@ -236,7 +238,7 @@ class Tag extends Component {
         this.mc.on('tap', function(ev) {
             if (ev.pointers[0].pointerType == 'touch' && ev.pointers.length == 1){
                 
-                console.log('TAP')
+                // console.log('TAP')
                 if ($('#item-'+that.props.stroke.id).hasClass( "saveTop" )){
                     // console.log('HEY', that.props.stroke);
 
