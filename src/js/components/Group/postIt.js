@@ -15,17 +15,23 @@ export class postIt {
         this.BBOxPathMain = null;
         // console.log(flipSVG)
     } 
-    update(BBOX){
-        // console.log('UPDATE')
+    update(BBOX, model){
+        // console.log('UPDATE', model)
         var BB = JSON.parse(JSON.stringify(BBOX))
         var that = this;
         if (BB != undefined){
             // showBboxBB(BBOX, 'red')
             // this.colors.forEach((d)=>{
+            if (model.isGallery == undefined){
                 BB.y -= 20;
                 BB.x -= 20;
+                BB.width += 60;
+                BB.height += 200;
+            } else {
                 BB.width -= 60;
-                BB.height += 50;
+                BB.height -= 50;
+            }
+               
             d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
             this.createFlipPage(BB);
         }

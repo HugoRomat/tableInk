@@ -65,11 +65,17 @@ class Group extends Component {
         this.BB = null;
         
     }
-    createStroke(){
+    createStroke(model){
         var line = d3.line()
         var that = this;
+        // console.log('CREATE LINE', model)
+        // LENGTH OF THE DIVIDER
 
-        var myPath = [[0,0], [0, 0 + this.BB.height - 100]]
+        var myPath = [[0,0], [0, 0 + this.BB.height + 50]]
+
+        if (model != undefined  && model.isGallery != undefined){
+            myPath = [[0,0], [0, 0 + this.BB.height - 150]]
+        }
         // console.log(myPath, that.strokePath)
         d3.select('#'+that.props.group.id)
             // .attr("d", line(that.strokePath))
@@ -78,7 +84,7 @@ class Group extends Component {
             .attr('stroke', 'grey')
             .attr('stroke-width', '2')
             .attr("stroke-dasharray", "5")
-            .attr('opacity', '1.0')
+            .attr('opacity', '0.0')
         
         d3.select('#fake-'+that.props.group.id)
             // .attr("d", line(that.strokePath))
@@ -98,6 +104,7 @@ class Group extends Component {
         
     }
     updateBackground(){
+        console.log('update Bcakground')
         var that = this;
         if (this.props.group.lines.length > 0) {
             getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
@@ -344,7 +351,7 @@ class Group extends Component {
         this.postIt = new postIt(this);
         
         this.updateLine().then(()=>{
-            console.log('CreatePositi')
+            // console.log('CreatePositi')
             // this.postIt = new postIt(this);
             // this.postIt.init().then(()=>{
                
@@ -367,6 +374,7 @@ class Group extends Component {
         // })
     }
     drawBG(){
+        console.log('draw BG')
         this.postIt.update();
     }
     colorForTaping(isIt){
@@ -490,8 +498,12 @@ class Group extends Component {
 
             this.getBoundinxBoxEveryone().then(()=> {
                 this.computePosition();
-                getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
-                    that.computeStyle(d).then((model)=>{
+                getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> { 
+                    // console.log(d)
+
+                    // Value for a new line
+                    // d.height += 8000;
+                    that.computeStyle(d, true).then((model)=>{
                         // console.log('UPDATE MODEL')
                         that.props.updateModel({
                             'idGroup': that.props.group.id,
@@ -517,9 +529,13 @@ class Group extends Component {
             var placeHolder = this.props.group.model.placeHolder[0];
             var BB = placeHolder
             this.BB = BB;
-            this.postIt.update(BB);
-            this.createStroke();
-            // console.log('CHANGE')
+
+           
+            this.postIt.update(BB, this.props.group.model);
+            
+           
+            this.createStroke(this.props.group.model);
+            console.log('CHANGE', this.props.group.model)
             // if (this.props.group.lines.length > 0){
             //     this.postIt.update();
             // }
@@ -635,8 +651,8 @@ class Group extends Component {
 
        
     }
-    computeStyle(BBfirstLine){
-
+    computeStyle(BBfirstLine, isNewLine){
+        console.log('compute styles')
         var isUndefined = false;
         if (BBfirstLine == undefined) isUndefined = true;
         var that = this;
@@ -656,14 +672,14 @@ class Group extends Component {
                     // var Outer = this.props.group.model.placeHolder[0]
                     // console.log(BBgroup)
                     if (BBgroup.width > 0){
-                        BBgroup.width = BBgroup.height - 200
-                        BBgroup.height = BBgroup.height - 170
+                        BBgroup.width = BBgroup.width// - 200
+                        BBgroup.height = BBgroup.height //- 170
                     } else {
-                        BBgroup.width = Math.abs(BBgroup.height)
+                        BBgroup.width = Math.abs(BBgroup.width)
                         BBgroup.height = Math.abs(BBgroup.height)
                     }
                     // console.log(this.props.group.model.placeHolder[0])
-                   
+                    // BBgroup.height += 200
 
                  
                     if (this.props.group.model.placeHolder[0] != undefined){
@@ -684,6 +700,10 @@ class Group extends Component {
                 var X = BBgroup.x - 70 - transform.translateX;
                 var Y = BBgroup.y - 110 - transform.translateY;;
 
+                if (isNewLine != undefined){
+                    console.log('NEWWW LINE')
+                    height -= 100;
+                }
                
                 /** 1/OUter 2/Backgroundline 3/ BackgroundText */
 
@@ -698,15 +718,17 @@ class Group extends Component {
                 var xText = BBfirstLine.x - transform.translateX;
                 var yText = BBfirstLine.y - transform.translateY;
 
+                // width += 100
+
                 model.placeHolder[0] = { ...model.placeHolder[0], 'width': width, 'height': height, 'x': X, 'y': Y}
                 model.placeHolder[1] = { ...model.placeHolder[1], 'width': widthLine, 'height': heightLine, 'x': xLine, 'y': yLine}
                 model.placeHolder[2] = { ...model.placeHolder[2], 'width': BBfirstLine.width, 'height': BBfirstLine.height, 'x': xText, 'y': yText}
                 
 
                 // console.log(width)
-                this.postIt.update({'width': width, 'height': height, 'x': X, 'y': Y});
+                this.postIt.update({'width': width, 'height': height, 'x': X, 'y': Y}, this.props.group.model);
                 this.BB = {'width': width, 'height': height, 'x': X, 'y': Y};
-                this.createStroke();
+                this.createStroke(this.props.group.model);
                 // if (isUndefined == true){
                 //     var Outer = this.props.group.model.placeHolder[0]
                 //     model.placeHolder[0] = { ...model.placeHolder[0], 'width': Outer.width + 20, 'height': Outer.height, 'x': X, 'y': Y}
@@ -732,7 +754,7 @@ class Group extends Component {
     }
     moveLines = (d) => {
         var that = this;
-        this.props.moveSketchLines(d.data);
+        // this.props.moveSketchLines(d.data);
         // console.log('MOVE LINES')
         //** Quand je bouge une ligne je veux update la taille de mon rectangle MAximum */
         if (d.iteration == this.BB.length - 1){

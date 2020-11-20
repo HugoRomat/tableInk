@@ -269,7 +269,7 @@ class PlaceHolder extends Component {
                 .attr('height', heightTotal)
                 .attr('x', 0)
                 .attr('y',0)
-                .attr('stroke', 'rgba(252, 243, 242, 1)')
+                .attr('stroke', 'rgba(186, 186, 186, 1)')
                 .attr('fill', 'white')
 
 

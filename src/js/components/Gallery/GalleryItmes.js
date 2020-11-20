@@ -141,8 +141,8 @@ class GalleryItmes extends Component {
                             newGuide.placeHolder[j]['lines'].forEach(element => {element.id = guid()});
                         }
                         newGuide.placeHolder[0] = {...newGuide.placeHolder[0], 
-                            'width': actualGuide.placeHolder[0]['width'],
-                            'height': actualGuide.placeHolder[0]['height'],
+                            'width': actualGuide.placeHolder[0]['width'] + 100,
+                            'height': actualGuide.placeHolder[0]['height'] + 300,
                             'x': actualGuide.placeHolder[0]['x'],
                             'y': actualGuide.placeHolder[0]['y']
                         }
@@ -159,6 +159,7 @@ class GalleryItmes extends Component {
                             'y': actualGuide.placeHolder[2]['y']
                         }
                         newGuide.position = [0,0]
+                        newGuide.isGallery = true;
                         delete newGuide.scale;
                         // console.log(newGuide)
                         that.props.updatePlaceHolderGroup({'idGroup':elemnt.id, 'model':newGuide})

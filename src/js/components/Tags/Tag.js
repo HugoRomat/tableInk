@@ -324,9 +324,11 @@ class Tag extends Component {
     addBG(){
         var that = this;
         if ( this.props.stroke.tagSnapped.length > 0){
-            d3.select('#tagSnapped-'+that.props.stroke.id).selectAll('*').remove()
-            for (var i = this.props.stroke.tagSnapped.length - 1; i >= 0; i--) {
-                this.drawRectangle(this.props.stroke.width,this.props.stroke.height,-10 * (i+1),-10 * (i+1));
+            d3.select('#tagSnapped-'+that.props.stroke.id).selectAll('*').remove();
+
+            for (var i = 0; i >= 0; i--) {
+            // for (var i = this.props.stroke.tagSnapped.length - 1; i >= 0; i--) {
+                this.drawRectangle(this.props.stroke.width,this.props.stroke.height,-5 * (i+1),-5 * (i+1));
             }
 
         }
@@ -500,7 +502,7 @@ class Tag extends Component {
             .attr('height', height)
             .attr('x', x)
             .attr('y',y)
-            .attr('stroke', 'rgba(252, 243, 242, 1)')
+            .attr('stroke', 'rgba(186, 186, 186, 1)')
             .attr('fill', 'white')
             
 

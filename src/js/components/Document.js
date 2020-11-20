@@ -740,6 +740,11 @@ class Document extends Component {
                     that.isGuideHold = false;
                     that.setState({'isGuideHold': false})
                     
+                    d3.select('#tags').selectAll('rect').attr('stroke', 'white')
+                    // d3.selectAll('.groupLine').selectAll('.groupPath').attr('opacity')
+                    // groupPath
+                    that.colorPen = 'black';
+                    that.strokeOpacity = 1;
 
                 } else {
                     var group = that.props.groupLines.find(x => x.id==id)
@@ -787,6 +792,7 @@ class Document extends Component {
                 else if (d3.event.pointerType == 'pen'){
                     that.pointerDown(d3.event)
                     var element = whereIsPointer(d3.event.x, d3.event.y);
+                    // console.log(element)
                     that.firsPointerOn = element;
                     // console.log(element)
                     if (element.type == 'group'){
@@ -948,7 +954,7 @@ class Document extends Component {
         
     }
     panCanvas(ev){
-        // console.log(ev)
+        // console.log(this.lastPosition)
         var offsetX = ev.srcEvent.x - this.lastPosition.x;
         var offsetY = ev.srcEvent.y - this.lastPosition.y;
         var transform = getTransformation(d3.select('#panItems').attr('transform'))
@@ -976,6 +982,8 @@ class Document extends Component {
 
             d3.select(this).attr('transform', 'translate('+X+','+Y+')rotate('+transform.rotate+')')
         })
+
+        // console.log(lastPosition)
  
 
     }
@@ -1055,6 +1063,7 @@ class Document extends Component {
         that.lastMovePosition = {'x':0, 'y':0};
         that.drawing = false;
         that.erasing = false;
+        that.straightLine = false;
         // that.hasMoved = false;
         // that.press == false && 
         // console.log(event)
@@ -1159,6 +1168,7 @@ class Document extends Component {
     pointerUp(event){
         var that = this;
         // console.log('UP')
+        console.log(that.straightLine, that.increaseGuideSize)
         if (event.pointerType == 'pen') that.detectingFlick(event);
         // console.log(that.isGuideHold.length, that.isItemDragged)
         if (that.down && that.isItemDragged == false){
@@ -1174,14 +1184,14 @@ class Document extends Component {
             //     // selectionGroup
             //     that.selecting = false;
             // }
-
+            // console.log('HELLO')
            
             if (that.increaseGuideSize != false){
                 
             }
-            else  if (that.isFlick){
+            // else  if (that.isFlick){
                 
-            }
+            // }
             
             else if (that.isPatternPen){
                 that.addStrokePattern();
@@ -1220,6 +1230,7 @@ class Document extends Component {
                 that.sticky = false;
             }*/
             else if (that.straightLine != false && that.increaseGuideSize != false){
+                // console.log('straight')
                 var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke))
                 that.idLine = guid();
                 // if (that.tempArrayStroke.length > 15){
@@ -1258,7 +1269,7 @@ class Document extends Component {
                         })
                     }
                     else {
-                        that.findClosestElements(closelements, 'penTemp', strokeGuide).then((elementLines)=> {
+                        that.findClosestElements(closelements, 'penTemp', strokeGuide, 10).then((elementLines)=> {
                             console.log(elementLines)
                             recognizeInk(this, elementLines).then((ink)=> {
                                
@@ -1310,14 +1321,14 @@ class Document extends Component {
             }
 
             /** Quisk swipe to draw or create a sticky */
-            else if (that.drawing && that.sticky == false && that.isGuideHold == false && that.tempArrayStroke.length > 10){
+            else if (that.drawing && that.sticky == false && that.isGuideHold == false && that.tempArrayStroke.length > 3){
                 // var objectsSelected = that.findCloseStrokes();
                 var length = d3.select('#penTemp').node().getTotalLength();
 
               
                 //It's a guide OR a stroke
                
-                var dist = distance(that.tempArrayStroke[0][0],that.tempArrayStroke[that.tempArrayStroke.length-1][0], that.tempArrayStroke[0][1],that.tempArrayStroke[that.tempArrayStroke.length-1][1] )
+                // var dist = distance(that.tempArrayStroke[0][0],that.tempArrayStroke[that.tempArrayStroke.length-1][0], that.tempArrayStroke[0][1],that.tempArrayStroke[that.tempArrayStroke.length-1][1] )
                 // console.log(dist)
                 // if (length > 150 && Date.now() - that.pointerDownPoperties.time < 400 && dist > 30){
                 //     var strokeGuide = JSON.parse(JSON.stringify(that.tempArrayStroke));
@@ -1347,11 +1358,11 @@ class Document extends Component {
                 // else {
                     // console.log('ADD')
                     that.idLine = guid();
-                    if (that.tempArrayStroke.length > 10){
-                        that.addStroke();
-                        that.isNewLine();
-                        that.isSameLine();
-                    }
+                    // if (that.tempArrayStroke.length > 10){
+                    that.addStroke();
+                    that.isNewLine();
+                    that.isSameLine();
+                    // }
                 // }
 
 
@@ -1514,7 +1525,10 @@ class Document extends Component {
         // this.props.removeSketchLines();
 
     }
-    findClosestElements(objects, idGuide, tempArrayStroke){
+    findClosestElements(objects, idGuide, tempArrayStroke, distance){
+        if (distance == undefined){
+            distance = 0;
+        }
         var that = this;
         // console.log(objects)
         return new Promise((resolve, reject) => {
@@ -1562,8 +1576,8 @@ class Document extends Component {
                     pointsThroughLine[iteration].push(pointOnLine[iteration]);
                     pointsThroughLine[iteration].push(centerBox[iteration]);
     
-                    this.expandText(pointOnLine[iteration],  centerBox[iteration], 3,  pointsThroughLine[iteration], alreadyAdded[iteration], -1, JSON.parse(JSON.stringify(this.props.sketchLines)));
-                    this.expandText(centerBox[iteration], pointOnLine[iteration],  3,  pointsThroughLine[iteration], alreadyAdded[iteration], +1, JSON.parse(JSON.stringify(this.props.sketchLines)))
+                    this.expandText(pointOnLine[iteration],  centerBox[iteration], 3,  pointsThroughLine[iteration], alreadyAdded[iteration], -1, JSON.parse(JSON.stringify(this.props.sketchLines)), distance);
+                    this.expandText(centerBox[iteration], pointOnLine[iteration],  3,  pointsThroughLine[iteration], alreadyAdded[iteration], +1, JSON.parse(JSON.stringify(this.props.sketchLines)), distance);
                 }
                
             })
@@ -1641,7 +1655,7 @@ class Document extends Component {
         /**********************************************************/
         //    EXPAND AS LONG AS USERS WRITE
         /**********************************************************/
-    expandText(begin, end, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines){
+    expandText(begin, end, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines, distance){
             
             // var point = interpolate(begin, end, lengthInterpolate);
         var that = this;
@@ -1664,11 +1678,18 @@ class Document extends Component {
             if (alreadyAdded.indexOf(id) == -1 && insideandWhichGroup == undefined){
                 
                 var BB = _getBBox('item-'+id);
-                var originalBB = JSON.parse(JSON.stringify(BB))
-                BB.x -= 15;
-                BB.y -= 15;
-                BB.width +=30;
-                BB.height += 30
+                var originalBB = JSON.parse(JSON.stringify(BB));
+                if (distance != 0){
+                    BB.x -= 2;
+                    BB.y -= 2;
+                    BB.width +=2;
+                    BB.height += 2
+                } else {
+                    BB.x -= 15;
+                    BB.y -= 15;
+                    BB.width +=30;
+                    BB.height += 30
+                }
                 var oobbNew = [
                     {'x': BB.x, 'y':BB.y},
                     {'x': BB.x+ BB.width, 'y':BB.y},
@@ -1687,8 +1708,8 @@ class Document extends Component {
                     var centerPolygon = getCenterPolygon(oobbNew);
                     var rightSide = {'x': BB.x+ BB.width, 'y':BB.y+ (BB.height/2)}
                     // var result = that.increasePrecisionLine(begin, end, oobbNew, pointsThroughLine,)
-                    if (signe == 1) that.expandText(centerPolygon, rightSide, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines)//, arraySorted,oobb, iteration)
-                    else that.expandText(rightSide, centerPolygon, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines)
+                    if (signe == 1) that.expandText(centerPolygon, rightSide, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines, distance)//, arraySorted,oobb, iteration)
+                    else that.expandText(rightSide, centerPolygon, lengthInterpolate, pointsThroughLine, alreadyAdded, signe, sketchLines, distance)
                 }
             }
         })
@@ -2063,7 +2084,7 @@ class Document extends Component {
         var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
         console.log()
         var dist = distance(that.lastMovePosition.x, event['x'], that.lastMovePosition.y, event['y']);
-        if (dist > this.isGuideHold.placeHolder[0]['width']){//(this.guidHoldObject.width)){
+        if (dist > this.isGuideHold.placeHolder[0]['width'] + 200){//(this.guidHoldObject.width)){
             that.lastMovePosition = {'x': event['x'],'y': event['y']};
             // drawCircle(event['x'], event['y'], 10, 'red');
             // var newGuidePoints = [
@@ -2129,7 +2150,7 @@ class Document extends Component {
             .attr('fill', 'none')
             .attr('stroke', 'black')
             .attr('stroke-width', '10')
-            .attr('opacity', '0.2')
+            // .attr('opacity', '0.2')
             .attr("stroke-dasharray", "10");
       
       
@@ -2390,12 +2411,13 @@ class Document extends Component {
                     var index = d3.select(arrayNode[j]).attr('id').split('-')[1];
                     // console.log(id)
                     // console.log(index)
-                    this.props.addLineToExistingGroup({'idLine': [this.idLine], 'idGroup':id, 'iteration':index})
+                    // this.props.addLineToExistingGroup({'idLine': [this.idLine], 'idGroup':id, 'iteration':index})
                 }
             }
         }
     }
     isNewLine= async() => {
+        // console.log(this.tempArrayStroke)
         var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
         var transform = getTransformation(d3.select('#panItems').attr('transform'))
 
@@ -2457,7 +2479,7 @@ class Document extends Component {
         }
     }
     addStroke(){
-        
+        // console.log('AGG')
         if (this.tempArrayStroke.length > 1){
             // To have everything in 0,0
             var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
@@ -2468,7 +2490,7 @@ class Document extends Component {
                 d[1] = d[1] - firstPoint[1]
             })
             // console.log(arrayPoints.length)
-            arrayPoints = simplify(arrayPoints, 0.08)
+            // arrayPoints = simplify(arrayPoints, 0.08)
             // console.log(arrayPoints.length)
             // console.log(JSON.stringify(arrayPoints))
             var data = {
@@ -2777,8 +2799,13 @@ class Document extends Component {
                     <g id='panItems' transform={'translate(0,0)'}>
                         <g id="grid" />
                         <g id="item-feedBackVoice"><circle r={35} opacity={0} fill={'#c7e9c0'} id="circlefeedBackVoice" /></g>
+                        <Tags 
+                    
+                            holdTag={this.holdTag} 
+                            colorStroke = {this.state.colorStroke}
+                            sizeStroke = {this.state.sizeStroke}
+                        /> 
                         
-                        <Lines />
                         <Groups 
                             setSelection={this.setSelection}
                             setGroupTapped={this.setGroupTapped}
@@ -2799,17 +2826,12 @@ class Document extends Component {
                             setGuideTapped={this.setGuideTapped}
                             guideTapped={this.state.guideTapped}
                         />
-                       
+                       <Lines />
                         <Textes />
                         {/* <TagsInterface
                             holdTag={this.holdTag} 
                         /> */}
-                        <Tags 
-                    
-                            holdTag={this.holdTag} 
-                            colorStroke = {this.state.colorStroke}
-                            sizeStroke = {this.state.sizeStroke}
-                        /> 
+                       
                         <Images/>
                         {/* <Guides 
                             holdGuide={this.holdGuide} 

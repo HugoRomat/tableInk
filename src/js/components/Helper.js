@@ -921,6 +921,7 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
         }
         
     }
+    console.log(BBid)
     // console.log(BBid)
     findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups)
 }
@@ -938,7 +939,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
         var type = id.split('-')[0]
         // showBboxBB(BBTemp, 'red');
         // showBboxBB(BB, 'blue');
-        var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+        var intersected = boxBox(BB.x -10, BB.y-10, BB.width+10, BB.height+10, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
         if (intersected) {
             
             // console.log()

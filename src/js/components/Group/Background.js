@@ -26,6 +26,8 @@ class Background extends Component {
     }
     componentDidMount(){
         var that = this;
+
+        d3.select('#background-'+this.props.id).selectAll('rect').attr('stroke', 'white')
         // this.BBox = this.getBoundinxBoxEveryone().then((d)=>{
             
         // })
@@ -41,6 +43,7 @@ class Background extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
+        
         //Si j'udpate la BBox
         
         if (this.props.placeholders != prevProps.placeholders){
@@ -65,7 +68,8 @@ class Background extends Component {
             })
            
         }
-        // this.addPlaceHolder();
+        
+        d3.select('#background-'+this.props.id).selectAll('rect').attr('stroke', 'white')// this.addPlaceHolder();
     }
     /**
      * FAIT LA BOUNDING BOX DE TOUT LE MONDE

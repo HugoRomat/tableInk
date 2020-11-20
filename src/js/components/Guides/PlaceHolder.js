@@ -107,6 +107,7 @@ class PlaceHolder extends Component {
     }
     pointerMove(event){
         var that = this;
+        console.log(that.props.penType)
         if (that.props.penType == 'normal'){
             
             var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
@@ -342,7 +343,7 @@ class PlaceHolder extends Component {
                 rect = element
                 .attr('width', this.props.data.width)
                 .attr('height',  this.props.data.height)
-                .attr('x', this.props.data.x)
+                .attr('x', this.props.data.x -20)
                 .attr('y',this.props.data.y)
                 .attr('fill', 'rgba(247, 247, 247, 0)')
                 .attr('stroke-width', '1')
@@ -365,8 +366,8 @@ class PlaceHolder extends Component {
         else if (this.props.data.id == 'outerBackground'){
     
             rect = element
-                .attr('width', this.props.data.width)
-                .attr('height', this.props.data.height)
+                .attr('width', this.props.data.width + 100)
+                .attr('height', this.props.data.height + 150)
                 .attr('x', this.props.data.x)
                 .attr('y',this.props.data.y)
                 .attr('fill', 'rgba(247, 247, 247, 0.9)')

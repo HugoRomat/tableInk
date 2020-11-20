@@ -33,6 +33,8 @@ class LinesGrouping extends Component {
     }
     componentDidMount(){
         var that = this;
+
+        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
         // this.BBox = this.getBoundinxBoxEveryone();
         
         // this.BBox = this.props.BBs[this.props.iteration];
@@ -51,6 +53,7 @@ class LinesGrouping extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
+        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
         // console.log(this.props.line)
         //Si j'udpate la BBox
 
@@ -92,6 +95,7 @@ class LinesGrouping extends Component {
             }, 10)
         }
         else if (this.props.tags != prevProps.tags){
+            // console.log('YUPDATE TAAG')
             this.addTags()
         }
         if (this.props.tagHold != prevProps.tagHold){
@@ -276,6 +280,8 @@ class LinesGrouping extends Component {
         var that = this;
         var line = d3.line();
         
+        // console.log('===============', '#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id)
+       
         if (this.props.tags.length != 0){
             // console.log(that.props.tags)
             var placeHolder = d3.select('#tags-'+that.props.iteration +'-'+that.props.id).selectAll('g')
@@ -298,6 +304,9 @@ class LinesGrouping extends Component {
                     .attr('fill', 'none')
                     .attr('stroke', (d)=>d.colorStroke)
                     .attr('stroke-width', (d)=>d.sizeStroke)
+
+            console.log('#tags-'+that.props.iteration +'-'+that.props.id)
+            
         }
         
     }
@@ -312,6 +321,7 @@ class LinesGrouping extends Component {
         d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
         d3.select('#placeHolderTagLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
 
+        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
 
         var placeHolderLine = this.props.placeholders.find(x => x.id == 'backgroundLine');
         // var outerBackground = this.props.placeholders.find(x => x.id == 'outerBackground');
@@ -353,10 +363,12 @@ class LinesGrouping extends Component {
                 // NewBBox = l'endroit ou je cree mon element
                 // BBox creation = la bbox qui a cree cet element
                 var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x) - transformDrag.translateX;
-                var Y = this.BBox.y - placeHolderLine.y - 50 + (newBBox.y - BBoxCreation.y) - transformDrag.translateY;
+                var Y = this.BBox.y - placeHolderLine.y -10 + (newBBox.y - BBoxCreation.y) - transformDrag.translateY;
 
                 // console.log(transformDrag)
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+
+                
             }
 
             if (tagLines != undefined && tagLines.length > 0){
@@ -375,7 +387,7 @@ class LinesGrouping extends Component {
                     placeHolderTagSnapped[0]['lines'].forEach(element => {element.id = that.props.iteration +'-'+ guid()});
                 }
                 // console.log(tag)
-                this.setState({tagInsideBullet: <Tag key={0} stroke={tag} isGallery={false} holdTag={null} colorStroke = {'red'} sizeStroke = {10} /> })
+                this.setState({tagInsideBullet: <Tag key={0} stroke={tag} isGallery={false} holdTag={null} colorStroke = {'red'} sizeStroke = {0} /> })
                 // var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
                 // var X = this.BBox.x - transformDrag.translateX - 145; 
                 // var Y = this.BBox.y - transformDrag.translateY - 100;
@@ -389,6 +401,7 @@ class LinesGrouping extends Component {
                 // }
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
                 // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate(')')
+
             }
 
             // console.log(this.props.placeholders)
