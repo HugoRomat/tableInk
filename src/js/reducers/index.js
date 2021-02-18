@@ -417,6 +417,22 @@ initialState.colorPalette.lines = strokesPalette;
             
             return state;
 
+            
+      case 'ADD_LINE_TO_GROUP':
+        var id = action.data.idGroup;
+        var data = action.data.idLine;
+        var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
+        if (index > -1){
+            state = update(state, { 
+              groupLines: {
+                [index] : {
+                  lines: {$push: data}
+               }
+              }
+            })
+        }
+        
+
 
   case 'SWIPE_GROUP':
     var idGroup = action.data.id;
@@ -452,20 +468,6 @@ initialState.colorPalette.lines = strokesPalette;
       return state;
             
 
-      case 'ADD_LINE_TO_GROUP':
-          var id = action.data.idGroup;
-          var data = action.data.idLine;
-          var index = state.groupLines.indexOf(state.groupLines.find(x => x.id == id))
-          if (index > -1){
-              state = update(state, { 
-                groupLines: {
-                  [index] : {
-                    lines: {$push: data}
-                 }
-                }
-              })
-          }
-          
           return state;
           
         case 'ADD_LINES_LETTER':

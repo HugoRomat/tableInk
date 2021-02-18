@@ -388,9 +388,10 @@ export function drawCircle(x, y, r, color){
     .attr('fill', color)
 
 }
-export function showBboxBB(BB2, color){
+export function showBboxBB(BB2, color, strokeSize){
     // var BB2 = d3.select('#'+id).node().getBBox();
     // console.log(BB2)
+    if (strokeSize == undefined) strokeSize = 2
     d3.select('svg').append('rect').attr('class', 'BB')
     .attr('x', BB2.x)
     .attr('y', BB2.y)
@@ -398,6 +399,7 @@ export function showBboxBB(BB2, color){
     .attr('height', BB2.height)
     .attr('fill', 'none')
     .attr('stroke', color)
+    .attr('stroke-width', strokeSize)
 }
 export function showBbox(id, color){
     var BB2 = d3.select('#'+id).node().getBBox();
@@ -563,7 +565,7 @@ export function findMinMax(arr) {
     return {'x': minX, 'y':minY, 'width': maxX - minX, 'height': maxY - minY};
   }
 export function _getBBoxPromise(id, offset){
-
+    // console.log('id')
     return new Promise(resolve => {
         if (offset == undefined) offset = 0;
         // console.log('Id', id)
@@ -921,7 +923,7 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
         }
         
     }
-    console.log(BBid)
+    // console.log(BBid)
     // console.log(BBid)
     findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups)
 }

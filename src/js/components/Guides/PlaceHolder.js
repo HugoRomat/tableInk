@@ -107,7 +107,7 @@ class PlaceHolder extends Component {
     }
     pointerMove(event){
         var that = this;
-        console.log(that.props.penType)
+        console.log(this.props.data.id)
         if (that.props.penType == 'normal'){
             
             var transformPan = getTransformation(d3.select('#panItems').attr('transform'))
@@ -352,26 +352,34 @@ class PlaceHolder extends Component {
         }
         else if (this.props.data.id == 'backgroundText'){
 
-            // console.log(widthTotal)
+            // console.log("===================", this.props.data.x)
             rect = element
-            .attr('width', this.props.data.width)
-            .attr('height', this.props.data.height)
-            .attr('x', this.props.data.x)
-            .attr('y',this.props.data.y)
-            .attr('fill', 'rgba(247, 247, 247, 0)')
-            .attr('stroke-width', '1')
+                .attr('width', this.props.data.width)
+                .attr('height', this.props.data.height)
+                .attr('x', this.props.data.x)
+                .attr('y',this.props.data.y)
+                .attr('fill', 'rgba(247, 247, 247, 0)')
+                .attr('stroke-width', '1')
             // .style("filter", "url(#drop-shadow)")
 
         }
         else if (this.props.data.id == 'outerBackground'){
     
+            // console.log("===================", this.props.data.x)
             rect = element
-                .attr('width', this.props.data.width + 100)
-                .attr('height', this.props.data.height + 150)
-                .attr('x', this.props.data.x)
-                .attr('y',this.props.data.y)
-                .attr('fill', 'rgba(247, 247, 247, 0.9)')
+                // .attr('width', this.props.data.width +300)
+                // .attr('height', this.props.data.height +200)
+                // .attr('x', this.props.data.x)
+                // .attr('y',this.props.data.y)
+                // .attr('fill', 'rgba(247, 247, 247, 0)')
+                // .attr('stroke-width', '1')
+                .attr('width', this.props.data.width + 300)
+                .attr('height', this.props.data.height + 200)
+                .attr('x', this.props.data.x - 150)
+                .attr('y',this.props.data.y - 100)
+                .attr('fill', '#f9f9f9')
                 .attr('stroke-width', '2')
+                .style("stroke-dasharray", ("3, 5"))
                 .style("filter", "url(#drop-shadow)")
         }
         

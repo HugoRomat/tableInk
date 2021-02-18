@@ -104,214 +104,61 @@ class Group extends Component {
         
     }
     updateBackground(){
-        console.log('update Bcakground')
-        var that = this;
-        if (this.props.group.lines.length > 0) {
-            getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
-                that.computeStyle(d).then((model)=>{
-                    // console.log('UPDATE MODEL')
-                    that.props.updateModel({
-                        'idGroup': that.props.group.id,
-                        'model': model
-                    })
-                })
-            })
-        } else {
-            that.computeStyle().then((model)=>{
-                console.log('UPDATE MODEL')
-                that.props.updateModel({
-                    'idGroup': that.props.group.id,
-                    'model': model
-                })
-            })
-        }
-        this.postIt.update();
+        // console.log('update Bcakground')
+        // var that = this;
+        // if (this.props.group.lines.length > 0) {
+        //     getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
+        //         that.computeStyle(d).then((model)=>{
+        //             // console.log('UPDATE MODEL')
+        //             that.props.updateModel({
+        //                 'idGroup': that.props.group.id,
+        //                 'model': model
+        //             })
+        //         })
+        //     })
+        // } else {
+        //     that.computeStyle().then((model)=>{
+        //         console.log('UPDATE MODEL')
+        //         that.props.updateModel({
+        //             'idGroup': that.props.group.id,
+        //             'model': model
+        //         })
+        //     })
+        // }
+        // this.postIt.update();
         
     }
     updateLine(){
         var that = this;
 
         return new Promise(resolve => {
-            // console.log(this.props.group)
-
-            var el = document.getElementById('fake-'+that.props.group.id);
-            this.mc = new Hammer.Manager(el);
-            // var press = new Hammer.Press({time: 250});
-            var pan = new Hammer.Pan({'pointers':0, threshold: 1});
-            // var pan2fingers = new Hammer.Pan({'pointers':1, threshold: 1});
-            // var tap = new Hammer.Tap();
-
-            // this.mc.add(press);
-            this.mc.add(pan);
-            // this.mc.add(tap);
-            // pan.recognizeWith(press);
-            // $(el).on('touchstart touchmove', function(e){e.preventDefault(); })
-
-            // pan.recognizeWith(tap);
-
-            
-            // this.mc.on("tap", function(ev) {
-            //     if (ev.pointers[0].pointerType == 'pen' ){
-            //         if (that.props.isGuideHold){
-            //             that.props.setGroupTapped({'item': that.props.group.id});
-            //             that.colorForTaping(false);
-            //         }
-            //         else {
-            //             // console.log(that.props.isGuideHold)
-            //             that.colorForTaping(true);
-            //             that.props.addToSelection({'id':that.props.group.id});
-                        
-            //         }
-            //     }
-            // })
-            this.mc.on("panstart", function(event) {
-                if (event.pointers[0].pointerType == 'pen' ){
-                    that.startPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y,  'time': Date.now()};
-                    that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
-                    _getBBoxPromise('item-'+that.props.group.id).then((d)=>{
-                        that.BBOxPathMain  = d;
-                    })
-                }
-            })
-            this.mc.on("panmove", function(ev) {
-            
-                    
-                /** Si c'est pen sur stroke */
-                if (ev.pointers[0].pointerType == 'pen' ){
-
-                    // var trans = getTransformation(d3.select('#item-'+that.props.group.id).attr('transform'))
-                    // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-                    var X = ev.pointers[0].x - that.BBOxPathMain.x //-transformPan.translateX// - that.BBOxPathMain.x;// - transform.translateX// - getPan.translateX;
-                    var Y = ev.pointers[0].y - that.BBOxPathMain.y//- transformPan.translateY// - that.BBOxPathMain.y;// - transform.translateY// - getPan.translateY;;
-                    // console.log(trans)
-                    // drawCircle(ev.pointers[0].x, ev.pointers[0].y, 10, 'red')
-                
-                    // drawCircle(that.BBOxPathMain.x, that.BBOxPathMain.y + that.BBOxPathMain.height, 10, 'red')
-                    // console.log(Y+ that.BBOxPathMain.y, that.BBOxPathMain.y + that.BBOxPathMain.height)
-                    if (Y+ that.BBOxPathMain.y > that.BBOxPathMain.y + that.BBOxPathMain.height){
-                        
-                        that.strokePath.push([X,Y])
-                        // that.strokePath.push([X,Y])
-                        that.updateStroke();
-                    } else {
-                        // var lastPoint = 
-                        // that.strokePath.push([X,Y])
-                    }
-                }
-            })
-            this.mc.on("panend", function(ev) {
-                if (ev.pointers[0].pointerType == 'pen' ){
-                   that.updateBackground();
-                }
-            })
-            // this.mc.on("press", function(ev) {
-            //     // console.log('press')
-            //     if (ev.pointers[0].pointerType == 'touch' ){
-            //         // that.press = true;
-            //         that.props.holdGuide(that.props.group.id);
-            //     }
-            // })
-            // this.mc.on("pressup", function(ev) {
-            //     if (ev.pointers[0].pointerType == 'touch' ){
-            //         // that.press = false;
-            //         that.props.holdGuide(false);
-            //     }
-            // })
-            
-            
-
-
-            /*d3.select('#fake-'+that.props.group.id)
-                .on('pointerdown', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        that.startPosition = {'x': d3.event.x, 'y':d3.event.y,  'time': Date.now()};
-                        that.lastPosition = {'x': d3.event.x, 'y':d3.event.y}
-                        that.dragstarted(that);
-                    }
-                })
-                .on('pointermove', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        var dist = distance(that.startPosition.x, d3.event.x, that.startPosition.y, d3.event.y);
-                        if (dist > 10 ){
-                            that.dragged(that);
-                        }
-                    }
-                })
-                .on('pointerup', function(d){
-                    if (d3.event.pointerType == 'touch'){
-                        that.dragended(that);
-                    }
-                })*/
-                d3.select('#fake-'+that.props.group.id).on('contextmenu', function(){
-                    d3.event.preventDefault();
-                })
-
-            // console.log('BEGINNING')
-            if (this.props.group.lines.length >0){
+           
+            if (this.props.group.lines.length > 0){
                 this.getBoundinxBoxEveryone().then(()=> {
-                    
-                    
                     this.computePosition();
                     getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
                         that.computeStyle(d).then((model)=>{
-                            
-                            // console.log(model)
                             that.props.updateModel({
                                 'idGroup': that.props.group.id,
                                 'model': model
                             })
-                            
                             resolve(true)
                         })
                     })
-            
-                    // resolve(true)
                 })     
             } 
             else {
-                // console.log('HEY')
                 this.getBoundinxBoxEveryone().then(()=> {
-                    // console.log(this.props.group)
                     that.computeStyle().then((model)=>{
-                        // console.log('UPDATE MODEL', model.placeHolder)
                         that.props.updateModel({
                             'idGroup': that.props.group.id,
                             'model': JSON.parse(JSON.stringify(model))
                         })
-
-                        // that.postIt.update();
-                        // that.placeHolder = model.placeHolder; 
-                        // console.log(that.placeHolder, JSON.parse(JSON.stringify(model.placeHolder)))
-                       
                         resolve(true)
                     })
-                   
                 })    
             }
             
-
-
-            //Swipe on the BIG box
-            // var that = this;
-            // var el = d3.select('#rect-'+this.props.group.id).node()
-            // this.mc = new Hammer.Manager(el);
-            // var swipe = new Hammer.Swipe({pointers: 1});
-            // this.mc.add(swipe);
-
-            // this.mc.on("swipeleft", function(ev) {
-            //     if (ev.pointers[0].pointerType == 'touch'){
-            //         console.log('swipeleft', ev.direction)
-            //         that.createTable();
-                    
-            //         // var data = {
-            //         //     'id': guid(), 
-            //         //     'idGroupline':that.props.iteration +'-'+that.props.id, 
-            //         //     'position': [0,0],
-            //         //     'model': that.props.tagHold
-            //         // };
-            //         // that.props.addTagToGroup(data)
-            //         // // console.log('TAP', that.props.tagHold)
-            //     }
         }) 
     }
 
@@ -321,21 +168,21 @@ class Group extends Component {
 
         //ADD BBOX LINE FOR having at least one when pushing
         // var transformPan = {'translateX': 0, 'translateY': 0}
-        // console.log(that.props.group.id)
-        var BBLine = await _getBBoxPromise('item-'+id);
-        var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-        BBLine.x = BBLine.x - transformPan.translateX;
-        BBLine.y = BBLine.y - transformPan.translateY;
+        // console.log(that.props.group.id, id)
+        // var BBLine = await _getBBoxPromise('item-'+id);
+        // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
+        // BBLine.x = BBLine.x - transformPan.translateX;
+        // BBLine.y = BBLine.y - transformPan.translateY;
 
         // console.log(id, BBLine)
         // showBboxBB(BBLine, 'green')
         // console.log(transformPan)
         return new Promise(resolve => {
             that.getBoundinxBoxEveryone().then((BBox)=>{
-                var BBox1 = BBLine;
+                var BBox1 = BBox[0];
                 if (BBox.length != 0){
                     for (var i = 0; i< BBox.length; i++){
-                        // showBboxBB(BBox[i], 'red');
+                        // showBboxBB(BBox[i], 'green');
                         BBox1 = unionRectangles(BBox1, BBox[i]);
                     }
                 }
@@ -351,27 +198,12 @@ class Group extends Component {
         this.postIt = new postIt(this);
         
         this.updateLine().then(()=>{
-            // console.log('CreatePositi')
-            // this.postIt = new postIt(this);
-            // this.postIt.init().then(()=>{
-               
-            // })
+      
             d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',1);
-            // d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
-            // d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
-
+          
         })
         
-        
-        // getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
-        //     that.computeStyle(d).then((model)=>{
-        //         console.log('UPDATE MODEL')
-        //         that.props.updateModel({
-        //             'idGroup': that.props.group.id,
-        //             'model': model
-        //         })
-        //     })
-        // })
+     
     }
     drawBG(){
         console.log('draw BG')
@@ -401,7 +233,7 @@ class Group extends Component {
         // return new Promise((resolve, reject) => {
             // console.log('GO', this.props.group.lines)
         var BBox = [];
-        // console.log(this.props.group.lines)
+        console.log(this.props.group.lines)
         // const grouped = this.props.group.lines(pets, pet => pet.type);
         // d3.selectAll('.BB').remove()
         for (let i = 0; i < this.props.group.lines.length; i++) {
@@ -495,25 +327,25 @@ class Group extends Component {
         /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME*/
         else if ([].concat(...this.props.group.lines).length != [].concat(...prevProps.group.lines).length ){
             //NOUVELLE LIGNE
+            that.getBoundinxBoxEveryone()
+            // this.getBoundinxBoxEveryone().then(()=> {
+            //     this.computePosition();
+            //     getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> { 
+            //         // console.log(d)
 
-            this.getBoundinxBoxEveryone().then(()=> {
-                this.computePosition();
-                getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> { 
-                    // console.log(d)
+            //         // Value for a new line
+            //         // d.height += 8000;
+            //         that.computeStyle(d, true).then((model)=>{
+            //             // console.log('UPDATE MODEL')
+            //             that.props.updateModel({
+            //                 'idGroup': that.props.group.id,
+            //                 'model': model
+            //             })
+            //             // that.setState({"model": model})
+            //         })
+            //     })
 
-                    // Value for a new line
-                    // d.height += 8000;
-                    that.computeStyle(d, true).then((model)=>{
-                        // console.log('UPDATE MODEL')
-                        that.props.updateModel({
-                            'idGroup': that.props.group.id,
-                            'model': model
-                        })
-                        // that.setState({"model": model})
-                    })
-                })
-
-            })
+            // })
         }
         // else if (this.props.shouldUnselect != prevProps.shouldUnselect){
         //     d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
@@ -526,27 +358,27 @@ class Group extends Component {
         // }
         else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
            
-            var placeHolder = this.props.group.model.placeHolder[0];
+           /* var placeHolder = this.props.group.model.placeHolder[0];
             var BB = placeHolder
             this.BB = BB;
-
-           
-            this.postIt.update(BB, this.props.group.model);
+            // showBboxBB(this.BB, 'green')
+            // console.log(placeHolder)
+            // this.postIt.update(BB, this.props.group.model);
             
            
             this.createStroke(this.props.group.model);
-            console.log('CHANGE', this.props.group.model)
+            // console.log('CHANGE', this.props.group.model)
             // if (this.props.group.lines.length > 0){
             //     this.postIt.update();
             // }
             this.getBoundinxBoxEveryone().then(()=> {
                 if (this.props.group.lines.length > 0) {
                     this.computePosition();
-                    
                 }
                 // console.log('UPDATED')
                 
             })
+            */
         }
         else if (this.props.groupHolded != prevProps.groupHolded){
             
@@ -576,48 +408,17 @@ class Group extends Component {
         if (this.props.group.swipe != prevProps.group.swipe){
             var modelId = this.props.group.model.id;
 
-            if (this.props.group.swipe == false){
-
-                d3.select('#postItImage-' + that.props.group.id).select('.path2').style('opacity',1);
-                // d3.select('#postItImage-' + that.props.group.id).select('.path1').style('opacity',1);
-
-                // d3.select('#postItImage-' + that.props.group.id).transition().duration(1000).style('opacity', 0);
-                this.postIt.reverseTransition();
-
-                d3.select('#item-'+modelId).transition().duration(1000).style('opacity', 0);
-                setTimeout(function(){ that.hideStyleGuide();  }, 1000);
-
-                /** HIDE THE STROKE */
-                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
-                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
-            }
-            else if (this.props.group.swipe){
-                // console.log('SWIPE')
-                
-                // 
-                this.postIt.transition();
-
-                setTimeout(function(){ 
-                    // d3.select('#postItImage-' + that.props.group.id).style('opacity', 0);
-                    d3.select('#postItImage-' + that.props.group.id).select('.path2').transition().duration(1000).style('opacity',1);
-                    // d3.select('#postItImage-' + that.props.group.id).select('.path1').transition().duration(1000).style('opacity',0);
-                    // d3.select('#postItImage-' + that.props.group.id).select('.rectangle').transition().duration(1000).style('opacity',0);
-                    that.postIt.reverseTransition();
-                }, 1000)
-
-
-                // d3.select('#item-'+modelId).style('opacity', 0);
-
-                //MONTRE LES LIGNES DU GUIDE
-                // setTimeout(function(){  that.showStyleGuide();  }, 1000)
-
-                /** HIDE THE STROKE */
-                d3.select('#'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0')
-                d3.select('#fake-'+that.props.group.id).transition().duration(1000).attr('opacity', '0.0').attr('stroke-width', '1')
-            }
+           
         }
-        // if (this.props.group.tap != prevProps.group.tap){
-        //     console.log('HEY', this.props.group.tap)
+        if (this.props.group.tap != prevProps.group.tap){
+            console.log('HEY', this.props.group.tap);
+            var modelId = this.props.group.model.id;
+
+            // if (this.props.group.tap == true) that.showStyleGuide();
+            // else {that.hideStyleGuide();}
+
+
+
         //     var modelId = this.props.group.model.id;
         //     if (this.props.group.tap == false){
         //         d3.select('#item-'+modelId).attr('transform', 'translate(0,0)scale(0.3)')
@@ -647,14 +448,16 @@ class Group extends Component {
 
 
         //     }
-        // }
+        }
 
        
     }
     computeStyle(BBfirstLine, isNewLine){
-        console.log('compute styles')
-        var isUndefined = false;
-        if (BBfirstLine == undefined) isUndefined = true;
+        console.log('compute styles', BBfirstLine, isNewLine)
+        if (BBfirstLine == undefined){
+            BBfirstLine = {'width': 0, 'height': 0, 'x':0, 'y': 0}
+        }
+
         var that = this;
         return new Promise((resolve, reject) => {
          
@@ -666,39 +469,11 @@ class Group extends Component {
 
             // console.log(this.props.group.model)
             this.getAllBoundingBox(this.props.group.id).then((BBgroup)=> {
-                // showBboxBB(BBgroup, 'red')
-                if (BBfirstLine == undefined){
-                    BBfirstLine = { 'width': 200, 'height': 40, 'x':BBgroup.x, 'y': BBgroup.y}
-                    // var Outer = this.props.group.model.placeHolder[0]
-                    // console.log(BBgroup)
-                    if (BBgroup.width > 0){
-                        BBgroup.width = BBgroup.width// - 200
-                        BBgroup.height = BBgroup.height //- 170
-                    } else {
-                        BBgroup.width = Math.abs(BBgroup.width)
-                        BBgroup.height = Math.abs(BBgroup.height)
-                    }
-                    // console.log(this.props.group.model.placeHolder[0])
-                    // BBgroup.height += 200
-
-                 
-                    if (this.props.group.model.placeHolder[0] != undefined){
-                        // console.log(this.props.group.model.placeHolder[0].width)
-                        BBgroup.width = this.props.group.model.placeHolder[0].width - 230
-                        BBgroup.height = this.props.group.model.placeHolder[0].width - 170
-                    }
-
-                    // console.log(this.postIt)
-                    // this.postIt.update();
-                }
-
-                // var width = BBgroup.width + 230;
-                // var height = BBgroup.height + 100;
-
-                var width = this.props.group.model.placeHolder[0].width
-                var height = BBgroup.height + 100;
-                var X = BBgroup.x - 70 - transform.translateX;
-                var Y = BBgroup.y - 110 - transform.translateY;;
+                
+                var width = BBgroup.width //+ 230;
+                var height = BBgroup.height //+ 100;
+                var X = BBgroup.x  - transform.translateX;
+                var Y = BBgroup.y  - transform.translateY;;
 
                 if (isNewLine != undefined){
                     console.log('NEWWW LINE')
@@ -706,10 +481,6 @@ class Group extends Component {
                 }
                
                 /** 1/OUter 2/Backgroundline 3/ BackgroundText */
-
-                // _getBBoxPromise('containerBackground-0-' + that.props.group.id).then((BBfirstLine)=>{
-
-                    // showBboxBB(BBfirstLine, 'red')
                 var widthLine = BBfirstLine.width + 120;
                 var heightLine = BBfirstLine.height + 40;
                 var xLine = BBfirstLine.x - 80 - transform.translateX;
@@ -718,26 +489,15 @@ class Group extends Component {
                 var xText = BBfirstLine.x - transform.translateX;
                 var yText = BBfirstLine.y - transform.translateY;
 
-                // width += 100
-
                 model.placeHolder[0] = { ...model.placeHolder[0], 'width': width, 'height': height, 'x': X, 'y': Y}
                 model.placeHolder[1] = { ...model.placeHolder[1], 'width': widthLine, 'height': heightLine, 'x': xLine, 'y': yLine}
                 model.placeHolder[2] = { ...model.placeHolder[2], 'width': BBfirstLine.width, 'height': BBfirstLine.height, 'x': xText, 'y': yText}
-                
 
-                // console.log(width)
+                // showBboxBB(BBgroup, 'purple')
                 this.postIt.update({'width': width, 'height': height, 'x': X, 'y': Y}, this.props.group.model);
                 this.BB = {'width': width, 'height': height, 'x': X, 'y': Y};
                 this.createStroke(this.props.group.model);
-                // if (isUndefined == true){
-                //     var Outer = this.props.group.model.placeHolder[0]
-                //     model.placeHolder[0] = { ...model.placeHolder[0], 'width': Outer.width + 20, 'height': Outer.height, 'x': X, 'y': Y}
 
-                //     console.log(model)
-                // }
-                // console.log(model.placeHolder[1])
-                // showBboxBB(model.placeHolder[0], 'green')
-                // console.log(model.placeHolder[0])
                
                 resolve(JSON.parse(JSON.stringify(model)));
             })
@@ -757,6 +517,7 @@ class Group extends Component {
         // this.props.moveSketchLines(d.data);
         // console.log('MOVE LINES')
         //** Quand je bouge une ligne je veux update la taille de mon rectangle MAximum */
+        /*
         if (d.iteration == this.BB.length - 1){
             setTimeout(function(){
                 getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> {
@@ -770,7 +531,7 @@ class Group extends Component {
                     })
                 })
             }, 10)
-        }   
+        }   */
     }
     render() {
 
@@ -833,7 +594,7 @@ class Group extends Component {
              
                     />
                     {/* : null } */}
-                    {(this.props.group.swipe) ?
+                    {(this.props.group.tap) ?
                  <Guide 
                         // group = {this.props.group}
                         stroke={this.props.group.model} 
@@ -850,10 +611,10 @@ class Group extends Component {
                     /> 
                     : null}
                 
-                <g id={'item-'+this.props.group.id} className={'groupPath'} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
+                {/* <g id={'item-'+this.props.group.id} className={'groupPath'} transform={`translate(${this.props.group.stroke.position[0]},${this.props.group.stroke.position[1]})`}>
                     <path style={{'pointerEvents': 'none' }} id={this.props.group.id}/> 
                     <path id={'fake-'+this.props.group.id}  className={'fakePath'}></path>
-                </g>
+                </g> */}
 
                 <rect className={'bbGroup'} id={'pathBB-'+this.props.group.id} />
                 <rect id={'rect-'+this.props.group.id} />

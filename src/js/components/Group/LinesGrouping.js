@@ -36,13 +36,14 @@ class LinesGrouping extends Component {
 
         d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
         // this.BBox = this.getBoundinxBoxEveryone();
-        
+        console.log('ITERATION', that.props.iteration)
         // this.BBox = this.props.BBs[this.props.iteration];
         // console.log(this.BBox,this.props.iteration)
         // this.movePoints();
         // console.log('LINES GROUPING', this.props.iteration, this.props.BBs)
         this.addEventsContainer();
-        this.addTags()
+        this.addTags();
+        // this.addContainer();
         // if (this.BBox != null && this.BBox != undefined) {
         //     this.movePoints();
         //     this.addContainer();
@@ -54,7 +55,7 @@ class LinesGrouping extends Component {
     componentDidUpdate(prevProps, prevState){
         var that = this;
         d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
-        // console.log(this.props.line)
+        console.log(this.props)
         //Si j'udpate la BBox
 
         // if (this.props.line != prevProps.line){
@@ -63,21 +64,27 @@ class LinesGrouping extends Component {
         //     this.movePoints();
         // }
         if (this.props.BBs != prevProps.BBs){
+            // console.log('GO')
             this.BBox = this.props.BBs[this.props.iteration];
             this.addContainer();
             this.addPlaceHolder();
         }
         if (this.props.placeholders != prevProps.placeholders){
+            console.log('GO', this.isCreated)
             if (this.isCreated == true && this.BBox != undefined){
+                console.log('GO2')
                 this.movePoints();
                 this.addContainer();
                 this.addPlaceHolder();
                 this.isCreated = false;
             }
+            // if ()
+            // this.movePoints();
+            this.addPlaceHolder();
 
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-
+            // console.log('GO')
            
             this.addPlaceHolder();
 
@@ -95,6 +102,7 @@ class LinesGrouping extends Component {
             }, 10)
         }
         else if (this.props.tags != prevProps.tags){
+            // console.log('GO')
             // console.log('YUPDATE TAAG')
             this.addTags()
         }
@@ -129,7 +137,7 @@ class LinesGrouping extends Component {
         }
 
         /** RED */
-        
+        // console.log('ADDDDD', that.BBox, that.props.id, that.props.iteration)
         d3.select('#containerBackground-'+that.props.iteration +'-'+that.props.id)
             .attr('width', that.BBox.width + 80)
             .attr('height', that.BBox.height)
@@ -362,11 +370,11 @@ class LinesGrouping extends Component {
                 // placeholderLine = Premier ligne seulement
                 // NewBBox = l'endroit ou je cree mon element
                 // BBox creation = la bbox qui a cree cet element
-                var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x) - transformDrag.translateX;
-                var Y = this.BBox.y - placeHolderLine.y -10 + (newBBox.y - BBoxCreation.y) - transformDrag.translateY;
+                var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x); //- transformDrag.translateX;
+                var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y); //- transformDrag.translateY;
 
-                // console.log(transformDrag)
-                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+Y+')')
+                console.log(that.props.iteration, this.BBox.x, placeHolderLine.x, (newBBox.x - BBoxCreation.x), transformDrag.translateX);
+                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+0+','+Y+')')
 
                 
             }
@@ -493,7 +501,7 @@ class LinesGrouping extends Component {
 
         // console.log(this.state.tagInsideBullet)
         return (
-            <g transform={`translate(0,0)`}>
+            <g transform={`translate(0,0)`} id={'line-'+this.props.iteration +'-'+this.props.id} className={'lineGroup'}>
                 
                <g id={'placeHolderBulletLine-'+this.props.iteration +'-'+this.props.id}  style={{'pointerEvents': 'auto' }}>
                {this.state.tagInsideBullet}

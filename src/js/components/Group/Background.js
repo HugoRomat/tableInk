@@ -80,9 +80,9 @@ class Background extends Component {
 
 
 
-        var BBLine = await _getBBoxPromise('item-'+that.props.group.id);
+        // var BBLine = await _getBBoxPromise('item-'+that.props.group.id);
         // console.log(BBLine)
-        var rectangle = BBLine;
+        var rectangle = null;//BBLine;
         // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
         // BBLine.x = BBLine.x - transformPan.translateX;
         // BBLine.y = BBLine.y - transformPan.translateY;
@@ -177,7 +177,7 @@ class Background extends Component {
                         
                         var BBoxOriginalHolder = myLine.BBoxPlaceHolder
 
-                        // console.log(d, BBoxOriginalHolder)
+                        // console.log(d)
                         // console.log(BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width, d.BBox.x, d.BBox.x + d.BBox.width)
                         // var myScaleX = d3.scaleLinear().domain([BBoxOriginalHolder.x, BBoxOriginalHolder.x + BBoxOriginalHolder.width]).range([that.BBox.x - 80 , that.BBox.x + that.BBox.width + 170]);
                         // var myScaleY = d3.scaleLinear().domain([BBoxOriginalHolder.y, BBoxOriginalHolder.y + BBoxOriginalHolder.height]).range([that.BBox.y - 100 , that.BBox.y + that.BBox.height + 70]);
@@ -262,6 +262,7 @@ class Background extends Component {
                                 var container = d3.select('#placeHolderOuterBGPattern-'+that.props.id).append('g').attr('transform', 'translate('+X+','+Y+')')
                                 for (var j = 0; j < myPattern.pattern.strokes.length; j += 1){
                                     var element = myPattern.pattern.strokes[j];
+                                    
                                     container.append('g').attr('transform', 'translate('+element.position[0]+','+element.position[1]+')')
                                     .append('path')
                                     .attr('d', (d)=>line(element.points))

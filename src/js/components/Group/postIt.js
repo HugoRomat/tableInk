@@ -13,6 +13,7 @@ export class postIt {
         this.offsetX = 80;
         this.allBoundingBox = null;
         this.BBOxPathMain = null;
+        this.BB = null;
         // console.log(flipSVG)
     } 
     update(BBOX, model){
@@ -20,23 +21,107 @@ export class postIt {
         var BB = JSON.parse(JSON.stringify(BBOX))
         var that = this;
         if (BB != undefined){
-            // showBboxBB(BBOX, 'red')
+            // showBboxBB(BBOX, 'green')
             // this.colors.forEach((d)=>{
             if (model.isGallery == undefined){
                 BB.y -= 20;
                 BB.x -= 20;
-                BB.width += 60;
-                BB.height += 200;
+                BB.width += 40;
+                BB.height += 40;
             } else {
                 BB.width -= 60;
                 BB.height -= 50;
             }
-               
+            this.BB = BB;
+            
             d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
             this.createFlipPage(BB);
+            this.addHandlers(BB);
         }
         else this.init();
+
+        // console.log('========GO', BBOX)
     }
+    /// FOR THE RESIZER HANDLER
+    /// GOOOOOOO
+    addHandlers(BB){
+        var knobposition = {'knob1': [0,0], 'knob2': [0,0]}
+
+        var that = this;
+        var drag = d3.drag()
+            .on("start", function(){ dragstarted(this)})
+            .on("drag", function(){ dragged(this)})
+            .on("end", function(){ dragended(this)})
+
+
+        var that = this;
+        d3.select('#postIt-' + that.group.props.group.id)
+                .append("g")
+                .attr('class', "circles")
+            .append('circle')
+                .style('pointer-events', 'auto')
+                .attr('cx', BB.x + BB.width)
+                .attr('cy', BB.y + BB.height)
+                .attr('r', 30)
+                .attr('fill', '#f9f9f9')
+                .attr('stroke', 'black')
+                .attr('id', 'knob1')
+                .call(drag);
+        
+        function dragstarted(obj) {
+            var id = d3.select(obj).attr('id');
+            knobposition[id] = [0,0]
+            d3.event.sourceEvent.stopPropagation();
+            d3.select(obj).classed("dragging", true);
+        }
+        // that.props.updateModel({
+        //     'idGroup': that.props.group.id,
+        //     'model': JSON.parse(JSON.stringify(model))
+        // })
+        function dragged(obj) {
+            d3.select(obj).attr("cx", d3.event.x).attr("cy", d3.event.y);
+            var id = d3.select(obj).attr('id');
+            knobposition[id] = [d3.event.x, d3.event.y]
+            // console.log(d3.event.x, d3.event.y)
+            // knobposition[id][0] += parseInt(d3.event.x);
+            // knobposition[id][1] += parseInt(d3.event.y);
+            // console.log(that.group.props.group.model)
+            // UPDATE IN REAL TIME
+            d3.select(obj).classed("dragging", false);
+            var id = d3.select(obj).attr('id');
+            if (id == 'knob1'){
+                that.BB.width = knobposition['knob1'][0] - BB.x;
+                that.BB.height = knobposition['knob1'][1] - BB.y;
+            }
+
+            d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
+            that.createFlipPage(BB);
+        }
+
+        function dragended(obj) {
+            var id = d3.select(obj).attr('id');
+            if (id == 'knob1'){
+                var transform = getTransformation(d3.select('#group-'+that.group.props.group.id).attr('transform'));
+                var model = that.group.props.group.model;
+                // var X = that.BB.x  - transform.translateX;
+                // var Y = that.BB.y  - transform.translateY;
+                // console.log(that.BB.x)
+                // console.log( model.placeHolder[0])
+                model.placeHolder[0] = { ...model.placeHolder[0], 'width': that.BB.width-40 , 'height': that.BB.height-40, 'x': that.BB.x+20, 'y': that.BB.y+20};
+                // console.log( model.placeHolder[0])
+                that.group.props.updateModel({
+                        'idGroup': that.group.props.group.id,
+                        'model': JSON.parse(JSON.stringify(model))
+                    })
+            }
+            
+            // console.log(knobposition)
+            
+        }
+
+    }
+    
+
     init() { 
         var that = this;
         return new Promise((resolve, reject) => {
@@ -64,6 +149,7 @@ export class postIt {
                 // BB.height += 100;
                 d3.select('#postItImage-' + that.group.props.group.id).selectAll('*').remove('*')
                 this.createFlipPage(BB);
+                this.addHandlers(BB);
 
                 resolve(true);
                 // this.initEvent();
@@ -161,39 +247,82 @@ export class postIt {
             }
         })
     }
-    dragged(event) {  
-        var idGroup = this.groupId
-        var that = this;       
-        var transform = getTransformation(d3.select('#group-'+idGroup).attr('transform'));
-        // console.log(event)
-        var offsetX = event.srcEvent.x - that.lastPosition.x;
-        var offsetY = event.srcEvent.y - that.lastPosition.y;
-        var X = offsetX + transform.translateX;
-        var Y = offsetY + transform.translateY;
-        d3.select('#group-'+idGroup).attr('transform', 'translate('+X+','+Y+')')
+    // dragged(event) {  
+    //     var idGroup = this.groupId
+    //     var that = this;       
+    //     var transform = getTransformation(d3.select('#group-'+idGroup).attr('transform'));
+    //     // console.log(event)
+    //     var offsetX = event.srcEvent.x - that.lastPosition.x;
+    //     var offsetY = event.srcEvent.y - that.lastPosition.y;
+    //     var X = offsetX + transform.translateX;
+    //     var Y = offsetY + transform.translateY;
+    //     d3.select('#group-'+idGroup).attr('transform', 'translate('+X+','+Y+')')
 
-        var linesAttached = that.group.props.group['lines'];
+    //     var linesAttached = that.group.props.group['lines'];
 
-        // console.log(linesAttached)
-        linesAttached.forEach((groupLine)=>{
-            groupLine.forEach((lineId)=>{
-                var id = 'item-'+lineId;
+    //     // console.log(linesAttached)
+    //     linesAttached.forEach((groupLine)=>{
+    //         groupLine.forEach((lineId)=>{
+    //             var id = 'item-'+lineId;
 
                 
-                var transform = getTransformation(d3.select('#'+id).attr('transform'));
-                var X = offsetX + transform.translateX;
-                var Y = offsetY + transform.translateY;
-                d3.select('#'+id).attr('transform', 'translate('+X+','+Y+')')
-            })
-        })
+    //             var transform = getTransformation(d3.select('#'+id).attr('transform'));
+    //             var X = offsetX + transform.translateX;
+    //             var Y = offsetY + transform.translateY;
+    //             d3.select('#'+id).attr('transform', 'translate('+X+','+Y+')')
+    //         })
+    //     })
 
-        that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
+    //     that.lastPosition = {'x': event.srcEvent.x, 'y':event.srcEvent.y}
 
-    }
-    
+    // }
     createFlipPage(BB){
         var that = this;
-        var td = this.htmlToElement(flipSVG);
+        var dataPath1 = [0,0,0,0]
+        dataPath1[0] = {'x': BB.x, 'y': BB.y}
+        dataPath1[1] = {'x': BB.x, 'y': BB.y + BB.height}
+        dataPath1[2] = {'x': BB.x + BB.width , 'y': BB.y + BB.height}
+        dataPath1[3] = {'x': BB.x + BB.width , 'y': BB.y }
+        var line0 = d3.line()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .curve(d3.curveLinear);
+
+        d3.select('#postItImage-' + that.group.props.group.id)
+        .append('path')
+            .attr('id', 'path1-'+ that.group.props.group.id)
+            .attr('class', 'path1')
+            .attr('d', line0(dataPath1) )
+            .attr('stroke','#ececec')
+            .attr('stroke-width','3')
+            .attr('fill','#f9f9f9')
+            .style("stroke-dasharray", ("3, 3"))
+
+
+        // var dataPath2 = [0,0,0,0, 0]
+        // var offset = 30
+        // dataPath2[0] = {'x': BB.x + BB.width/2 - offset, 'y': BB.y - 20}
+        // dataPath2[1] = {'x': BB.x + BB.width/2 + offset, 'y': BB.y - 20}
+        // dataPath2[2] = {'x': BB.x + BB.width/2 + offset, 'y': BB.y + 20}
+        // dataPath2[3] = {'x': BB.x + BB.width/2 - offset, 'y': BB.y + 20 }
+        // dataPath2[4] = {'x': BB.x + BB.width/2 - offset, 'y': BB.y - 20}
+        // var line1 = d3.line()
+        //     .x(function(d) { return d.x; })
+        //     .y(function(d) { return d.y; })
+        //     .curve(d3.curveLinear);
+
+        // d3.select('#postItImage-' + that.group.props.group.id)
+        // .append('path')
+        //     .attr('id', 'path2-'+ that.group.props.group.id)
+        //     .attr('d', line1(dataPath2) )
+        //     .attr('stroke','#ececec')
+        //     .attr('stroke-width','3')
+        //     .attr('fill','#e0e0e0')
+            // .style("stroke-dasharray", ("3, 3"))
+    }
+    createFlipPageBis(BB){
+        var that = this;
+        // var td = this.htmlToElement(flipSVG);
 
         // console.log(BB)
         
@@ -234,10 +363,13 @@ export class postIt {
         path = path.join('')
 
         
-        var newNode = d3.select('#postItImage-' + that.group.props.group.id)
-        var pathTache = newNode.node().append(td.childNodes[0])
-        d3.select('#postItImage-' + that.group.props.group.id).select('.path1')
+        // var newNode = d3.select('#postItImage-' + that.group.props.group.id)
+        // var pathTache = newNode.node().append(td.childNodes[0])
+        d3.select('#postItImage-' + that.group.props.group.id)
+        //.select('.path1')
+        .append('path')
             .attr('id', 'path1-'+ that.group.props.group.id)
+            
             .attr('d',path )
             .attr('stroke','#ececec')
             .attr('stroke-width','3')
@@ -246,47 +378,47 @@ export class postIt {
 
 
         /** FOR THE SECOND PATH */
-        var path2 = 'M268.931488,30.863834L626.6552730000001,470.995269C595.958557,426.874114,512.944458,374.689849,203.37998900000008,306.18008299999997C252.6965940000001,175.70728899999997,290.6645810000001,80.18060899999998,268.93148700000006,30.863832999999943Z';
+        // var path2 = 'M268.931488,30.863834L626.6552730000001,470.995269C595.958557,426.874114,512.944458,374.689849,203.37998900000008,306.18008299999997C252.6965940000001,175.70728899999997,290.6645810000001,80.18060899999998,268.93148700000006,30.863832999999943Z';
         
-        var data = parser(path2)
+        // var data = parser(path2)
 
-        // console.log(data)
-        data.splice(3, 0, data.splice(1, 1)[0]);
+        // // console.log(data)
+        // data.splice(3, 0, data.splice(1, 1)[0]);
 
         
 
-        data[0] = {...data[0], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
-        data[1] = {...data[1], 
-            'x': BB.x + BB.width - 90 + 80, 'y': BB.y + 70,
-            'x1': BB.x + BB.width - 25 + 80, 'y1': BB.y + 70,
-            'x2': BB.x + BB.width - 90 + 80, 'y2': BB.y + 75,
-        }
-        data[2] = {...data[2], 
-            'x': BB.x + BB.width - 90 + 80, 'y': BB.y,
-            'x1': BB.x + BB.width - 80 + 80, 'y1': BB.y + 50,
-            'x2': BB.x + BB.width - 80 + 80, 'y2': BB.y
-        }
-        data[3] = {...data[3], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
+        // data[0] = {...data[0], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
+        // data[1] = {...data[1], 
+        //     'x': BB.x + BB.width - 90 + 80, 'y': BB.y + 70,
+        //     'x1': BB.x + BB.width - 25 + 80, 'y1': BB.y + 70,
+        //     'x2': BB.x + BB.width - 90 + 80, 'y2': BB.y + 75,
+        // }
+        // data[2] = {...data[2], 
+        //     'x': BB.x + BB.width - 90 + 80, 'y': BB.y,
+        //     'x1': BB.x + BB.width - 80 + 80, 'y1': BB.y + 50,
+        //     'x2': BB.x + BB.width - 80 + 80, 'y2': BB.y
+        // }
+        // data[3] = {...data[3], 'x': BB.x + BB.width + 80, 'y': BB.y + 100}
      
-        var path = data.map((d)=> {
-            // console.log(d.code)
-            if (d.code == 'Z') return d.code 
-            if (d.code == 'C') return d.code + d.x1 + ',' + d.y1 + ' ' + d.x2 + ',' + d.y2 + ' ' + d.x + ',' + d.y;
-            else return d.code + d.x + ',' + d.y;
-        })
+        // var path = data.map((d)=> {
+        //     // console.log(d.code)
+        //     if (d.code == 'Z') return d.code 
+        //     if (d.code == 'C') return d.code + d.x1 + ',' + d.y1 + ' ' + d.x2 + ',' + d.y2 + ' ' + d.x + ',' + d.y;
+        //     else return d.code + d.x + ',' + d.y;
+        // })
 
-        path = path.join('')
-        d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
-            .attr('d',path)
+        // path = path.join('')
+        // d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
+        //     .attr('d',path)
 
 
-        d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
-            .style('pointer-events', 'auto')
-            .on('pointerdown', function(){
+        // d3.select('#postItImage-' + that.group.props.group.id).select('.path2')
+        //     .style('pointer-events', 'auto')
+        //     .on('pointerdown', function(){
 
-                that.group.props.swipeGroup({'id': that.group.props.group.id, 'swipe': !that.group.props.group.swipe});
-                console.log('HELLO', that.group.props)
-            })
+        //         that.group.props.swipeGroup({'id': that.group.props.group.id, 'swipe': !that.group.props.group.swipe});
+        //         console.log('HELLO', that.group.props)
+        //     })
             
         // console.log(d3.select('#postItImage-' + that.group.props.group.id).select('.path2').node())
         /*d3.select('#postItImage-' + that.group.props.group.id).select('.rectangle')
@@ -299,13 +431,13 @@ export class postIt {
 
     //    this.transition(data, dataPath1, BB)
 
-        this.data =data;
-        this.dataPath1 = dataPath1;
-        this.BB = BB;
+        // this.data =data;
+        // this.dataPath1 = dataPath1;
+        // this.BB = BB;
 
     }
     reverseTransition(){
-        var data = this.data;
+        /*var data = this.data;
         var dataPath1 = this.dataPath1
         var BB = this.BB;
 
@@ -370,7 +502,7 @@ export class postIt {
 
         path = path.join('')
         d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
-
+        */
     }
     transition(){
 
@@ -402,7 +534,7 @@ export class postIt {
 
         path = path.join('')
 
-        d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
+        // d3.select('#postIt-' + that.group.props.group.id).select('.path2').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
 
         dataPath1[0] = {...dataPath1[0], 'x': BB.x, 'y': BB.y}
         dataPath1[1] = {...dataPath1[1], 'x': BB.x, 'y': BB.y + BB.height}
@@ -431,7 +563,7 @@ export class postIt {
         })
 
         path = path.join('')
-        d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
+        // d3.select('#postIt-' + that.group.props.group.id).select('.path1').transition().ease(d3.easeCubic).duration(1000).delay(0).attr('d',path )
 
 
     }

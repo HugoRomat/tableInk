@@ -524,7 +524,7 @@ class Document extends Component {
 
                 if (that.panGroup) that.panStartGroup(ev);
                 else if ( that.panStroke) that.panStartStroke(ev);
-                else that.panStartCanvas(ev);
+                // else that.panStartCanvas(ev);
             }
           })
           this.mc.on("pan", function(ev) {
@@ -592,7 +592,7 @@ class Document extends Component {
 
                 if (that.panGroup) that.panMoveGroup(ev);
                 else if ( that.panStroke) that.panMoveStroke(ev);
-                else that.panCanvas(ev);
+                // else that.panCanvas(ev);
             }
           })
           this.mc.on("panend", function(ev) {
@@ -716,14 +716,14 @@ class Document extends Component {
                 }
             }
             if (ev.pointers[0]['pointerType'] == 'touch' ){
-                // console.log('TAP')
+                console.log('TAP')
                 var x = ev.pointers[0]['x'];
                 var y = ev.pointers[0]['y'];
                 var element = whereIsPointer(x, y)
                 var id = element.id;
                     // console.log(element)
                 if (id == null){
-                    // console.log(id)
+                    console.log(id)
                     that.speech.setAlphabet(that.props.lettres)
                     var transform = getTransformation(d3.select('#panItems').attr('transform'))
                     that.speech.setPositionTyping([ev.srcEvent.x - transform.translateX, ev.srcEvent.y - transform.translateY])
@@ -1323,6 +1323,7 @@ class Document extends Component {
             /** Quisk swipe to draw or create a sticky */
             else if (that.drawing && that.sticky == false && that.isGuideHold == false && that.tempArrayStroke.length > 3){
                 // var objectsSelected = that.findCloseStrokes();
+                console.log('draw on Canvas')
                 var length = d3.select('#penTemp').node().getTotalLength();
 
               
@@ -1360,8 +1361,10 @@ class Document extends Component {
                     that.idLine = guid();
                     // if (that.tempArrayStroke.length > 10){
                     that.addStroke();
-                    that.isNewLine();
-                    that.isSameLine();
+
+                    that.addToGroup();
+                    // that.isNewLine();
+                    // that.isSameLine();
                     // }
                 // }
 
@@ -1589,7 +1592,7 @@ class Document extends Component {
             var arrayPromise = lines.map((d)=> _getBBoxPromise('item-'+ d));
             
             var lineRemove = []
-            // var rectangle = null;
+            var rectangle = null;
             // // console.log(arrayPromise)
             Promise.all(arrayPromise).then(function(BBs) {
                 // console.log(BBs)
@@ -1601,13 +1604,13 @@ class Document extends Component {
                 // console.log(lineRemove)
                     //     lineRemove.push(objectId)
                     // }
-            //     for (var i in BBs){
-            //         if (rectangle == null) rectangle = BBs[i];
-            //         else rectangle = unionRectangles(rectangle, BBs[i]);
-            //         // showBboxBB(BBs[i], 'red')
-            //     }
+                // for (var i in BBs){
+                //     if (rectangle == null) rectangle = BBs[i];
+                //     else rectangle = unionRectangles(rectangle, BBs[i]);
+                //     showBboxBB(BBs[i], 'red')
+                // }
             //     // console.log(rectangle)
-            //     // showBboxBB(rectangle, 'green')
+                // showBboxBB(rectangle, 'green')
             //     var color = that.commandFunction.args;
             //     var c = d3.color(color)
             //     c.opacity = 0.2;
@@ -1639,7 +1642,7 @@ class Document extends Component {
                 }
         
 
-                // console.log(realArray, arrayDoublons)
+                console.log(realArray, arrayDoublons)
                 resolve(realArray)
 
                 
@@ -2386,98 +2389,142 @@ class Document extends Component {
         }
       
     }
-    isSameLine = async() => {
-        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-        var transform = getTransformation(d3.select('#panItems').attr('transform'))
+    addToGroup = async() => {
+        var that = this;
+        _getBBoxPromise('penTemp').then((BBink)=>{
+            for (var i in this.props.groupLines){
+                var item = this.props.groupLines[i];
+                var id = item['id'];
+                var arrayNode = [];
+                var BB = _getBBox('group-'+id);
+                var isIntersect = boxBox(BB.x, BB.y, BB.width, BB.height,BBink.x, BBink.y, BBink.width, BBink.height)
 
-        firstPoint[0] += transform.translateX;
-        firstPoint[1] += transform.translateY;
-        var whichGroup = false;
-        // console.log(this.props.groupLines)
-        for (var i in this.props.groupLines){
-            var item = this.props.groupLines[i];
-            var id = item['id'];
-            var arrayNode = [];
-            // console.log(d3.select('#group-'+id))
-            d3.select('#group-'+id).selectAll('.containerBackground').each(function(d){
-                arrayNode.push(d3.select(this).node());
-            })
-            for (var j in arrayNode){
-                var BB = await _getBBoxPromiseNode(arrayNode[j]);
-                var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
-                if (isIn) {
-                    // console.log('HEY')
-                    var index = d3.select(arrayNode[j]).attr('id').split('-')[1];
-                    // console.log(id)
-                    // console.log(index)
-                    // this.props.addLineToExistingGroup({'idLine': [this.idLine], 'idGroup':id, 'iteration':index})
-                }
-            }
-        }
-    }
-    isNewLine= async() => {
-        // console.log(this.tempArrayStroke)
-        var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
-        var transform = getTransformation(d3.select('#panItems').attr('transform'))
-
-        firstPoint[0] += transform.translateX;
-        firstPoint[1] += transform.translateY;
-
-        var dictBBox = {};
-        var groupNotToCheck = []
-
-        /** Check for guideIntersection */
-        for (var i in this.props.groupLines){
-            var item = this.props.groupLines[i];
-            var id = item['id'];
-            var BB = await _getBBoxPromise('item-'+id);
-            dictBBox[id] = BB;
-            // showBboxBB(BB, 'red')
-        }  
-        
-        for (var i = 0 ; i <  Object.keys(dictBBox).length; i++){
-            var key1 = Object.keys(dictBBox)[i]
-            var BB1 = dictBBox[key1]
-            // console.log(Object.keys(dictBBox).length, i)
-            for (var j = i+1 ; j <  Object.keys(dictBBox).length; j++){
-                var key = Object.keys(dictBBox)[j]
-                var BB2 = dictBBox[key]
-                var isIntersect = boxBox(BB1.x, BB1.y, BB1.width, BB1.height,BB2.x, BB2.y, BB2.width, BB2.height)
                 if (isIntersect){
-                    groupNotToCheck.push(key);
-                    groupNotToCheck.push(key1);
-                    // showBboxBB(BB1, 'red')
+                    var IsIn = false;
+                    //Iterating over lines in group
+                    d3.select('#group-'+id).selectAll('.lineGroup').each(function(d){
+                        var idLineGroup = d3.select(this).attr('id')
+                        var BBLine = _getBBox(idLineGroup, 15);
+                        var index = d3.select(this).attr('id').split('-')[1];
+                        BBLine.width += 30
+                        var isIntersectLine = boxBox(BBLine.x, BBLine.y, BBLine.width, BBLine.height,BBink.x, BBink.y, BBink.width, BBink.height)
+                        // console.log('interesct====', isIntersect)
+
+                        // showBboxBB(BBLine, 'blue')
+                        if (isIntersectLine){
+                            console.log('add line to existing line')
+                            that.props.addLineToExistingGroup({'idLine': [that.idLine], 'idGroup':id, 'iteration':index})
+                            IsIn = true
+                        } 
+                        
+                    })
+                    if (IsIn == false){
+                        console.log('add line to group new line')
+                        this.props.addLineToGroup({'idLine': [[this.idLine]], 'idGroup':id})
+                    }
                 }
-                // console.log(isIntersect)
             }
-        }
-        // console.log(groupNotToCheck)
-
-        for (var i in this.props.groupLines){
-            var item = this.props.groupLines[i];
-            var id = item['id'];
-
-            /* Sure to not have crossing groups */
-            if (groupNotToCheck.indexOf(id) == -1){
-                // console.log(item)
-                var BB = dictBBox[id]
-                            
-                var offset = 80;
-                BB.x -= offset;
-                BB.width += 2*offset;
-
-                // showBboxBB(BB, 'red')
-
-                var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
-                if (isIn) {
-                    this.props.addLineToGroup({'idLine': [[this.idLine]], 'idGroup':id})
-                }
-                // console.log(isIn)
-            }
-            
-        }
+            // showBboxBB(BBink, 'blue')
+        })
     }
+    //ADD A NEW ITEM TO THE LINE
+    // isSameLine = async() => {
+    //     var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+    //     var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+    //     var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+    //     firstPoint[0] += transform.translateX;
+    //     firstPoint[1] += transform.translateY;
+    //     var whichGroup = false;
+    //     // console.log(this.props.groupLines)
+    //     for (var i in this.props.groupLines){
+    //         var item = this.props.groupLines[i];
+    //         var id = item['id'];
+    //         var arrayNode = [];
+    //         // console.log(d3.select('#group-'+id))
+    //         d3.select('#group-'+id).selectAll('.containerBackground').each(function(d){
+    //             arrayNode.push(d3.select(this).node());
+    //         })
+    //         for (var j in arrayNode){
+    //             var BB = await _getBBoxPromiseNode(arrayNode[j]);
+    //             var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
+    //             if (isIn) {
+    //                 console.log('SAME LINE')
+    //                 var index = d3.select(arrayNode[j]).attr('id').split('-')[1];
+    //                 // console.log(id)
+    //                 // console.log(index)
+    //                 this.props.addLineToExistingGroup({'idLine': [this.idLine], 'idGroup':id, 'iteration':index})
+    //             }
+    //         }
+    //     }
+    // }
+    
+    // // IT'S A NEW LINE
+    // isNewLine= async() => {
+    //     // console.log(this.tempArrayStroke)
+    //     var firstPoint = JSON.parse(JSON.stringify(this.tempArrayStroke[0]))
+    //     var transform = getTransformation(d3.select('#panItems').attr('transform'))
+
+    //     firstPoint[0] += transform.translateX;
+    //     firstPoint[1] += transform.translateY;
+
+    //     var dictBBox = {};
+    //     var groupNotToCheck = []
+
+
+    //     console.log(this.props.groupLines)
+    //     /** Check for guideIntersection */
+    //     for (var i in this.props.groupLines){
+    //         var item = this.props.groupLines[i];
+    //         var id = item['id'];
+    //         var BB = await _getBBoxPromise('item-'+id);
+    //         dictBBox[id] = BB;
+    //         // showBboxBB(BB, 'red')
+    //     }  
+        
+    //     for (var i = 0 ; i <  Object.keys(dictBBox).length; i++){
+    //         var key1 = Object.keys(dictBBox)[i]
+    //         var BB1 = dictBBox[key1]
+    //         // console.log(Object.keys(dictBBox).length, i)
+    //         for (var j = i+1 ; j <  Object.keys(dictBBox).length; j++){
+    //             var key = Object.keys(dictBBox)[j]
+    //             var BB2 = dictBBox[key]
+    //             var isIntersect = boxBox(BB1.x, BB1.y, BB1.width, BB1.height,BB2.x, BB2.y, BB2.width, BB2.height)
+    //             if (isIntersect){
+    //                 groupNotToCheck.push(key);
+    //                 groupNotToCheck.push(key1);
+    //                 // showBboxBB(BB1, 'red')
+    //             }
+    //             // console.log(isIntersect)
+    //         }
+    //     }
+    //     // console.log(groupNotToCheck)
+
+    //     for (var i in this.props.groupLines){
+    //         var item = this.props.groupLines[i];
+    //         var id = item['id'];
+
+    //         /* Sure to not have crossing groups */
+    //         if (groupNotToCheck.indexOf(id) == -1){
+    //             // console.log(item)
+    //             var BB = dictBBox[id]
+                            
+    //             var offset = 80;
+    //             BB.x -= offset;
+    //             BB.width += 2*offset;
+
+    //             // showBboxBB(BB, 'red')
+
+    //             var isIn = boxPoint(BB.x, BB.y, BB.width, BB.height, firstPoint[0], firstPoint[1]);
+    //             if (isIn) {
+    //                 console.log('NEW LINE')
+    //                 this.props.addLineToGroup({'idLine': [[this.idLine]], 'idGroup':id})
+    //             }
+    //             // console.log(isIn)
+    //         }
+            
+    //     }
+    // }
     addStroke(){
         // console.log('AGG')
         if (this.tempArrayStroke.length > 1){
