@@ -133,16 +133,19 @@ class GalleryItmes extends Component {
                         actualGuide = JSON.parse(JSON.stringify(actualGuide.model));
                         var items = JSON.parse(JSON.stringify(that.props.galleryItems.data));
 
+                        
                         var newGuide = JSON.parse(JSON.stringify(items[that.iteration]))
-                        // console.log(newGuide)
+                        
                         newGuide.id = guid();
                         newGuide.child = actualGuide.child;
                         for (var j in newGuide.placeHolder){
                             newGuide.placeHolder[j]['lines'].forEach(element => {element.id = guid()});
                         }
+
+                        // console.log(newGuide, elemnt.id)
                         newGuide.placeHolder[0] = {...newGuide.placeHolder[0], 
-                            'width': actualGuide.placeHolder[0]['width'] + 100,
-                            'height': actualGuide.placeHolder[0]['height'] + 300,
+                            'width': actualGuide.placeHolder[0]['width'], //+ 100,
+                            'height': actualGuide.placeHolder[0]['height'] ,//+ 300,
                             'x': actualGuide.placeHolder[0]['x'],
                             'y': actualGuide.placeHolder[0]['y']
                         }
@@ -160,9 +163,14 @@ class GalleryItmes extends Component {
                         }
                         newGuide.position = [0,0]
                         newGuide.isGallery = true;
+
+                        console.log(newGuide)
                         delete newGuide.scale;
                         // console.log(newGuide)
                         that.props.updatePlaceHolderGroup({'idGroup':elemnt.id, 'model':newGuide})
+
+
+
                     }
                     if (elemnt.type == null && elemnt.id == null){
                         // console.log(items[that.iteration])

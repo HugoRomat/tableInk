@@ -30,11 +30,12 @@ class LinesGrouping extends Component {
         this.state ={
             tagInsideBullet : null
         }
+        this.hasupdatedBB = false;
     }
     componentDidMount(){
         var that = this;
 
-        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
+        // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
         // this.BBox = this.getBoundinxBoxEveryone();
         console.log('ITERATION', that.props.iteration)
         // this.BBox = this.props.BBs[this.props.iteration];
@@ -54,8 +55,8 @@ class LinesGrouping extends Component {
     }
     componentDidUpdate(prevProps, prevState){
         var that = this;
-        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
-        console.log(this.props)
+        // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
+        // console.log(this.props)
         //Si j'udpate la BBox
 
         // if (this.props.line != prevProps.line){
@@ -63,14 +64,26 @@ class LinesGrouping extends Component {
         //     console.log('MOVE LINES')
         //     this.movePoints();
         // }
-        if (this.props.BBs != prevProps.BBs){
+        console.log('ITERATION', that.props.iteration)
+        
+        if (this.props.BBs != prevProps.BBs && this.hasupdatedBB == false){
+            // console.log('BB', that.props.iteration)
+            // this.hasupdatedBB = true
             // console.log('GO')
             this.BBox = this.props.BBs[this.props.iteration];
             this.addContainer();
             this.addPlaceHolder();
         }
         if (this.props.placeholders != prevProps.placeholders){
-            console.log('GO', this.isCreated)
+            // if (this.props.placeholders[1]['lines'].length == 0){
+            //     d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+            //     d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+            //     d3.select('#placeHolderTagLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
+        
+                // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
+            // }
+
+            console.log('PLACE', that.props.iteration)
             if (this.isCreated == true && this.BBox != undefined){
                 console.log('GO2')
                 this.movePoints();
@@ -82,9 +95,13 @@ class LinesGrouping extends Component {
             // this.movePoints();
             this.addPlaceHolder();
 
+            // REMOV ELES PLACEHOLDERS
+            
+            // console.log(this.props.placeholders)
+
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            // console.log('GO')
+            console.log('SKETCH', that.props.iteration)
            
             this.addPlaceHolder();
 
@@ -355,7 +372,8 @@ class LinesGrouping extends Component {
                     .attr('fill', 'none')
                     .attr('stroke', (d)=>d.colorStroke)
                     .attr('stroke-width', (d)=>d.sizeStroke)
-                    .attr('stroke-linejoin', "round")
+                    .style('stroke-linejoin', "round")
+                    .style('pointer-events', "none")
 
                 // showBboxBB(placeHolderLine, 'red')
 
@@ -371,10 +389,17 @@ class LinesGrouping extends Component {
                 // NewBBox = l'endroit ou je cree mon element
                 // BBox creation = la bbox qui a cree cet element
                 var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x); //- transformDrag.translateX;
-                var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y); //- transformDrag.translateY;
+                var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y)//- transformDrag.translateY;
 
-                console.log(that.props.iteration, this.BBox.x, placeHolderLine.x, (newBBox.x - BBoxCreation.x), transformDrag.translateX);
-                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+0+','+Y+')')
+                // var Y = this.BBox.y - newBBox.y// - transformDrag.translateY;
+
+                // console.log('GO', transformDrag)
+
+                // var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y);
+                // showBboxBB(BBoxCreation, 'red')
+                // showBboxBB(this.BBox, 'green')
+                // console.log(that.props.iteration, this.BBox.x, placeHolderLine.x, (newBBox.x - BBoxCreation.x), transformDrag.translateX);
+                d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+(Y)+')')
 
                 
             }
@@ -448,6 +473,8 @@ class LinesGrouping extends Component {
                         .attr('fill', 'none')
                         .attr('stroke', (d)=>myLine.colorStroke)
                         .attr('stroke-width', (d)=>myLine.sizeStroke)
+                        .style('stroke-linejoin', "round")
+                        .style('pointer-events', "none")
                 }
             }
             /*if (pattern != undefined && pattern.length > 0){

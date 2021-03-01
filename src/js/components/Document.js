@@ -513,6 +513,7 @@ class Document extends Component {
                 that.panGroup = that.props.groupLines.find(x => x.id==id)
                 that.panStroke = that.props.sketchLines.find(x => x.id==id)
                 
+                console.log(element)
                 // console.log(element)
                 if (that.firsPointerOn == null ){
                     that.firsPointerOn = element;
@@ -698,7 +699,7 @@ class Document extends Component {
                 var id = element.id;
                 var line = that.props.sketchLines.find((d)=> d.id == id)
                     
-                console.log(element)
+                
                 if (id != null && line != undefined){
                     //
                     var myLine = JSON.parse(JSON.stringify(line));
@@ -706,6 +707,8 @@ class Document extends Component {
                     if (data.stretch != undefined) myLine.stretch = data.stretch;
                     if (data.pattern != undefined) myLine.pattern = data.pattern;
                     myLine.data = data.data;
+
+                    console.log(myLine, data)
 
                     // console.log('CHANGE', line.id, id)
                     that.props.changeStrokesProperties({
@@ -1168,10 +1171,14 @@ class Document extends Component {
     pointerUp(event){
         var that = this;
         // console.log('UP')
-        console.log(that.straightLine, that.increaseGuideSize)
+        console.log(that.tempArrayStroke.length)
+
+        // if (that.tempArrayStroke.length > 10) return;
+        // var dist = distance(that.tempArrayStroke[0][0],that.tempArrayStroke[that.tempArrayStroke.length-1][0], that.tempArrayStroke[0][1],that.tempArrayStroke[that.tempArrayStroke.length-1][1] )
+        // console.log(dist)
         if (event.pointerType == 'pen') that.detectingFlick(event);
         // console.log(that.isGuideHold.length, that.isItemDragged)
-        if (that.down && that.isItemDragged == false){
+        if (that.down && that.isItemDragged == false && that.tempArrayStroke.length > 10){
             // console.log(that.drawing, that.sticky)
             // console.log(that.drawing)
             // console.log(that.isGuideHold)
@@ -2770,7 +2777,7 @@ class Document extends Component {
         console.log(data)
     }
     setColorPaletteTapped = (d) => {
-        // console.log(d)
+        // console.log('PALETTE', d)
         this.colorPaletteTapped = d;
     }
     createGroup = (d) => {

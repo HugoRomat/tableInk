@@ -306,7 +306,9 @@ class PlaceHolder extends Component {
             .attr('stroke', that.props.colorStroke)
             .attr('stroke-width', that.props.sizeStroke)
             .attr("stroke-dasharray", 'none')
-            .attr("opacity", '1');
+            .attr("opacity", '1')
+            .style('stroke-linejoin', "round")
+            .style('pointer-events', "none")
         
     }
     componentDidUpdate(prevProps, prevState){

@@ -874,6 +874,7 @@ export function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
 	return {x, y}
 }
 export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, allGroups){
+    // console.log(ev)
     // console.log(BBTemp)
     // var alreadyAdded = []
     var that = this;
@@ -923,16 +924,31 @@ export async function findIntersectionRecursive(BBTemp, ev, lastPosition, id, al
         }
         
     }
-    // console.log(BBid)
-    // console.log(BBid)
-    findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups)
+
+    // console.log(ev.distance)
+    var groupToExclude = [];
+    
+    for (var i in BBid){
+        var id = BBid[i]['id'];
+        var BB = BBid[i]['BB']
+        var intersected = boxBox(BB.x, BB.y, BB.width, BB.height, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
+        if (intersected) groupToExclude.push(id);
+    }
+    // console.log(groupToExclude.length)
+    
+
+    // if (groupToExclude.length == 0)  
+    
+    findIntersects(BBTemp, offsetX, offsetY, BBid, BBTemp, allGroups, groupToExclude)
 }
-async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGroups) {
+async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGroups, groupToExclude) {
        
     // showBboxBB(BBTemp, 'red');
     // console.log(BBid)
     //Put my lines in an array
     // console.log(BBid)
+    if (BBid.length == 0) groupToExclude = []
+    
     // Check for all these lines
     for (var i in BBid){
         var id = BBid[i]['id'];
@@ -941,6 +957,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
         var type = id.split('-')[0]
         // showBboxBB(BBTemp, 'red');
         // showBboxBB(BB, 'blue');
+        // console.log(groupToExclude.indexOf(id), groupToExclude)
         var intersected = boxBox(BB.x -10, BB.y-10, BB.width+10, BB.height+10, BBTemp.x, BBTemp.y, BBTemp.width, BBTemp.height);
         if (intersected) {
             
@@ -948,7 +965,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
             var insideandWhichGroup = allGroups.find(group => group.lines.find((arrayEntry)=> arrayEntry.indexOf(idSImple) > -1))//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
             // console.log(insideandWhichGroup)
             var isItAGroup = allGroups.find(group => group.id == idSImple)//.indexOf(idSImple) > -1);//x.id == this.guideTapped.item)
-            // console.log(isItAGroup, insideandWhichGroup)
+            // console.log(id)
             // if not attached to a group
 
             /** It's a group que je tappe */
@@ -982,7 +999,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                     } else var newBB = JSON.parse(JSON.stringify(BBid))
                     var index = newBB.indexOf(newBB.find(x => x.id == id));
                     newBB.splice(index,1)
-                    // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                    // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups, groupToExclude);
                 
             }
             /** Not stroke inside a group */
@@ -1007,7 +1024,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                     // console.log(index)
                     var newBB = JSON.parse(JSON.stringify(BBid))
                     newBB.splice(index,1)
-                    findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                    findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups, groupToExclude);
                 }
                
             } 
@@ -1039,7 +1056,7 @@ async function findIntersects (BBTemp, offsetX, offsetY, BBid, BBinitial, allGro
                 /** REMOVING THE GROUP */
                 var index = newBB.indexOf(newBB.find(x => x.id == 'group-'+insideandWhichGroup.id));
                 newBB.splice(index,1)
-                // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups);
+                // findIntersects(BB, offsetX, offsetY, newBB, BBinitial, allGroups, groupToExclude);
             }
         }
     }

@@ -127,11 +127,12 @@ class Picker extends Component {
                         }
                     }
                 } 
-                that.props.updatePaletteLine({
-                    'id': that.elementSelected.split('-')[1], 
-                    'sizeStroke': item.attr('stroke-width'),
-                    'colorStroke': item.attr('stroke')
-                })
+                // console.log(that.elementSelected)
+                // that.props.updatePaletteLine({
+                //     'id': that.elementSelected.split('-')[1], 
+                //     'sizeStroke': item.attr('stroke-width'),
+                //     'colorStroke': item.attr('stroke')
+                // })
                 // console.log(elementSelected)
                 // console.log('GOO')
             }

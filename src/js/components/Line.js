@@ -156,11 +156,11 @@ class Line extends Component {
     }
     render() {
         // getTransformation()
-        console.log(this.props.stroke.position[0])
+        // console.log(this.props.stroke.position[0])
         return (
             <g id={'item-'+this.props.stroke.id} className={'parentLine'} transform={`translate(${this.props.stroke.position[0]},${this.props.stroke.position[1]})`}>
                 <path style={{'pointerEvents': 'none' }} className="realStroke" id={this.props.stroke.id}></path>
-                {/* <path style={{'pointerEvents': 'none' }} className="fakeStroke" id={'fake-'+this.props.stroke.id}></path> */}
+                <path style={{'pointerEvents': 'none' }} className="fakeStroke" id={'fake-'+this.props.stroke.id}></path>
                 <g id={"tempGroup-"+this.props.stroke.id} style={{'pointerEvents': 'none' }} >
 
                 </g>
