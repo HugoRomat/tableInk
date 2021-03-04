@@ -64,7 +64,7 @@ class LinesGrouping extends Component {
         //     console.log('MOVE LINES')
         //     this.movePoints();
         // }
-        console.log('ITERATION', that.props.iteration)
+        // console.log('ITERATION', that.props.iteration)
         
         if (this.props.BBs != prevProps.BBs && this.hasupdatedBB == false){
             // console.log('BB', that.props.iteration)
@@ -83,10 +83,10 @@ class LinesGrouping extends Component {
                 // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('rect').attr('stroke', 'white')
             // }
 
-            console.log('PLACE', that.props.iteration)
+            console.log('CHANGE PLACEHOLDER')
             if (this.isCreated == true && this.BBox != undefined){
-                console.log('GO2')
-                this.movePoints();
+                // console.log('GO2')
+                // this.movePoints();
                 this.addContainer();
                 this.addPlaceHolder();
                 this.isCreated = false;
@@ -101,13 +101,16 @@ class LinesGrouping extends Component {
 
         }
         else if (this.props.sketchLines != prevProps.sketchLines){
-            console.log('SKETCH', that.props.iteration)
+            // console.log('SKETCH', that.props.iteration)
            
             this.addPlaceHolder();
 
             setTimeout(function(){
                 getBoundinxBoxLines(that.props.line).then((d)=>{
                     // console.log('=================== GO', that.props.line)
+                    // var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
+
+
                     that.BBox = d;
                     // showBboxBB(d, 'red');
                     // d3.selectAll('.BB').remove()
@@ -336,11 +339,12 @@ class LinesGrouping extends Component {
         
     }
     addPlaceHolder(){
-        // console.log(this.props.placeholders)
+        console.log("ITERATION", this.props.iteration)
         var line = d3.line()
         var that = this;
-        // d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
-
+        
+        
+        d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
 
         d3.select('#placeHolderBackgroundLine-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
         d3.select('#placeHolderBackgroundLinePattern-'+that.props.iteration +'-'+that.props.id).selectAll('*').remove();
@@ -379,28 +383,27 @@ class LinesGrouping extends Component {
 
                 // showBboxBB(this.BBox, 'green')
                 var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-                // var transform = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
-                // var transformPan = getTransformation(d3.select('#panItems').attr('transform'));
-                // var X = this.BBox.x - transformDrag.translateX  - 80; 
-                // var Y = this.BBox.y - transformDrag.translateY  - 20;
+                // d3.select('#group-'+that.props.id)
+                var BBoxGroup = _getBBox('postIt-'+that.props.id);
 
                 // thisBBox = toutes les box des lignes
                 // placeholderLine = Premier ligne seulement
                 // NewBBox = l'endroit ou je cree mon element
                 // BBox creation = la bbox qui a cree cet element
-                var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x); //- transformDrag.translateX;
-                var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y)//- transformDrag.translateY;
 
-                // var Y = this.BBox.y - newBBox.y// - transformDrag.translateY;
+                // d3.selectAll(".BB").remove();
+                // showBboxBB(BBoxGroup, 'red');
 
-                // console.log('GO', transformDrag)
+                // var X = this.BBox.x - BBoxGroup.x - transformDrag.translateX - 50;//- newBBox.x// + transformDrag.translateX;
+                // var Y = this.BBox.y - BBoxGroup.y - transformDrag.translateY - 30; //- newBBox.y// - transformDrag.translateY;
+                // var X = this.BBox.x + (newBBox.x - BBoxCreation.x) - transformDrag.translateX - 50;
+                // var Y = this.BBox.y  + (newBBox.y - BBoxCreation.y) - transformDrag.translateY - 30;
+                var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x)- transformDrag.translateX;
+                var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y) + transformDrag.translateY;
 
-                // var Y = this.BBox.y - placeHolderLine.y - 30 + (newBBox.y - BBoxCreation.y);
-                // showBboxBB(BBoxCreation, 'red')
-                // showBboxBB(this.BBox, 'green')
-                // console.log(that.props.iteration, this.BBox.x, placeHolderLine.x, (newBBox.x - BBoxCreation.x), transformDrag.translateX);
                 d3.select('#placeHolderBulletLine-'+that.props.iteration +'-'+that.props.id).attr('transform', 'translate('+X+','+(Y)+')')
 
+                // console.log('CHANNNNNGE', normal);
                 
             }
 
@@ -424,8 +427,11 @@ class LinesGrouping extends Component {
                 // var transformDrag = getTransformation(d3.select('#group-'+that.props.id).attr('transform'));
                 // var X = this.BBox.x - transformDrag.translateX - 145; 
                 // var Y = this.BBox.y - transformDrag.translateY - 100;
-                var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x)
-                var Y = this.BBox.y - placeHolderLine.y -20 + (newBBox.y - BBoxCreation.y)
+                // var X = this.BBox.x - placeHolderLine.x - 80 + (newBBox.x - BBoxCreation.x)
+                // var Y = this.BBox.y - placeHolderLine.y -20 + (newBBox.y - BBoxCreation.y)
+
+                var X = this.BBox.x - BBoxGroup.x - transformDrag.translateX;//- newBBox.x// + transformDrag.translateX;
+                var Y = this.BBox.y - BBoxGroup.y - transformDrag.translateY; //- n
 
 
                 // var difference = 0;

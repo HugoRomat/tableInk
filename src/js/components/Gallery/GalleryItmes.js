@@ -164,7 +164,7 @@ class GalleryItmes extends Component {
                         newGuide.position = [0,0]
                         newGuide.isGallery = true;
 
-                        console.log(newGuide)
+                        // console.log(newGuide)
                         delete newGuide.scale;
                         // console.log(newGuide)
                         that.props.updatePlaceHolderGroup({'idGroup':elemnt.id, 'model':newGuide})

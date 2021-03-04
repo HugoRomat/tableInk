@@ -51,6 +51,7 @@ class Guide extends Component {
         var line = d3.line().curve(d3.curveBasis)
         var that = this;
 
+        // console.log(this.props.stroke)
         
         // var drag = d3.drag()
         //     // .subject(function (d) { return d; })

@@ -28,7 +28,7 @@ class Lines extends Component {
     } 
     
     render() {
-        console.log(this.props.sketchLines)
+        // console.log(this.props.sketchLines)
         const listItems = this.props.sketchLines.map((d, i) => {
             // console.log(d.position)
                 return <Line 

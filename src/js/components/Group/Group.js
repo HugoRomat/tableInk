@@ -233,9 +233,10 @@ class Group extends Component {
         // return new Promise((resolve, reject) => {
             // console.log('GO', this.props.group.lines)
         var BBox = [];
-        console.log(this.props.group.lines)
+        // console.log(this.props.group.lines)
         // const grouped = this.props.group.lines(pets, pet => pet.type);
         // d3.selectAll('.BB').remove()
+
         for (let i = 0; i < this.props.group.lines.length; i++) {
             var line = this.props.group.lines[i];
             var rectangle = null;
@@ -249,8 +250,9 @@ class Group extends Component {
 
                 if (rectangle == null) rectangle = BB;
                 else rectangle = unionRectangles(rectangle, BB);
-                // showBboxBB(BB, 'red');
+                
             }
+            
            
             var transformPan = {'translateX': 0, 'translateY': 0}
             var transformDrag = {'translateX': 0, 'translateY': 0}
@@ -258,11 +260,16 @@ class Group extends Component {
             if (item != null){
                 transformPan = getTransformation(d3.select('#panItems').attr('transform'));
             } 
+
+            transformDrag = getTransformation(d3.select('#group-'+that.props.group.id).attr('transform'));
+
+
             var item = d3.select('#group-'+ that.props.group.id).node()
+
             // GET apres le drag en compte sur les BBox
             // console.log(transform)
-            rectangle.x = rectangle.x - transformPan.translateX;
-            rectangle.y = rectangle.y - transformPan.translateY;
+            rectangle.x = rectangle.x - transformPan.translateX// - transformDrag.translateX;
+            rectangle.y = rectangle.y - transformPan.translateY// - transformDrag.translateY;
 
             BBox.push(rectangle)
 
@@ -271,7 +278,14 @@ class Group extends Component {
             // console.log('PUSH')
         }
 
-        
+        // for (var i in BBox){
+        //     BBox[i]['x'] -= BBox[0]['x']
+        //     BBox[i]['y'] -= BBox[0]['y']
+        // }
+        // d3.selectAll(".BB").remove();
+        // for (var i in BBox){
+        //     showBboxBB(BBox[i], 'red');
+        // }
         
         // console.log('GO',BBox)
         // showBboxBB(BBox[0], 'red');
@@ -324,10 +338,11 @@ class Group extends Component {
 
         }
         /** J'UPDATE  */
-        /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME*/
+        /** POUR UNE NOUVELL LIGNE OU ECRIRE SUR LA MEME ***/
+        /** JE MET A JOUR LES PROPRIETES **/
         else if ([].concat(...this.props.group.lines).length != [].concat(...prevProps.group.lines).length ){
             //NOUVELLE LIGNE
-            that.getBoundinxBoxEveryone()
+            that.getBoundinxBoxEveryone();
             // this.getBoundinxBoxEveryone().then(()=> {
             //     this.computePosition();
             //     getBoundinxBoxLines(that.props.group.lines[0]).then((d)=> { 
@@ -357,7 +372,7 @@ class Group extends Component {
         //     // d3.select('#fake-'+that.props.group.id).attr('opacity', '0.2')
         // }
         else if (this.props.group.model.placeHolder != prevProps.group.model.placeHolder){
-           
+            that.getBoundinxBoxEveryone();
            /* var placeHolder = this.props.group.model.placeHolder[0];
             var BB = placeHolder
             this.BB = BB;
@@ -571,7 +586,7 @@ class Group extends Component {
         
         return (
             <g id={'group-'+this.props.group.id} className={'groupLine'} transform={`translate(${this.props.group.position[0]},${this.props.group.position[1]})`}>
-                <g id={"postIt-" + this.props.group.id} className="postit"> 
+                <g id={"postIt-" + this.props.group.id} className="postit" transform={`translate(0,0)`}> 
                     <rect id={"rectAllBB-" + this.props.group.id} />
                     <g id={"postItImage-" + this.props.group.id}> 
                     </g>
